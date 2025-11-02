@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eduard Fekete — Brutalist Minimal</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Idle background dots -->
+    <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+    <header class="site-header" role="banner">
+      <div class="title">
+        EDUARD FEKETE
+        <small class="underline-snap"
+          >Software Engineer • Entrepreneur • Learner</small
+        >
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-icon">🌙</span>
+      </button>
+    </header>
+
+    <main class="layout" role="main">
+      <aside class="sidebar" role="navigation" aria-label="Sections">
+        <button class="tab-btn" data-tab="about" aria-current="page">
+          About
+        </button>
+        <button class="tab-btn" data-tab="experience">Experience</button>
+        <button class="tab-btn" data-tab="projects">Projects</button>
+        <button class="tab-btn" data-tab="contact">INFO & CONTACT</button>
+      </aside>
+
+      <section class="content">
+        <div class="content-inner" id="content">
+          <!-- Content injected by JS -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="script.js" defer></script>
+  </body>
+</html>

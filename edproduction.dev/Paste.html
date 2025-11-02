@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Pes</title>
+    <script type="text/javascript">
+      window.addEventListener("paste", function(e){
+    var item = Array.from(e.clipboardData.items).find(x => /^image\//.test(x.type));
+
+    var blob = item.getAsFile();
+
+    var img = new Image();
+
+    img.onload = function(){
+        document.body.appendChild(this);
+    };
+
+    img.src = URL.createObjectURL(blob);
+    var download = document.createElement('a');
+    download.href = img.src;
+    var x  = document.getElementById("lname");
+    if (x.value=="") {
+      download.download = 'IMG_'+Math.floor(Math.random()*100000)+'.png';
+    }else {
+      download.download = x.value+'.png';
+    }
+
+    download.click();
+});
+    </script>
+  </head>
+  <body>
+  <form>
+    <label>name of file (empty means that random name is generated)</label><br>
+    <input type="text" id="lname"><br>
+    </form>
+    <div>Click on the body and press Ctrl-V</div>
+  </body>
+</html>
