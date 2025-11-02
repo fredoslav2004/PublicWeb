@@ -52,6 +52,7 @@ a {
   --underline-color: #000;
   --cursor-fill: white;
   --cursor-stroke: black;
+  --table-separator: #d1d1d1;
 }
 
 /* Dark theme */
@@ -70,6 +71,7 @@ a {
   --cursor-fill: black;
   --cursor-stroke: white;
   --accent: rgb(226, 83, 255); /* lighter green for dark mode */
+  --table-separator: #474747;
 }
 
 header.site-header {
@@ -200,7 +202,7 @@ section.content {
 }
 
 .kicker {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -212,14 +214,15 @@ section.content {
   margin: 1.6rem 0rem 0.6rem 0rem;
 }
 .huge {
-  font-size: clamp(28px, 3vw + 0.8rem, 54px);
+  font-size: clamp(24px, 2.5vw + 0.8rem, 48px);
   font-weight: 900;
   line-height: 0.98;
 }
 
 /* Micro-interactions / motion */
 .underline-snap {
-  background: linear-gradient(var(--underline-color), var(--underline-color)) left 1.02em/0 3px no-repeat;
+  background: linear-gradient(var(--underline-color), var(--underline-color))
+    left 1.02em/0 3px no-repeat;
   transition: background-size 0.25s ease;
 }
 .underline-snap:hover {
@@ -247,10 +250,9 @@ section.content {
 
 /* === Custom Cursors (mac‑ish arrow + glove hand) === */
 /* SVG data URIs (simple, crisp, oversized). Hotspots tuned via last two numbers. */
-:root
-{
-    cursor: url('default.png'), wait;
-    --cursor-pointer: url('handpointing.png'), wait
+:root {
+  cursor: url("default.png"), wait;
+  --cursor-pointer: url("handpointing.png"), wait;
 }
 a,
 button,
@@ -332,31 +334,88 @@ button,
 }
 
 img.normal {
-    border-radius: 20%;
-    width: auto;
-    height: 40px;
-    margin-right: 10px;
-    vertical-align: middle;
+  border-radius: 20%;
+  width: auto;
+  height: 30px;
+  margin-right: 10px;
+  vertical-align: middle;
 }
 img.iconimg {
-    border-radius: 10%;
-    width: auto;
-    height: 20px;
-    margin-right: 10px;
-    margin-left: 5px;
-    vertical-align: middle;
+  border-radius: 10%;
+  width: auto;
+  height: 15px;
+  margin-right: 10px;
+  margin-left: 5px;
+  vertical-align: middle;
 }
 
 /* Resume tables: align year column and content consistently */
+.resume-table {
+  margin-bottom: 1rem;
+  border-collapse: collapse;
+  width: 100%;
+  padding-left: 1rem;
+}
+.resume-table tr:not(:last-child) {
+  border-bottom: 1px solid var(--table-separator);
+}
+.resume-table td {
+  border: none;
+  padding: 0.2rem 0;
+  vertical-align: middle;
+}
 .resume-table td:first-child {
   width: 8rem; /* fixed width for year column */
   padding-right: 1rem;
-  vertical-align: middle;
   text-align: left;
   white-space: nowrap;
 }
 .resume-table td:last-child {
+  font-size: 0.9rem;
+}
+
+/* Ensure consistent alignment for the content column */
+.resume-table td {
   vertical-align: middle;
+  text-align: left;
+}
+
+/* Prevent images from increasing row height or misaligning text */
+.resume-table img.normal,
+.resume-table img.iconimg {
+  vertical-align: middle;
+  display: inline-block;
+}
+
+/* Make columns align across separate resume tables
+   - Use fixed table layout so column widths are respected across different tables
+   - First column is a fixed width (years), last column is fixed-ish for location/org
+   - Middle column takes remaining space
+   - On narrow screens fall back to auto layout for better wrapping */
+.resume-table {
+  width: 100%;
+  table-layout: fixed;
+}
+.resume-table td:first-child {
+  width: 8rem; /* year column — matches existing value */
+}
+.resume-table td:last-child {
+  width: 16rem; /* location/organization column — tweak if you want wider */
+  white-space: normal;
+}
+.resume-table td:nth-child(2) {
+  width: auto; /* description/content column fills remaining space */
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .resume-table {
+    table-layout: auto;
+  }
+  .resume-table td:first-child,
+  .resume-table td:last-child {
+    width: auto;
+  }
 }
 
 /* Mobile responsiveness */
