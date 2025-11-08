@@ -1,59 +1,227 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Website Temporarily Down</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            text-align: center;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-
-        .container h1 {
-            color: #333;
-        }
-
-        .container p {
-            color: #666;
-        }
-
-        .container a {
-            display: inline-block;
-            margin: 10px;
-            color: #008CBA;
-            text-decoration: none;
-            border: 2px solid #008CBA;
-            padding: 10px 20px;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-        }
-
-        .container a:hover {
-            background-color: #008CBA;
-            color: #fff;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EdProduction</title>
+  <!-- Font: Inter (variable) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#0b0b0c; --fg:#EDEDED; --accent:210 100% 60%; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{ margin:0; background:var(--bg); color:var(--fg);
+      font-family:"Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      overflow:hidden;
+    }
+    .wrap{ position:relative; height:100vh; width:100vw; display:grid; place-items:center }
+    h1{ position:relative; z-index:3; margin:0; font-size:clamp(42px, 9vw, 160px); font-weight:800; letter-spacing:0.01em; line-height:1; text-align:center; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+    h1::after{ content:""; position:absolute; inset:-8vmin; z-index:-1; pointer-events:none; filter:blur(60px) saturate(140%);
+      background:
+        radial-gradient(60vmax 60vmax at 30% 20%, hsl(var(--accent)/0.10), transparent 60%),
+        radial-gradient(50vmax 50vmax at 80% 70%, hsl(280 100% 60% / 0.08), transparent 60%),
+        radial-gradient(40vmax 40vmax at 10% 90%, hsl(160 100% 60% / 0.08), transparent 60%);
+    }
+    canvas.fx{ position:absolute; inset:0; width:100%; height:100%; display:block }
+    #bokeh{ z-index:1 }
+    #light{ z-index:2 }
+    @media (prefers-reduced-motion: reduce){ canvas.fx{display:none} h1::after{display:none} }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Our Website is Down</h1>
-        <p>We are sorry for the inconvenience. The website is under reconstruction. Meanwhile, you can check out these websites:</p>
-        <a href="http://edproduction.dev/FridgeChef/">FridgeChef</a>
-        <a href="http://edproduction.dev/archive/">Old website</a>
-        <a href="http://edproduction.dev/Personal/EduardFekete/Mentoring/">Game dev mentoring</a>
-    </div>
+  <div class="wrap" aria-label="EdProduction landing">
+    <!-- Two-layer canvas: particles + cursor light -->
+    <canvas id="bokeh" class="fx" aria-hidden="true"></canvas>
+    <canvas id="light" class="fx" aria-hidden="true"></canvas>
+    <h1>EdProduction</h1>
+  </div>
+
+  <script>
+  // Single-file, robust, minimal, with cursor light + particles.
+  (function(){
+    const cb = document.getElementById('bokeh');    // particles layer
+    const cl = document.getElementById('light');    // cursor light layer
+    const b = cb.getContext('2d');
+    const l = cl.getContext('2d');
+
+    // --- Utilities ---
+    const isFiniteNum = n => Number.isFinite(n) && !Number.isNaN(n);
+    const clamp = (v,min,max)=> v<min?min : v>max?max : v;
+    const rand = (a,b)=> a + Math.random()*(b-a);
+    const pick = (arr)=> arr[(Math.random()*arr.length)|0];
+
+    let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    let W=0, H=0, T=0;
+
+    const RANGES = {
+      count: [36, 60],
+      radius: [30, 120],
+      speed: [0.02, 0.12],
+      alpha: [0.06, 0.16]
+    };
+
+    const palette = [
+      [210, 100, 60],  // electric blue
+      [280, 100, 62],  // violet
+      [160, 100, 55],  // teal
+      [25, 100, 60],   // amber
+    ];
+
+    const particles = [];
+    const mouse = { x: 0, y: 0, vx: 0, vy: 0 };
+
+    // IMPORTANT: use comma-separated HSLA syntax: hsla(h, s%, l%, a)
+    function hsla(h,s,l,a){ return `hsla(${h}, ${s}%, ${l}%, ${a})`; }
+
+    function seedParticle(){
+      const [h,s,l_] = pick(palette);
+      const p = {
+        x: rand(0, W||1), y: rand(0, H||1),
+        r: Math.max(8, rand(...RANGES.radius)),
+        a: rand(...RANGES.alpha),
+        hue: h + rand(-8,8), sat: s, lig: l_,
+        // flow-field base
+        base: rand(0, Math.PI*2),
+        speed: rand(...RANGES.speed),
+      };
+      if (!isFiniteNum(p.x) || !isFiniteNum(p.y)) { p.x = 0; p.y = 0; }
+      return p;
+    }
+
+    function initParticles(n){
+      particles.length = 0;
+      for (let i=0; i<n; i++) particles.push(seedParticle());
+    }
+
+    function resize(){
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      W = Math.max(1, cb.clientWidth || window.innerWidth || 1);
+      H = Math.max(1, cb.clientHeight || window.innerHeight || 1);
+      for (const c of [cb, cl]){ c.width = (W*dpr)|0; c.height = (H*dpr)|0; const ctx = c.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); }
+      mouse.x = W*0.5; mouse.y = H*0.5;
+      const count = Math.round(rand(...RANGES.count));
+      initParticles(count);
+      // clear layers
+      b.clearRect(0,0,W,H); l.clearRect(0,0,W,H);
+    }
+
+    window.addEventListener('pointermove', (e)=>{
+      const r = cl.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      if (isFiniteNum(x) && isFiniteNum(y)){
+        // simple mouse smoothing
+        mouse.vx += (x - mouse.x) * 0.75;
+        mouse.vy += (y - mouse.y) * 0.75;
+      }
+    }, {passive:true});
+
+    // --- Render: particles ---
+    function renderParticles(dt){
+      b.clearRect(0,0,W,H);
+      // base vignette behind particles for depth
+      const cx=W*0.5, cy=H*0.5, cr=Math.max(W,H)*0.8;
+      if (isFiniteNum(cx)&&isFiniteNum(cy)&&isFiniteNum(cr)){
+        const g = b.createRadialGradient(cx,cy,0,cx,cy,cr);
+        g.addColorStop(0,'rgba(255,255,255,0.02)');
+        g.addColorStop(1,'rgba(0,0,0,0.10)');
+        b.fillStyle=g; b.fillRect(0,0,W,H);
+      }
+
+      b.globalCompositeOperation='lighter';
+      for (let i=0;i<particles.length;i++){
+        let p = particles[i];
+        if (!isFiniteNum(p.x)||!isFiniteNum(p.y)||!isFiniteNum(p.r)||p.r<=0){ particles[i]=seedParticle(); p=particles[i]; }
+        // flow field using time + position (cheap, smooth)
+        const a = Math.sin((p.base + p.x*0.0013 + T*0.0006))*Math.PI;
+        const sp = p.speed * (1 + 0.25*Math.sin(T*0.001 + p.base));
+        p.x += Math.cos(a)*sp*dt*60;
+        p.y += Math.sin(a)*sp*dt*60;
+        // gentle mouse parallax
+        const dx = (mouse.x - W*0.5)*0.0006, dy = (mouse.y - H*0.5)*0.0006;
+        p.x += dx * p.r * 0.05; p.y += dy * p.r * 0.05;
+        // wrap
+        if (p.x < -p.r) p.x = W + p.r; if (p.x > W + p.r) p.x = -p.r;
+        if (p.y < -p.r) p.y = H + p.r; if (p.y > H + p.r) p.y = -p.r;
+
+        // draw soft blob
+        if (isFiniteNum(p.x)&&isFiniteNum(p.y)&&isFiniteNum(p.r)&&p.r>0){
+          const rad = b.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+          rad.addColorStop(0.0, hsla(p.hue, p.sat, p.lig, p.a*1.0));
+          rad.addColorStop(0.5, hsla(p.hue, p.sat, p.lig, p.a*0.35));
+          rad.addColorStop(1.0, hsla(p.hue, p.sat, p.lig, 0));
+          b.fillStyle = rad; b.beginPath(); b.arc(p.x,p.y,p.r,0,Math.PI*2); b.fill();
+        }
+      }
+      b.globalCompositeOperation='source-over';
+    }
+
+    // --- Render: cursor light ---
+    function renderLight(dt){
+      // smooth mouse towards velocity target
+      mouse.x += mouse.vx * 0.2; mouse.y += mouse.vy * 0.2; mouse.vx *= 0.7; mouse.vy *= 0.7;
+      l.clearRect(0,0,W,H);
+      const r = Math.max(W,H)*0.35; // light radius
+      const cx = clamp(mouse.x, 0, W), cy = clamp(mouse.y, 0, H);
+      if (isFiniteNum(cx)&&isFiniteNum(cy)&&isFiniteNum(r)){
+        // subtle bright light following cursor
+        const g = l.createRadialGradient(cx,cy,0,cx,cy,r);
+        g.addColorStop(0, 'rgba(255,255,255,0.10)');
+        g.addColorStop(0.4, 'rgba(255,255,255,0.05)');
+        g.addColorStop(1, 'rgba(255,255,255,0.0)');
+        l.globalCompositeOperation = 'screen';
+        l.fillStyle = g; l.fillRect(0,0,W,H);
+        l.globalCompositeOperation = 'source-over';
+      }
+    }
+
+    let last = performance.now();
+    function frame(now){
+      const dt = clamp((now - last)/1000, 0, 0.05); last = now; T = now;
+      if (!(W>0 && H>0)) { requestAnimationFrame(frame); return; }
+      renderParticles(dt);
+      renderLight(dt);
+      requestAnimationFrame(frame);
+    }
+
+    const mq = matchMedia && matchMedia(`(resolution: ${window.devicePixelRatio||1}dppx)`);
+    mq && mq.addEventListener && mq.addEventListener('change', ()=>{ resize(); });
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(frame);
+
+    // --- Self-tests ---
+    (function selfTests(){
+      // 1) Canvas and particle invariants
+      console.assert(W>0 && H>0, 'Canvas dimensions must be > 0');
+      console.assert(particles.length>=RANGES.count[0] && particles.length<=RANGES.count[1], 'Particle count ok');
+
+      // 2) Color string validity tests — ensure hsla() returns parseable CSS colors
+      const testColors = [
+        hsla(210,100,60,0.5),
+        hsla(280,100,62,0.25),
+        hsla(160,100,55,0.1),
+        hsla(25,100,60,0.0),
+        hsla(0,0,100,1),
+        hsla(360,100,50,0.75),
+      ];
+      const off = document.createElement('canvas').getContext('2d');
+      const ok = testColors.every((c)=>{
+        try {
+          off.fillStyle = c; // will throw on some engines if invalid, or set to default
+          const g = off.createRadialGradient(0,0,0, 0,0,10);
+          g.addColorStop(0, c);
+          g.addColorStop(1, 'rgba(0,0,0,0)');
+          return true;
+        } catch(e){
+          console.error('Invalid color string produced by hsla()', c, e);
+          return false;
+        }
+      });
+      console.assert(ok, 'hsla() must yield valid CSS color strings');
+    })();
+  })();
+  </script>
 </body>
 </html>
