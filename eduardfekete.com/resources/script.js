@@ -26,11 +26,11 @@ function loadResourcesList(resourceTxtUrl) {
         jpeg: "img/image_icon.png",
         gif: "img/image_icon.png",
         svg: "img/image_icon.png",
-        doc: "img/doc_icon.png",
-        docx: "img/doc_icon.png",
+        doc: "img/docs_icon.png",
+        docx: "img/docs_icon.png",
         ppt: "img/presentation_icon.png",
         pptx: "img/presentation_icon.png",
-        txt: "img/doc_icon.png",
+        txt: "img/docs_icon.png",
       };
 
       lines.forEach(function (raw) {
