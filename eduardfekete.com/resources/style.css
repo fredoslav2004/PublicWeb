@@ -143,6 +143,7 @@ a {
 }
 .preview-close:hover {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  background-color: #ddc3c3;
 }
 
 .preview-download {
@@ -157,6 +158,7 @@ a {
 }
 .preview-download:hover {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  background-color: #c4ddc3;
 }
 
 .preview-content {
@@ -193,4 +195,20 @@ a {
   to {
     opacity: 1;
   }
+}
+
+.preview-share {
+  position: absolute;
+  top: 10px;
+  left: 108px; /* next to Download */
+  padding: 8px 12px;
+  border: 1px solid #000;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+.preview-share:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  background-color: #dddbc3;
 }
