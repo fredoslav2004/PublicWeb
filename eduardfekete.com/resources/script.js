@@ -39,8 +39,41 @@
       .filter((s) => s && !s.startsWith("#"));
     container.innerHTML = "";
     for (const raw of lines) {
-      const url = toUrl(raw, base);
-      const name = decodeURIComponent(url.split("/").pop() || raw);
+      // New behavior: manifest line is "<name> <path>"
+      // Split on whitespace; first token = name, rest joined = path.
+      const parts = raw.split(/\s+/);
+      let givenName = null;
+      let pathPart = null;
+      if (parts.length === 1) {
+        // Only a path provided — keep old behavior for name
+        pathPart = parts[0];
+      } else {
+        givenName = parts[0];
+        pathPart = parts.slice(1).join(" ");
+      }
+
+      // Resolve URL using same toUrl helper (below)
+      const url = toUrl(pathPart, base);
+      // If no explicit name was provided, derive from filename
+      let name = givenName;
+      if (!name) {
+        try {
+          name = decodeURIComponent(
+            new URL(url, window.location.href).pathname
+              .split("/")
+              .pop() || pathPart
+          );
+        } catch {
+          name = pathPart;
+        }
+      } else {
+        try {
+          name = decodeURIComponent(name);
+        } catch {
+          /* keep given name as-is */
+        }
+      }
+
       const ext = fileExt(url);
 
       const a = document.createElement("a");
