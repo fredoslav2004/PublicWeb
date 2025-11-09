@@ -85,8 +85,14 @@
       tile.className = "resource";
 
       const img = document.createElement("img");
-      img.alt = ext ? ext.toUpperCase() : "File";
-      img.src = iconFor(ext);
+      // Show YouTube icon for YouTube links, otherwise use ext-based icon
+      if (isYouTube(url)) {
+        img.alt = "YouTube";
+        img.src = "img/youtube_icon.png";
+      } else {
+        img.alt = ext ? ext.toUpperCase() : "File";
+        img.src = iconFor(ext);
+      }
 
       const p = document.createElement("p");
       p.textContent = name;
