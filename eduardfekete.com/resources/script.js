@@ -9,6 +9,7 @@
       await tryBuildFromManifest(list);
     }
     wirePreview();
+    initThemeToggle();
     // Deep-link: open if ?preview=<url> present
     const fromParam = getPreviewParam();
     if (fromParam)
@@ -436,4 +437,29 @@
       btn.disabled = false;
     }, 1200);
   }
+
+  // ----------------------- Theme toggle -----------------------
+  const THEME_KEY = "resources-theme"; // "dark" or "light"
+  function initThemeToggle() {
+    const btn = document.getElementById("theme-toggle");
+    if (!btn) return;
+    const saved = localStorage.getItem(THEME_KEY);
+    applyTheme(saved === "dark");
+    btn.addEventListener("click", () => {
+      const nowDark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem(THEME_KEY, nowDark ? "dark" : "light");
+      updateThemeButton(btn, nowDark);
+    });
+  }
+  function applyTheme(isDark) {
+    if (isDark) document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
+    const btn = document.getElementById("theme-toggle");
+    if (btn) updateThemeButton(btn, isDark);
+  }
+  function updateThemeButton(btn, isDark) {
+    btn.setAttribute("aria-pressed", isDark ? "true" : "false");
+    btn.textContent = isDark ? "Light mode" : "Dark mode";
+  }
+  // ----------------------- end theme toggle -----------------------
 })();

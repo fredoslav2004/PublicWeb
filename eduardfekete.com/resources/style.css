@@ -84,7 +84,7 @@ main {
 }
 
 .resource p {
-  color: #000;
+  color: inherit;
   font-size: 12.5px;
   line-height: 1.25;
   text-align: center;
@@ -229,3 +229,60 @@ a {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
   background-color: #c3ddff;
 }
+
+/* Theme toggle button */
+.theme-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 8px 12px;
+  border: 1px solid #000;
+  border-radius: 10px;
+  background: #fff;
+  color: #000;
+  font-size: 13px;
+  cursor: pointer;
+}
+.theme-toggle:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+
+/* Dark mode overrides (applied by adding 'dark' to <html>) */
+html.dark,
+html.dark body {
+  background: #0b0b0b;
+  color: #efefef;
+}
+html.dark header,
+html.dark footer,
+html.dark .preview-modal,
+html.dark .resource {
+  background: #0b0b0b;
+  color: #efefef;
+  border-color: #efefef;
+}
+html.dark body::before {
+  background: radial-gradient(
+    80% 60% at 50% 20%,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0) 60%
+  );
+}
+html.dark .preview-backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+html.dark .resource img {
+  /* invert icons on dark bg so black/transparent icons become light-on-dark */
+  filter: invert(1) grayscale(100%) contrast(130%);
+}
+html.dark .preview-close,
+html.dark .preview-download,
+html.dark .preview-share,
+html.dark .preview-share-raw,
+html.dark .theme-toggle {
+  background: #0b0b0b;
+  color: #efefef;
+  border-color: #efefef;
+}
+html.dark .preview-close:hover { background-color: #552b2b; }
+html.dark .preview-download:hover { background-color: #274227; }
+html.dark .preview-share:hover { background-color: #605f2a; }
+html.dark .preview-share-raw:hover { background-color: #2a4b76; }
