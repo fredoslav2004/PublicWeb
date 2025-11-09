@@ -212,3 +212,20 @@ a {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
   background-color: #dddbc3;
 }
+
+/* New: raw share button (aligned to the right of the "Share" button) */
+.preview-share-raw {
+  position: absolute;
+  top: 10px;
+  left: 184px; /* right of the Share button */
+  padding: 8px 12px;
+  border: 1px solid #000;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+.preview-share-raw:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  background-color: #c3ddff;
+}

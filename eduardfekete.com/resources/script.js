@@ -182,6 +182,20 @@
       });
     }
 
+    const rawShareBtn = document.querySelector(".preview-share-raw");
+    if (rawShareBtn) {
+      rawShareBtn.addEventListener("click", async () => {
+        if (!currentPreviewUrl) return;
+        const raw = buildRawLink(currentPreviewUrl);
+        try {
+          await copyToClipboard(raw);
+          flashShareFeedback(rawShareBtn, "Copied!");
+        } catch {
+          flashShareFeedback(rawShareBtn, "Copy failed");
+        }
+      });
+    }
+
     // Prevent the download link(s) from navigating if they're marked disabled.
     const downloadCtrls = Array.from(document.querySelectorAll(".preview-download"));
     for (const d of downloadCtrls) {
@@ -323,6 +337,11 @@
     const absFile = new URL(fileUrl, window.location.origin).toString();
     u.searchParams.set("preview", absFile);
     return u.toString();
+  }
+
+  // Build an absolute direct link to the resource (no preview param)
+  function buildRawLink(fileUrl) {
+    return new URL(fileUrl, window.location.origin).toString();
   }
 
   function pushPreviewParam(fileUrl) {
