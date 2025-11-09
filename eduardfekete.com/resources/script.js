@@ -40,7 +40,7 @@
     container.innerHTML = "";
     for (const raw of lines) {
       // New behavior: manifest line is "<name> <path>"
-      // Split on whitespace; first token = name, rest joined = path.
+      // Split on whitespace; last token = path, everything before = name (allows spaces in name)
       const parts = raw.split(/\s+/);
       let givenName = null;
       let pathPart = null;
@@ -48,8 +48,8 @@
         // Only a path provided — keep old behavior for name
         pathPart = parts[0];
       } else {
-        givenName = parts[0];
-        pathPart = parts.slice(1).join(" ");
+        pathPart = parts[parts.length - 1];
+        givenName = parts.slice(0, parts.length - 1).join(" ").trim() || null;
       }
 
       // Resolve URL using same toUrl helper (below)
@@ -146,7 +146,8 @@
 
       const url = new URL(href, window.location.href).toString();
       const ext = fileExt(url);
-      if (!PREVIEWABLE.has(ext)) return; // allow normal nav
+      // Allow preview for known previewable file types OR known YouTube URLs
+      if (!PREVIEWABLE.has(ext) && !isYouTube(url)) return; // allow normal nav
 
       e.preventDefault();
       openPreview(url, ext, /*updateHistory*/ true);
@@ -175,6 +176,16 @@
       });
     }
 
+    // Prevent the download link(s) from navigating if they're marked disabled.
+    const downloadCtrls = Array.from(document.querySelectorAll(".preview-download"));
+    for (const d of downloadCtrls) {
+      d.addEventListener("click", (ev) => {
+        if (d.getAttribute("aria-disabled") === "true") {
+          ev.preventDefault();
+        }
+      });
+    }
+
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") closePreview();
     });
@@ -183,17 +194,57 @@
   function openPreview(url, ext, updateHistory = true) {
     const backdrop = document.getElementById("preview-backdrop");
     const content = document.getElementById("preview-content");
-    const download = document.querySelector(".preview-download");
-    if (!backdrop || !content || !download) {
+    const downloads = Array.from(document.querySelectorAll(".preview-download"));
+    if (!backdrop || !content || !downloads.length) {
       window.location.href = url;
       return;
     }
 
     currentPreviewUrl = url;
     content.innerHTML = "";
-    download.setAttribute("href", url);
+
+    // Set or remove download link depending on content type (YouTube => no download)
+    if (isYouTube(url)) {
+      for (const d of downloads) {
+        d.removeAttribute("href");
+        d.removeAttribute("download");
+        d.setAttribute("aria-disabled", "true");
+        d.classList.add("disabled");
+        d.style.pointerEvents = "none";
+        d.style.opacity = "0.45";
+        d.setAttribute("tabindex", "-1");
+      }
+    } else {
+      for (const d of downloads) {
+        d.setAttribute("href", url);
+        d.setAttribute("download", "");
+        d.removeAttribute("aria-disabled");
+        d.classList.remove("disabled");
+        d.style.pointerEvents = "";
+        d.style.opacity = "";
+        d.removeAttribute("tabindex");
+      }
+    }
 
     if (updateHistory) pushPreviewParam(url);
+
+    // Handle YouTube embeds
+    if (isYouTube(url)) {
+      const embed = youtubeEmbedUrl(url);
+      if (!embed) {
+        window.location.href = url;
+        return;
+      }
+      const iframe = document.createElement("iframe");
+      iframe.title = "YouTube preview";
+      iframe.src = embed;
+      iframe.setAttribute("frameborder", "0");
+      iframe.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture");
+      iframe.setAttribute("allowfullscreen", "");
+      content.appendChild(iframe);
+      show();
+      return;
+    }
 
     if (ext === "pdf") {
       const iframe = document.createElement("iframe");
@@ -241,6 +292,19 @@
     const content = document.getElementById("preview-content");
     if (content) content.innerHTML = "";
     if (backdrop) backdrop.setAttribute("hidden", "hidden");
+
+    // Clean up download link state when closing
+    const downloads = Array.from(document.querySelectorAll(".preview-download"));
+    for (const d of downloads) {
+      d.removeAttribute("href");
+      d.removeAttribute("aria-disabled");
+      d.classList.remove("disabled");
+      d.removeAttribute("download");
+      d.style.pointerEvents = "";
+      d.style.opacity = "";
+      d.removeAttribute("tabindex");
+    }
+
     document.documentElement.style.overflow = "";
     currentPreviewUrl = null;
     popPreviewParam(); // clean URL
@@ -285,6 +349,39 @@
     } catch {
       const m = /\.([a-z0-9]+)(?:\?|#|$)/i.exec(url);
       return m ? m[1].toLowerCase() : "";
+    }
+  }
+
+  // New: detect YouTube URLs
+  function isYouTube(url) {
+    try {
+      const u = new URL(url, window.location.href);
+      const host = u.hostname.toLowerCase();
+      return host === "youtu.be" || host.endsWith(".youtube.com");
+    } catch {
+      return false;
+    }
+  }
+
+  // New: build an embed URL for a YouTube link, or return null if none
+  function youtubeEmbedUrl(url) {
+    try {
+      const u = new URL(url, window.location.href);
+      const host = u.hostname.toLowerCase();
+      let id = null;
+      if (host === "youtu.be") {
+        id = u.pathname.slice(1);
+      } else if (host.endsWith("youtube.com")) {
+        id = u.searchParams.get("v");
+        if (!id) {
+          const m = u.pathname.match(/\/(embed|v)\/([^/?]+)/);
+          if (m) id = m[2];
+        }
+      }
+      if (!id) return null;
+      return "https://www.youtube.com/embed/" + encodeURIComponent(id) + "?rel=0";
+    } catch {
+      return null;
     }
   }
 
