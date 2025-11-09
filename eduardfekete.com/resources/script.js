@@ -2,6 +2,8 @@
 (() => {
   const PREVIEWABLE = new Set(["pdf", "txt", "md", "log"]);
   let currentPreviewUrl = null;
+  let MANIFEST_TREE = null;
+  let CURRENT_PATH = []; // array of numeric indices representing current folder
 
   document.addEventListener("DOMContentLoaded", async () => {
     const list = document.getElementById("resources-list");
@@ -34,74 +36,10 @@
     }
     if (!text) return;
 
-    const lines = text
-      .split(/\r?\n/)
-      .map((s) => s.trim())
-      .filter((s) => s && !s.startsWith("#"));
-    container.innerHTML = "";
-    for (const raw of lines) {
-      // New behavior: manifest line is "<name> <path>"
-      // Split on whitespace; last token = path, everything before = name (allows spaces in name)
-      const parts = raw.split(/\s+/);
-      let givenName = null;
-      let pathPart = null;
-      if (parts.length === 1) {
-        // Only a path provided — keep old behavior for name
-        pathPart = parts[0];
-      } else {
-        pathPart = parts[parts.length - 1];
-        givenName = parts.slice(0, parts.length - 1).join(" ").trim() || null;
-      }
-
-      // Resolve URL using same toUrl helper (below)
-      const url = toUrl(pathPart, base);
-      // If no explicit name was provided, derive from filename
-      let name = givenName;
-      if (!name) {
-        try {
-          name = decodeURIComponent(
-            new URL(url, window.location.href).pathname
-              .split("/")
-              .pop() || pathPart
-          );
-        } catch {
-          name = pathPart;
-        }
-      } else {
-        try {
-          name = decodeURIComponent(name);
-        } catch {
-          /* keep given name as-is */
-        }
-      }
-
-      const ext = fileExt(url);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.className = "resource-link";
-      a.dataset.preview = "true";
-
-      const tile = document.createElement("div");
-      tile.className = "resource";
-
-      const img = document.createElement("img");
-      // Show YouTube icon for YouTube links, otherwise use ext-based icon
-      if (isYouTube(url)) {
-        img.alt = "YouTube";
-        img.src = "img/youtube_icon.png";
-      } else {
-        img.alt = ext ? ext.toUpperCase() : "File";
-        img.src = iconFor(ext);
-      }
-
-      const p = document.createElement("p");
-      p.textContent = name;
-
-      tile.append(img, p);
-      a.appendChild(tile);
-      container.appendChild(a);
-    }
+    // Build a nested tree using indentation levels.
+    const rawLines = text.split(/\r?\n/);
+    const root = [];
+    const stack = [{ indent: -1, children: root }];
 
     function toUrl(path, base) {
       if (/^https?:\/\//i.test(path)) return path;
@@ -126,6 +64,158 @@
       };
       return map[ext] || "img/file_icon.png";
     }
+
+    for (const raw of rawLines) {
+      if (!raw) continue;
+      const leading = raw.match(/^\s*/)[0].length;
+      const trimmed = raw.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+
+      // Pop to the correct parent based on indentation
+      while (leading <= stack[stack.length - 1].indent) stack.pop();
+
+      if (trimmed.endsWith("/")) {
+        // Folder node
+        const folderName = trimmed.replace(/\/$/, "").trim();
+        const folderNode = { type: "folder", name: decodeSafe(folderName), children: [] };
+        stack[stack.length - 1].children.push(folderNode);
+        // New context for this folder's children
+        stack.push({ indent: leading, children: folderNode.children });
+      } else {
+        // File node: "<name> <path>" (last token = path)
+        const parts = trimmed.split(/\s+/);
+        let givenName = null;
+        let pathPart = null;
+        if (parts.length === 1) {
+          pathPart = parts[0];
+        } else {
+          pathPart = parts[parts.length - 1];
+          givenName = parts.slice(0, parts.length - 1).join(" ").trim() || null;
+        }
+        const url = toUrl(pathPart, base);
+        let name = givenName;
+        if (!name) {
+          try {
+            name = decodeURIComponent(new URL(url, window.location.href).pathname.split("/").pop() || pathPart);
+          } catch {
+            name = pathPart;
+          }
+        } else {
+          try { name = decodeURIComponent(name); } catch { /* keep given */ }
+        }
+        const ext = fileExt(url);
+        const fileNode = { type: "file", name: name, url: url, ext: ext };
+        stack[stack.length - 1].children.push(fileNode);
+      }
+    }
+
+    // Save manifest tree and render root
+    MANIFEST_TREE = root;
+    CURRENT_PATH = [];
+    renderNodes(container, MANIFEST_TREE, []);
+
+    function decodeSafe(s) {
+      try { return decodeURIComponent(s); } catch { return s; }
+    }
+  }
+
+  // Render helpers and folder navigation
+  function renderNodes(container, nodes, pathIndices) {
+    container.innerHTML = "";
+
+    // If not root, add an "Up" tile to go to parent
+    if (pathIndices.length > 0) {
+      const parentPath = pathIndices.slice(0, -1).join(",");
+      const upA = document.createElement("a");
+      upA.href = "#";
+      upA.className = "resource-link resource-up";
+      upA.dataset.preview = "folder";
+      upA.dataset.folderPath = parentPath;
+
+      const tile = document.createElement("div");
+      tile.className = "resource";
+      const img = document.createElement("img");
+      img.alt = "Back";
+      img.src = "img/folder_icon.png";
+      const p = document.createElement("p");
+      p.textContent = "Back";
+      tile.append(img, p);
+      upA.appendChild(tile);
+      container.appendChild(upA);
+    }
+
+    nodes.forEach((node, idx) => {
+      const a = document.createElement("a");
+      a.className = "resource-link";
+      const tile = document.createElement("div");
+      tile.className = "resource";
+      const img = document.createElement("img");
+      const p = document.createElement("p");
+
+      if (node.type === "folder") {
+        a.dataset.preview = "folder";
+        const newPath = pathIndices.concat(idx);
+        a.dataset.folderPath = newPath.join(",");
+        a.href = "#";
+        img.alt = "Folder";
+        img.src = "img/folder_icon.png";
+        p.textContent = node.name || "Folder";
+      } else {
+        a.dataset.preview = "true";
+        a.href = node.url;
+        // If this file URL is a YouTube link, show the YouTube icon; otherwise fall back to ext-based icon.
+        if (isYouTube(node.url)) {
+          img.alt = "YouTube";
+          img.src = "img/youtube_icon.png";
+        } else {
+          img.alt = node.ext ? node.ext.toUpperCase() : "File";
+          // use existing icon map fallback
+          img.src = (function (ext) {
+            const map = {
+              pdf: "img/pdf_icon.png",
+              png: "img/image_icon.png",
+              jpg: "img/image_icon.png",
+              jpeg: "img/image_icon.png",
+              gif: "img/image_icon.png",
+              svg: "img/image_icon.png",
+              doc: "img/docs_icon.png",
+              docx: "img/docs_icon.png",
+              ppt: "img/presentation_icon.png",
+              pptx: "img/presentation_icon.png",
+              txt: "img/docs_icon.png",
+              md: "img/docs_icon.png",
+              log: "img/docs_icon.png",
+            };
+            return map[ext] || "img/file_icon.png";
+          })(node.ext);
+        }
+         p.textContent = node.name || node.url;
+       }
+
+      tile.append(img, p);
+      a.appendChild(tile);
+      container.appendChild(a);
+    });
+  }
+
+  function openFolderByPath(container, pathStr) {
+    const path = pathStr === "" ? [] : pathStr.split(",").filter(Boolean).map((n) => parseInt(n, 10));
+    const node = getNodeByPath(path);
+    if (!node) return;
+    const nodesToRender = node === MANIFEST_TREE ? MANIFEST_TREE : (node.children || []);
+    CURRENT_PATH = path.slice();
+    renderNodes(container, nodesToRender, CURRENT_PATH);
+  }
+
+  function getNodeByPath(path) {
+    if (!MANIFEST_TREE) return null;
+    if (!path || path.length === 0) return MANIFEST_TREE;
+    let cur = { children: MANIFEST_TREE };
+    for (const idx of path) {
+      if (!cur.children || !cur.children[idx]) return null;
+      cur = cur.children[idx];
+    }
+    return cur;
   }
 
   // ----------------------- Preview wiring -----------------------
@@ -142,6 +232,15 @@
         return;
       const a = e.target.closest("a");
       if (!a) return;
+
+      // Folder navigation: anchors created for folders carry dataset.preview="folder"
+      if (a.dataset.preview === "folder") {
+        e.preventDefault();
+        const list = document.getElementById("resources-list");
+        const path = a.dataset.folderPath || ""; // "" = root
+        openFolderByPath(list, path);
+        return;
+      }
 
       const isResource =
         a.classList.contains("resource-link") || !!a.closest(".resource");
