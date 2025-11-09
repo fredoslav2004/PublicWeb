@@ -42,7 +42,11 @@
     const stack = [{ indent: -1, children: root }];
 
     function toUrl(path, base) {
-      if (/^https?:\/\//i.test(path)) return path;
+      // Accept absolute URLs (http:, https:, data:, etc.) and protocol-relative URLs.
+      // Also accept other schemes (mailto:, data:, etc.) so full web URLs are preserved.
+      if (/^[a-z][a-z0-9+.-]*:/i.test(path)) return path; // scheme:...
+      // Protocol-relative URLs like //example.com/path -> preserve with current protocol
+      if (/^\/\//.test(path)) return window.location.protocol + path;
       if (base) return base.replace(/\/?$/, "/") + path.replace(/^\//, "");
       return path;
     }
@@ -147,6 +151,11 @@
     nodes.forEach((node, idx) => {
       const a = document.createElement("a");
       a.className = "resource-link";
+      // expose metadata for click handler (helps for absolute / external URLs)
+      if (node.type === "file") {
+        a.dataset.ext = node.ext || "";
+        a.dataset.url = node.url || "";
+      }
       const tile = document.createElement("div");
       tile.className = "resource";
       const img = document.createElement("img");
@@ -242,21 +251,46 @@
         return;
       }
 
+      // If there's no href and no data-url, nothing to do
+      const href = a.getAttribute("href");
+      const metaUrl = a.dataset.url;
+      if (!href && !metaUrl) return;
+
+      // Prefer metadata provided by renderNodes (robust for absolute/external links)
+      let resolvedUrl = metaUrl || href;
+      try {
+        // normalize to absolute form
+        resolvedUrl = new URL(resolvedUrl, window.location.href).toString();
+      } catch {
+        // if URL constructor fails, try using href directly (will likely be navigated normally)
+        resolvedUrl = metaUrl || href;
+      }
+
+      // Prefer data-ext when present; otherwise derive via fileExt
+      const metaExt = (a.dataset.ext || "").toLowerCase();
+      const ext = metaExt || fileExt(resolvedUrl);
+
       const isResource =
         a.classList.contains("resource-link") || !!a.closest(".resource");
-      const wantsPreview = a.dataset.preview === "true" || isResource;
-      if (!wantsPreview) return;
+      // Decide: previewable OR YouTube => preview, otherwise open in a new tab.
+      const wantsPreview =
+        a.dataset.preview === "true" ||
+        isResource ||
+        PREVIEWABLE.has(ext) ||
+        isYouTube(resolvedUrl);
 
-      const href = a.getAttribute("href");
-      if (!href) return;
+      if (!wantsPreview) {
+        // Not a previewable resource — open in new tab so current tab remains on the site.
+        e.preventDefault();
+        window.open(resolvedUrl, "_blank", "noopener");
+        return;
+      }
 
-      const url = new URL(href, window.location.href).toString();
-      const ext = fileExt(url);
-      // Allow preview for known previewable file types OR known YouTube URLs
-      if (!PREVIEWABLE.has(ext) && !isYouTube(url)) return; // allow normal nav
-
-      e.preventDefault();
-      openPreview(url, ext, /*updateHistory*/ true);
+      // If it's previewable (or YouTube), prevent default and open the preview.
+      if (PREVIEWABLE.has(ext) || isYouTube(resolvedUrl)) {
+        e.preventDefault();
+        openPreview(resolvedUrl, ext, /*updateHistory*/ true);
+      }
     });
 
     const closeBtn = document.querySelector(".preview-close");
@@ -316,7 +350,8 @@
     const content = document.getElementById("preview-content");
     const downloads = Array.from(document.querySelectorAll(".preview-download"));
     if (!backdrop || !content || !downloads.length) {
-      window.location.href = url;
+      // No preview UI available — open resource in a new tab instead of navigating current tab.
+      window.open(url, "_blank", "noopener");
       return;
     }
 
@@ -352,7 +387,8 @@
     if (isYouTube(url)) {
       const embed = youtubeEmbedUrl(url);
       if (!embed) {
-        window.location.href = url;
+        // Can't build an embed -> open in a new tab
+        window.open(url, "_blank", "noopener");
         return;
       }
       const iframe = document.createElement("iframe");
@@ -376,30 +412,16 @@
     }
 
     if (ext === "txt" || ext === "md" || ext === "log") {
-      fetch(url, { cache: "no-cache" })
-        .then((r) => {
-          if (!r.ok) throw new Error("HTTP " + r.status);
-          const ct = (r.headers.get("content-type") || "").toLowerCase();
-          if (ct && !(ct.includes("text") || ct.includes("json")))
-            throw new Error("not-text");
-          return r.text();
-        })
-        .then((text) => {
-          const pre = document.createElement("pre");
-          pre.className = "preview-text";
-          pre.textContent = text;
-          content.appendChild(pre);
-          show();
-          content.setAttribute("tabindex", "0");
-          content.focus();
-        })
-        .catch(() => {
-          window.location.href = url;
-        });
+      const iframe = document.createElement("iframe");
+      iframe.title = "Text preview";
+      iframe.src = url;
+      content.appendChild(iframe);
+      show();
       return;
     }
 
-    window.location.href = url;
+    // Unknown/unhandled type — open in a new tab.
+    window.open(url, "_blank", "noopener");
 
     function show() {
       backdrop.removeAttribute("hidden");
