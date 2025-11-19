@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive ATmega2560 Architecture Explorer</title>
+    <style>
+        :root {
+            --primary: #00979d; /* Arduino-ish teal */
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --accent: #e74c3c;
+            --highlight: #f1c40f;
+            --text: #333;
+            --bg: #f9f9f9;
+            --font-stack: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --code-font: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--dark);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        header h1 { margin: 0; font-size: 1.2rem; font-weight: 600; letter-spacing: 0.5px; }
+        header p { margin: 5px 0 0; font-size: 0.8rem; opacity: 0.8; font-family: var(--code-font); }
+
+        /* Navigation */
+        nav {
+            background-color: #34495e;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        nav button {
+            background: none;
+            border: none;
+            color: #bdc3c7;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+            text-transform: uppercase;
+        }
+
+        nav button:hover { color: white; background-color: rgba(255,255,255,0.05); }
+        nav button.active { color: white; border-bottom-color: var(--primary); background-color: rgba(0,0,0,0.1); }
+
+        /* Main Layout */
+        main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+            background-color: #eef2f3;
+        }
+
+        /* Views */
+        .view-section {
+            display: none;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto; /* Scrollbar handling */
+        }
+        
+        /* Layout Logic: Split-pane vs Single-pane */
+        /* Pinout, Block, CPU use flex for side-by-side */
+        #pinout.active, #block.active, #cpu.active { display: flex; gap: 20px; }
+        
+        /* Registers, Instructions use block for vertical flow */
+        #registers.active, #instructions.active { display: block; }
+
+        /* Left Panel (Diagram) */
+        .diagram-container {
+            flex: 2;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #ddd;
+            min-height: 500px;
+        }
+
+        /* Right Panel (Info) */
+        .info-panel {
+            flex: 1;
+            background: white;
+            border-radius: 4px;
+            padding: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            border-left: 4px solid var(--primary);
+            border: 1px solid #ddd;
+            border-left-width: 4px;
+            min-width: 350px;
+            max-width: 500px;
+        }
+
+        .info-panel h2 { 
+            color: var(--primary); 
+            margin-top: 0; 
+            border-bottom: 2px solid #f0f0f0; 
+            padding-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .info-panel h3 { margin-top: 20px; margin-bottom: 10px; color: var(--dark); font-size: 1.1rem; }
+        .info-panel p { line-height: 1.6; color: #444; font-size: 0.95rem; margin-bottom: 1rem; }
+        .info-panel strong { color: #2c3e50; }
+        
+        .citation { 
+            font-size: 0.75em; 
+            color: #999; 
+            display: block; 
+            margin-top: 15px; 
+            font-style: italic;
+            border-top: 1px solid #eee;
+            padding-top: 5px;
+        }
+        
+        /* --- SVG Styles --- */
+        svg { width: 100%; height: 100%; user-select: none; }
+        
+        /* Pinout Styles */
+        .pin-group { cursor: pointer; }
+        .pin { fill: #e0e0e0; stroke: #7f8c8d; stroke-width: 0.5; transition: fill 0.1s; }
+        .pin-group:hover .pin { fill: var(--highlight); }
+        .pin.selected { fill: var(--primary) !important; stroke: var(--dark); }
+        .package-body { fill: #2c3e50; rx: 4; ry: 4; }
+        .label-text { font-family: var(--code-font); font-size: 8px; pointer-events: none; text-anchor: middle; fill: #666; }
+        
+        /* Block Diagram Styles */
+        .block-group { cursor: pointer; transition: opacity 0.2s; }
+        .block-group:hover rect, .block-group:hover polygon { 
+            stroke: var(--primary); 
+            stroke-width: 3; 
+            filter: drop-shadow(0 0 5px rgba(0,0,0,0.2));
+        }
+        .block-rect { stroke: #34495e; stroke-width: 2; }
+        .block-text { 
+            font-family: var(--font-stack); 
+            font-weight: 700; 
+            fill: #2c3e50; 
+            pointer-events: none; 
+            text-anchor: middle; 
+            dominant-baseline: middle;
+        }
+        .bg-cpu { fill: #fff3cd; }
+        .bg-mem { fill: #d1e7dd; }
+        .bg-periph { fill: #cff4fc; }
+        .bg-analog { fill: #f8d7da; }
+        .bg-io { fill: #e2e3e5; }
+        .bus-line { stroke: #95a5a6; stroke-width: 4; fill: none; opacity: 0.5; }
+        .bus-arrow { fill: #95a5a6; }
+
+        /* Pin Detail Table */
+        .pin-detail-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        .pin-detail-table td { padding: 8px; border-bottom: 1px solid #eee; }
+        .pin-detail-table td:first-child { font-weight: bold; color: #7f8c8d; width: 100px; }
+
+        /* --- Register View Styles --- */
+        .reg-container { display: flex; flex-direction: column; width: 100%; max-width: 1200px; margin: 0 auto; gap: 30px; }
+        .reg-section { background: white; padding: 20px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
+        .reg-section-title { border-bottom: 2px solid var(--primary); color: var(--dark); padding-bottom: 5px; margin-top: 0; margin-bottom: 15px; font-size: 1.2rem; }
+        
+        .reg-explainer { background-color: #fdfdfe; border-left: 4px solid #bdc3c7; padding: 10px 15px; margin-bottom: 20px; font-size: 0.9rem; color: #555; }
+        .reg-explainer strong { color: #2c3e50; }
+        
+        .flag-list { list-style: none; padding: 0; margin: 0; }
+        .flag-list li { 
+            margin-bottom: 10px; 
+            padding-bottom: 10px; 
+            border-bottom: 1px dashed #eee;
+            display: flex;
+        }
+        .flag-bit { 
+            font-family: var(--code-font); 
+            font-weight: bold; 
+            background: #34495e; 
+            color: white; 
+            padding: 2px 8px; 
+            border-radius: 3px; 
+            margin-right: 10px; 
+            height: fit-content;
+        }
+        .flag-desc { flex: 1; }
+        .flag-title { font-weight: bold; color: var(--dark); font-size: 0.9rem; display: block; margin-bottom: 3px;}
+        .flag-detail { font-size: 0.85rem; color: #555; line-height: 1.4; }
+
+        .gpr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
+        .gpr-box { background: white; border: 1px solid #ccc; border-radius: 4px; padding: 8px 4px; text-align: center; cursor: help; transition: transform 0.1s; }
+        .gpr-box:hover { transform: scale(1.05); border-color: var(--primary); background: #f0fcfc; z-index: 2; position: relative;}
+        .gpr-name { font-weight: bold; color: var(--dark); font-size: 0.9rem; font-family: var(--code-font); }
+        .gpr-desc { font-size: 0.65rem; color: #777; margin-top: 2px; }
+        .gpr-low { border-top: 3px solid #95a5a6; }
+        .gpr-high { border-top: 3px solid var(--primary); background-color: #f4fafa; }
+        .gpr-ptr { border-top: 3px solid var(--accent); background-color: #fff5f5; }
+
+        .sreg-wrapper { display: flex; border: 1px solid #34495e; border-radius: 4px; overflow: hidden; margin-bottom: 20px; }
+        .sreg-bit { flex: 1; text-align: center; border-right: 1px solid #34495e; }
+        .sreg-bit:last-child { border-right: none; }
+        .sreg-bit-name { background: #34495e; color: white; font-size: 0.9rem; padding: 6px 0; font-weight: bold; font-family: var(--code-font); }
+        .sreg-bit-desc { background: white; font-size: 0.75rem; padding: 8px 4px; height: 40px; display: flex; align-items: center; justify-content: center; color: #333; font-weight: 600; line-height: 1.2; }
+
+        .io-category { background: white; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 15px; border-top: 3px solid var(--dark); }
+        .io-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .io-reg { background: #eef2f3; padding: 4px 8px; border-radius: 3px; font-family: monospace; font-size: 0.85rem; color: var(--dark); border: 1px solid #ddd; cursor: default; }
+        .io-reg:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* --- Instruction View Styles --- */
+        .inst-container { width: 100%; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px; }
+        
+        .inst-category { background: white; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e0e0e0; }
+        .inst-header { background: var(--dark); color: white; padding: 12px 20px; font-weight: bold; border-left: 5px solid var(--highlight); font-size: 1.1rem; }
+        
+        .inst-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; table-layout: fixed; }
+        .inst-table th { text-align: left; background: #f1f3f5; padding: 10px 15px; color: #555; font-size: 0.85rem; font-weight: 700; border-bottom: 2px solid #ddd; }
+        .inst-table td { padding: 10px 15px; border-bottom: 1px solid #eee; color: #333; vertical-align: top; word-wrap: break-word; }
+        .inst-table tr:last-child td { border-bottom: none; }
+        .inst-table tr:hover { background-color: #fafafa; }
+
+        .mnemonic { font-family: var(--code-font); font-weight: bold; color: #d35400; }
+        .operands { font-family: var(--code-font); color: #2980b9; font-size: 0.85rem; }
+        .cycles { font-family: var(--code-font); color: #555; text-align: center; }
+        .flags { font-family: var(--code-font); color: #7f8c8d; font-size: 0.8rem; }
+        .inst-desc { font-size: 0.9rem; line-height: 1.4; }
+
+        @media (max-width: 900px) {
+            #pinout.active, #block.active, #cpu.active { flex-direction: column; }
+            .diagram-container { min-height: 400px; flex: 1; }
+            .info-panel { max-height: 40%; flex: none; width: auto; max-width: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>ATmega2560 Architecture Explorer</h1>
+    <p>Software Engineer's Reference | Source: Datasheet DS40002211A</p>
+</header>
+
+<nav>
+    <button class="active" onclick="switchView('pinout')">Pinout</button>
+    <button onclick="switchView('block')">Block Diagram</button>
+    <button onclick="switchView('cpu')">CPU Core</button>
+    <button onclick="switchView('registers')">Registers</button>
+    <button onclick="switchView('instructions')">Instructions</button>
+</nav>
+
+<main>
+    <!-- SECTION 1: PINOUT -->
+    <div id="pinout" class="view-section active">
+        <div class="diagram-container" id="pinout-diagram"></div>
+        <div class="info-panel" id="pinout-info">
+            <div id="default-pin-msg">
+                <h2>Pin Configuration (TQFP-100)</h2>
+                <p>Hover over or click a pin to view details.</p>
+                <p><strong>Context:</strong> The ATmega2560 provides 86 programmable I/O lines. The remaining pins are power (VCC/GND), oscillator (XTAL), and analog reference.</p>
+                <p><strong>Multiplexing:</strong> Pins serve as GPIO by default. Alternate functions (PWM, UART, ADC) are enabled by configuring the specific peripheral registers.</p>
+            </div>
+            <div id="pin-details" style="display:none;">
+                <h2 id="pin-title">Pin -</h2>
+                <table class="pin-detail-table">
+                    <tr><td>Physical Pin</td><td id="detail-num">-</td></tr>
+                    <tr><td>Port Name</td><td id="detail-name">-</td></tr>
+                    <tr><td>Alt Functions</td><td id="detail-func">-</td></tr>
+                </table>
+                <p id="detail-desc" style="margin-top: 15px; font-size: 0.9rem;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: BLOCK DIAGRAM -->
+    <div id="block" class="view-section">
+        <div class="diagram-container">
+            <!-- SVG same as before, re-embedded for completeness -->
+            <svg viewBox="0 0 800 600">
+                <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" class="bus-arrow" /></marker></defs>
+                <path d="M 400,110 L 400,540" class="bus-line" />
+                <path d="M 80,300 L 720,300" class="bus-line" />
+                <g class="block-group" onclick="showInfo('cpu_block')"><rect x="300" y="40" width="200" height="100" class="block-rect bg-cpu"/><text x="400" y="90" class="block-text" style="font-size: 20px">AVR CPU</text></g>
+                <g class="block-group" onclick="showInfo('flash')"><rect x="50" y="40" width="140" height="60" class="block-rect bg-mem"/><text x="120" y="70" class="block-text">FLASH (256KB)</text></g>
+                <g class="block-group" onclick="showInfo('sram')"><rect x="50" y="110" width="140" height="60" class="block-rect bg-mem"/><text x="120" y="140" class="block-text">SRAM (8KB)</text></g>
+                <g class="block-group" onclick="showInfo('eeprom')"><rect x="50" y="180" width="140" height="60" class="block-rect bg-mem"/><text x="120" y="210" class="block-text">EEPROM (4KB)</text></g>
+                <g class="block-group" onclick="showInfo('timers')"><rect x="50" y="360" width="160" height="50" class="block-rect bg-periph"/><text x="130" y="385" class="block-text">Timer 0, 2 (8-bit)</text></g>
+                <g class="block-group" onclick="showInfo('timers16')"><rect x="50" y="420" width="160" height="50" class="block-rect bg-periph"/><text x="130" y="445" class="block-text">Timer 1,3,4,5 (16b)</text></g>
+                <g class="block-group" onclick="showInfo('jtag')"><rect x="50" y="480" width="160" height="50" class="block-rect bg-periph"/><text x="130" y="505" class="block-text">JTAG / Debug</text></g>
+                <g class="block-group" onclick="showInfo('usart')"><rect x="590" y="150" width="160" height="60" class="block-rect bg-periph"/><text x="670" y="180" class="block-text">USART (x4)</text></g>
+                <g class="block-group" onclick="showInfo('spi')"><rect x="590" y="220" width="160" height="60" class="block-rect bg-periph"/><text x="670" y="250" class="block-text">SPI</text></g>
+                <g class="block-group" onclick="showInfo('twi')"><rect x="590" y="290" width="160" height="60" class="block-rect bg-periph"/><text x="670" y="320" class="block-text">TWI (I2C)</text></g>
+                <g class="block-group" onclick="showInfo('adc')"><rect x="590" y="400" width="160" height="100" class="block-rect bg-analog"/><text x="670" y="450" class="block-text">10-bit ADC</text></g>
+                <g class="block-group" onclick="showInfo('ports')"><rect x="250" y="540" width="300" height="40" class="block-rect bg-io"/><text x="400" y="560" class="block-text">GPIO Ports A-L</text></g>
+            </svg>
+        </div>
+        <div class="info-panel" id="block-info">
+            <div id="block-default">
+                <h2>System Architecture</h2>
+                <p>Click a block to view technical details.</p>
+                <p>The system uses an 8-bit data bus but supports 16-bit addressing for data (64KB) and up to 22-bit for program memory (via EIND).</p>
+            </div>
+            <div id="block-details" style="display:none;">
+                <h2 id="blk-title">Title</h2>
+                <div id="blk-content">Content</div>
+                <span class="citation">[Ref: Datasheet]</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 3: CPU CORE -->
+    <div id="cpu" class="view-section">
+        <div class="diagram-container">
+            <svg viewBox="0 0 600 500">
+                <defs><marker id="cpu-arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#333" /></marker></defs>
+                <g class="block-group" onclick="showInfo('alu')"><polygon points="220,220 380,220 360,280 380,340 220,340 240,280" class="block-rect bg-cpu"/><text x="300" y="280" class="block-text">ALU</text></g>
+                <g class="block-group" onclick="showInfo('registers')"><rect x="180" y="120" width="240" height="60" class="block-rect bg-mem"/><text x="300" y="150" class="block-text">32x8 General Registers</text></g>
+                <g class="block-group" onclick="showInfo('sreg')"><rect x="420" y="280" width="120" height="40" class="block-rect bg-periph"/><text x="480" y="300" class="block-text">SREG</text></g>
+                <g class="block-group" onclick="showInfo('pc')"><rect x="40" y="80" width="100" height="40" class="block-rect bg-periph"/><text x="90" y="100" class="block-text">PC (17-bit)</text></g>
+                <g class="block-group" onclick="showInfo('stack')"><rect x="440" y="380" width="120" height="40" class="block-rect bg-mem"/><text x="500" y="400" class="block-text">SP (16-bit)</text></g>
+                <g class="block-group" onclick="showInfo('decoder')"><rect x="40" y="220" width="120" height="80" class="block-rect bg-io"/><text x="100" y="250" class="block-text" style="font-size: 12px">Instruction</text><text x="100" y="270" class="block-text" style="font-size: 12px">Decoder</text></g>
+                <g class="block-group" onclick="showInfo('progmem')"><rect x="40" y="10" width="100" height="40" class="block-rect bg-mem"/><text x="90" y="30" class="block-text" style="font-size: 12px">Prog Mem</text></g>
+                <g class="block-group" onclick="showInfo('datamem')"><rect x="440" y="450" width="120" height="40" class="block-rect bg-mem"/><text x="500" y="470" class="block-text" style="font-size: 12px">Data Mem</text></g>
+                <line x1="300" y1="180" x2="300" y2="220" stroke="#333" stroke-width="4" marker-end="url(#cpu-arrow)"/>
+                <line x1="380" y1="280" x2="420" y2="280" stroke="#333" stroke-width="2" marker-end="url(#cpu-arrow)"/>
+                <line x1="160" y1="260" x2="220" y2="260" stroke="#333" stroke-width="2" marker-end="url(#cpu-arrow)"/>
+                <line x1="90" y1="50" x2="90" y2="80" stroke="#333" stroke-width="2" marker-end="url(#cpu-arrow)"/>
+                <line x1="90" y1="120" x2="90" y2="220" stroke="#333" stroke-width="2" marker-end="url(#cpu-arrow)"/>
+            </svg>
+        </div>
+        <div class="info-panel" id="cpu-info">
+             <div id="cpu-default">
+                <h2>AVR CPU Core</h2>
+                <p><strong>Harvard Architecture:</strong> Separate memories and buses for program and data. Allows instructions to be fetched from Flash while data is simultaneously accessed in SRAM.</p>
+                <p><strong>Pipeline:</strong> 2-stage. Fetch next instruction while executing current. 1 instruction per clock cycle (mostly).</p>
+            </div>
+            <div id="cpu-details" style="display:none;">
+                <h2 id="cpu-title">Title</h2>
+                <div id="cpu-content">Content</div>
+                <span class="citation">[Ref: Datasheet]</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 4: REGISTERS -->
+    <div id="registers" class="view-section" style="background-color: #f8f9fa;">
+        <div class="reg-container">
+            
+            <!-- GPRs -->
+            <div class="reg-section">
+                <h3 class="reg-section-title">General Purpose Registers (R0-R31)</h3>
+                <div class="reg-explainer">
+                    <p><strong>Register File Structure:</strong></p>
+                    <ul style="font-size: 0.85rem; margin-left: -20px;">
+                        <li><strong>R0 - R15 (Low):</strong> <span style="border-top: 3px solid #95a5a6; display:inline-block; width: 15px;"></span> Cannot use immediate instructions (LDI, CPI, ANDI, etc.). Data must be moved here from High registers or loaded from memory.</li>
+                        <li><strong>R16 - R31 (High):</strong> <span style="border-top: 3px solid var(--primary); display:inline-block; width: 15px;"></span> Fully capable registers supporting immediate operands.</li>
+                        <li><strong>X, Y, Z Pointers (R26-R31):</strong> <span style="border-top: 3px solid var(--accent); display:inline-block; width: 15px;"></span> 16-bit pointers for indirect addressing. <strong>Z (R31:R30)</strong> is specifically used for Program Memory access (LPM).</li>
+                    </ul>
+                </div>
+                <div class="gpr-grid"></div>
+            </div>
+
+            <!-- SREG -->
+            <div class="reg-section">
+                <h3 class="reg-section-title">Status Register (SREG) Details</h3>
+                <div class="sreg-wrapper">
+                    <div class="sreg-bit"><div class="sreg-bit-name">I</div><div class="sreg-bit-desc">Int En</div></div>
+                    <div class="sreg-bit"><div class="sreg-bit-name">T</div><div class="sreg-bit-desc">Bit Copy</div></div>
+                    <div class="sreg-bit"><div class="sreg-bit-name">H</div><div class="sreg-bit-desc">Half Carry</div></div>
+                    <div class="sreg-bit"><div class="sreg-bit-name">S</div><div class="sreg-bit-desc">Sign</div></div>
+                    <div class="sreg-bit"><div class="sreg-bit-name">V</div><div class="sreg-bit-desc">Overflow</div></div>
+                    <div class="sreg-bit"><div class="sreg-bit-name">N</div><div class="sreg-bit-desc">Neg</div></div>
+                    <div class="sreg-bit"><div class="sreg-bit-name">Z</div><div class="sreg-bit-desc">Zero</div></div>
+                    <div class="sreg-bit"><div class="sreg-bit-name">C</div><div class="sreg-bit-desc">Carry</div></div>
+                </div>
+                
+                <ul class="flag-list">
+                    <li>
+                        <span class="flag-bit">I (Bit 7)</span>
+                        <div class="flag-desc">
+                            <span class="flag-title">Global Interrupt Enable</span>
+                            <span class="flag-detail">Master switch for all interrupts. Set by <code>SEI</code>, cleared by <code>CLI</code>. Automatically cleared by hardware when entering an Interrupt Service Routine (ISR) and restored by <code>RETI</code>.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="flag-bit">T (Bit 6)</span>
+                        <div class="flag-desc">
+                            <span class="flag-title">Bit Copy Storage</span>
+                            <span class="flag-detail">Scratchpad bit for bit-level logic. Used by <code>BST</code> (Bit Store) to save a bit from a register, and <code>BLD</code> (Bit Load) to move it back to another register. Useful for moving single bits without masks.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="flag-bit">H (Bit 5)</span>
+                        <div class="flag-desc">
+                            <span class="flag-title">Half Carry Flag</span>
+                            <span class="flag-detail">Indicates a carry from bit 3 to bit 4. Essential for BCD (Binary Coded Decimal) arithmetic. Triggers during <code>ADD</code>/<code>SUB</code> if the lower nibble overflows.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="flag-bit">S (Bit 4)</span>
+                        <div class="flag-desc">
+                            <span class="flag-title">Sign Bit (N &#8853; V)</span>
+                            <span class="flag-detail">Represents the <em>true</em> arithmetic sign of the result after a signed operation. It is the XOR of the Negative (N) and Overflow (V) flags. If V=1 (overflow), N is invalid, so S corrects this logic. Used by signed branches like <code>BRGE</code>, <code>BRLT</code>.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="flag-bit">V (Bit 3)</span>
+                        <div class="flag-desc">
+                            <span class="flag-title">Two's Complement Overflow Flag</span>
+                            <span class="flag-detail">Set if a signed arithmetic operation results in a value too large/small to fit in the register (e.g., +127 + 1 = -128). Critical for signed math.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="flag-bit">N (Bit 2)</span>
+                        <div class="flag-desc">
+                            <span class="flag-title">Negative Flag</span>
+                            <span class="flag-detail">Simply a copy of the Most Significant Bit (MSB, Bit 7) of the result. If MSB is 1, N is 1. Indicates a negative result in signed interpretation (assuming no overflow).</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="flag-bit">Z (Bit 1)</span>
+                        <div class="flag-desc">
+                            <span class="flag-title">Zero Flag</span>
+                            <span class="flag-detail">Set to 1 if the result of an arithmetic or logic operation is exactly zero (0x00). Used heavily for loop counters (<code>DEC</code> sets Z when counter hits 0) and equality checks (<code>CP</code> sets Z if operands are equal).</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="flag-bit">C (Bit 0)</span>
+                        <div class="flag-desc">
+                            <span class="flag-title">Carry Flag</span>
+                            <span class="flag-detail">Set if an arithmetic operation generates a carry out of the MSB (Bit 7). Used for unsigned arithmetic overflow detection and multi-byte arithmetic (<code>ADC</code>, <code>SBC</code>).</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- System Registers -->
+            <div class="reg-section">
+                <h3 class="reg-section-title">System & Control Registers</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;">
+                    <div class="gpr-box" style="border-left: 4px solid #f39c12; text-align: left; padding: 15px;">
+                        <div class="gpr-name">Stack Pointer (SP)</div>
+                        <div class="gpr-desc">
+                            <strong>16-bit (SPH:SPL)</strong><br>
+                            Points to top of Stack in SRAM. Initialized to RAMEND.
+                        </div>
+                    </div>
+                    <div class="gpr-box" style="border-left: 4px solid #f39c12; text-align: left; padding: 15px;">
+                        <div class="gpr-name">Program Counter (PC)</div>
+                        <div class="gpr-desc">
+                            <strong>17-bit</strong><br>
+                            Addresses 128K words (256KB Flash). Not directly mapped to I/O.
+                        </div>
+                    </div>
+                    <div class="gpr-box" style="border-left: 4px solid #f39c12; text-align: left; padding: 15px;">
+                        <div class="gpr-name">EIND & RAMPZ</div>
+                        <div class="gpr-desc">
+                            <strong>Extended Addressing</strong><br>
+                            <strong>EIND:</strong> Upper PC bits for EICALL/EIJMP (>64KB jumps).<br>
+                            <strong>RAMPZ:</strong> Upper Z-pointer bits for ELPM/SPM (>64KB data).
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- I/O Control -->
+            <div class="reg-section">
+                <h3 class="reg-section-title">Key I/O Control Registers</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                    <div class="io-category"><strong>Ports (A-L)</strong><div class="io-list"><span class="io-reg">DDRx</span><span class="io-reg">PORTx</span><span class="io-reg">PINx</span></div></div>
+                    <div class="io-category"><strong>Timers</strong><div class="io-list"><span class="io-reg">TCCRxA/B</span><span class="io-reg">TCNTx</span><span class="io-reg">OCRx</span><span class="io-reg">TIMSKx</span></div></div>
+                    <div class="io-category"><strong>USART</strong><div class="io-list"><span class="io-reg">UDRn</span><span class="io-reg">UCSRn</span><span class="io-reg">UBRRn</span></div></div>
+                    <div class="io-category"><strong>ADC</strong><div class="io-list"><span class="io-reg">ADMUX</span><span class="io-reg">ADCSRA</span><span class="io-reg">ADCL/H</span></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 5: INSTRUCTIONS -->
+    <div id="instructions" class="view-section" style="background-color: #f8f9fa;">
+        <div class="inst-container">
+            
+            <div class="inst-category">
+                <div class="inst-header">Arithmetic</div>
+                <table class="inst-table">
+                    <colgroup><col style="width:90px"><col style="width:90px"><col><col style="width:60px"><col style="width:80px"></colgroup>
+                    <thead><tr><th>Mn</th><th>Op</th><th>Description</th><th>Cyc</th><th>Flags</th></tr></thead>
+                    <tbody>
+                        <tr><td class="mnemonic">ADD</td><td class="operands">Rd, Rr</td><td>Add without Carry. Rd = Rd + Rr.</td><td>1</td><td>Z,C,N,V,H,S</td></tr>
+                        <tr><td class="mnemonic">ADC</td><td class="operands">Rd, Rr</td><td>Add with Carry. Rd = Rd + Rr + C.</td><td>1</td><td>Z,C,N,V,H,S</td></tr>
+                        <tr><td class="mnemonic">SUB</td><td class="operands">Rd, Rr</td><td>Subtract without Carry. Rd = Rd - Rr.</td><td>1</td><td>Z,C,N,V,H,S</td></tr>
+                        <tr><td class="mnemonic">SUBI</td><td class="operands">Rd, K</td><td>Subtract Immediate. Rd = Rd - K. (R16-R31 only)</td><td>1</td><td>Z,C,N,V,H,S</td></tr>
+                        <tr><td class="mnemonic">INC</td><td class="operands">Rd</td><td>Increment. Rd++. <strong>No Carry Flag change.</strong></td><td>1</td><td>Z,N,V,S</td></tr>
+                        <tr><td class="mnemonic">DEC</td><td class="operands">Rd</td><td>Decrement. Rd--.</td><td>1</td><td>Z,N,V,S</td></tr>
+                        <tr><td class="mnemonic">MUL</td><td class="operands">Rd, Rr</td><td>Multiply Unsigned. R1:R0 = Rd * Rr.</td><td>2</td><td>Z,C</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="inst-category">
+                <div class="inst-header">Branching & Jumps</div>
+                <table class="inst-table">
+                    <colgroup><col style="width:90px"><col style="width:90px"><col><col style="width:60px"><col style="width:80px"></colgroup>
+                    <thead><tr><th>Mn</th><th>Op</th><th>Description</th><th>Cyc</th><th>Flags</th></tr></thead>
+                    <tbody>
+                        <tr><td class="mnemonic">RJMP</td><td class="operands">k</td><td>Relative Jump. PC +/- 2k words.</td><td>2</td><td>-</td></tr>
+                        <tr><td class="mnemonic">RCALL</td><td class="operands">k</td><td>Relative Call. Push PC+1 to Stack.</td><td>3/4</td><td>-</td></tr>
+                        <tr><td class="mnemonic">RET</td><td class="operands"></td><td>Return from Subroutine. Pop PC.</td><td>4/5</td><td>-</td></tr>
+                        <tr><td class="mnemonic">RETI</td><td class="operands"></td><td>Return from Interrupt. Pop PC, Set I-flag.</td><td>4/5</td><td>I</td></tr>
+                        <tr><td class="mnemonic">CP</td><td class="operands">Rd, Rr</td><td>Compare. (Rd - Rr), flags updated, result discarded.</td><td>1</td><td>Z,C,N,V,H,S</td></tr>
+                        <tr><td class="mnemonic">CPI</td><td class="operands">Rd, K</td><td>Compare Immediate. (Rd - K). (R16-R31 only)</td><td>1</td><td>Z,C,N,V,H,S</td></tr>
+                        <tr><td class="mnemonic">BREQ</td><td class="operands">k</td><td>Branch if Equal (Z=1).</td><td>1/2</td><td>-</td></tr>
+                        <tr><td class="mnemonic">BRNE</td><td class="operands">k</td><td>Branch if Not Equal (Z=0).</td><td>1/2</td><td>-</td></tr>
+                        <tr><td class="mnemonic">BRCS</td><td class="operands">k</td><td>Branch if Carry Set (C=1).</td><td>1/2</td><td>-</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="inst-category">
+                <div class="inst-header">Data Transfer</div>
+                <table class="inst-table">
+                    <colgroup><col style="width:90px"><col style="width:90px"><col><col style="width:60px"><col style="width:80px"></colgroup>
+                    <thead><tr><th>Mn</th><th>Op</th><th>Description</th><th>Cyc</th><th>Flags</th></tr></thead>
+                    <tbody>
+                        <tr><td class="mnemonic">MOV</td><td class="operands">Rd, Rr</td><td>Copy Register. Rd = Rr.</td><td>1</td><td>-</td></tr>
+                        <tr><td class="mnemonic">LDI</td><td class="operands">Rd, K</td><td>Load Immediate. Rd = K. (R16-R31 only)</td><td>1</td><td>-</td></tr>
+                        <tr><td class="mnemonic">LD</td><td class="operands">Rd, X</td><td>Load Indirect from SRAM using X pointer.</td><td>2</td><td>-</td></tr>
+                        <tr><td class="mnemonic">ST</td><td class="operands">X, Rr</td><td>Store Indirect to SRAM using X pointer.</td><td>2</td><td>-</td></tr>
+                        <tr><td class="mnemonic">LDS</td><td class="operands">Rd, k</td><td>Load Direct from SRAM (16-bit addr).</td><td>2</td><td>-</td></tr>
+                        <tr><td class="mnemonic">STS</td><td class="operands">k, Rr</td><td>Store Direct to SRAM (16-bit addr).</td><td>2</td><td>-</td></tr>
+                        <tr><td class="mnemonic">IN</td><td class="operands">Rd, P</td><td>Load from I/O Port (0x00-0x3F).</td><td>1</td><td>-</td></tr>
+                        <tr><td class="mnemonic">OUT</td><td class="operands">P, Rr</td><td>Store to I/O Port (0x00-0x3F).</td><td>1</td><td>-</td></tr>
+                        <tr><td class="mnemonic">PUSH</td><td class="operands">Rr</td><td>Push Register. SP--, Store at SP.</td><td>2</td><td>-</td></tr>
+                        <tr><td class="mnemonic">POP</td><td class="operands">Rd</td><td>Pop Register. Load from SP, SP++.</td><td>2</td><td>-</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="inst-category">
+                <div class="inst-header">Bit & Logic</div>
+                <table class="inst-table">
+                    <colgroup><col style="width:90px"><col style="width:90px"><col><col style="width:60px"><col style="width:80px"></colgroup>
+                    <thead><tr><th>Mn</th><th>Op</th><th>Description</th><th>Cyc</th><th>Flags</th></tr></thead>
+                    <tbody>
+                        <tr><td class="mnemonic">SBI</td><td class="operands">P, b</td><td>Set Bit in I/O (0x00-0x1F).</td><td>2</td><td>-</td></tr>
+                        <tr><td class="mnemonic">CBI</td><td class="operands">P, b</td><td>Clear Bit in I/O (0x00-0x1F).</td><td>2</td><td>-</td></tr>
+                        <tr><td class="mnemonic">LSL</td><td class="operands">Rd</td><td>Logical Shift Left.</td><td>1</td><td>Z,C,N,V,H,S</td></tr>
+                        <tr><td class="mnemonic">AND</td><td class="operands">Rd, Rr</td><td>Logical AND. Rd = Rd & Rr.</td><td>1</td><td>Z,N,V,S</td></tr>
+                        <tr><td class="mnemonic">OR</td><td class="operands">Rd, Rr</td><td>Logical OR. Rd = Rd | Rr.</td><td>1</td><td>Z,N,V,S</td></tr>
+                        <tr><td class="mnemonic">EOR</td><td class="operands">Rd, Rr</td><td>Exclusive OR. Rd = Rd ^ Rr. (Clr: EOR R1, R1)</td><td>1</td><td>Z,N,V,S</td></tr>
+                        <tr><td class="mnemonic">COM</td><td class="operands">Rd</td><td>One's Complement.</td><td>1</td><td>Z,C,N,V,S</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</main>
+
+<script>
+    // --- Data & Logic ---
+    const pinMapping = [
+        {n:1, name:"PG5", func:"OC0B"}, {n:2, name:"PE0", func:"RXD0 / PCINT8"}, {n:3, name:"PE1", func:"TXD0"}, {n:4, name:"PE2", func:"XCK0 / AIN0"}, {n:5, name:"PE3", func:"OC3A / AIN1"},
+        {n:6, name:"PE4", func:"OC3B / INT4"}, {n:7, name:"PE5", func:"OC3C / INT5"}, {n:8, name:"PE6", func:"T3 / INT6"}, {n:9, name:"PE7", func:"CLKO / ICP3"}, {n:10, name:"VCC", func:"Digital Supply"},
+        {n:11, name:"GND", func:"Ground"}, {n:12, name:"PH0", func:"RXD2"}, {n:13, name:"PH1", func:"TXD2"}, {n:14, name:"PH2", func:"XCK2"}, {n:15, name:"PH3", func:"OC4A"},
+        {n:16, name:"PH4", func:"OC4B"}, {n:17, name:"PH5", func:"OC4C"}, {n:18, name:"PH6", func:"OC2B"}, {n:19, name:"PB0", func:"SS / PCINT0"}, {n:20, name:"PB1", func:"SCK / PCINT1"},
+        {n:21, name:"PB2", func:"MOSI / PCINT2"}, {n:22, name:"PB3", func:"MISO / PCINT3"}, {n:23, name:"PB4", func:"OC2A / PCINT4"}, {n:24, name:"PB5", func:"OC1A / PCINT5"}, {n:25, name:"PB6", func:"OC1B / PCINT6"},
+        {n:26, name:"PB7", func:"OC0A / OC1C"}, {n:27, name:"PH7", func:"T4"}, {n:28, name:"PG3", func:"TOSC2"}, {n:29, name:"PG4", func:"TOSC1"}, {n:30, name:"RESET", func:"Reset"},
+        {n:31, name:"VCC", func:"Digital Supply"}, {n:32, name:"GND", func:"Ground"}, {n:33, name:"XTAL2", func:"Osc Out"}, {n:34, name:"XTAL1", func:"Osc In"}, {n:35, name:"PL0", func:"ICP4"},
+        {n:36, name:"PL1", func:"ICP5"}, {n:37, name:"PL2", func:"T5"}, {n:38, name:"PL3", func:"OC5A"}, {n:39, name:"PL4", func:"OC5B"}, {n:40, name:"PL5", func:"OC5C"},
+        {n:41, name:"PL6", func:"-"}, {n:42, name:"PL7", func:"-"}, {n:43, name:"PD0", func:"SCL / INT0"}, {n:44, name:"PD1", func:"SDA / INT1"}, {n:45, name:"PD2", func:"RXD1 / INT2"},
+        {n:46, name:"PD3", func:"TXD1 / INT3"}, {n:47, name:"PD4", func:"ICP1"}, {n:48, name:"PD5", func:"XCK1"}, {n:49, name:"PD6", func:"T1"}, {n:50, name:"PD7", func:"T0"},
+        {n:51, name:"PG0", func:"WR"}, {n:52, name:"PG1", func:"RD"}, {n:53, name:"PC0", func:"A8"}, {n:54, name:"PC1", func:"A9"}, {n:55, name:"PC2", func:"A10"},
+        {n:56, name:"PC3", func:"A11"}, {n:57, name:"PC4", func:"A12"}, {n:58, name:"PC5", func:"A13"}, {n:59, name:"PC6", func:"A14"}, {n:60, name:"PC7", func:"A15"},
+        {n:61, name:"VCC", func:"Digital Supply"}, {n:62, name:"GND", func:"Ground"}, {n:63, name:"PJ0", func:"RXD3"}, {n:64, name:"PJ1", func:"TXD3"}, {n:65, name:"PJ2", func:"XCK3"},
+        {n:66, name:"PJ3", func:"PCINT12"}, {n:67, name:"PJ4", func:"PCINT13"}, {n:68, name:"PJ5", func:"PCINT14"}, {n:69, name:"PJ6", func:"PCINT15"}, {n:70, name:"PG2", func:"ALE"},
+        {n:71, name:"PA7", func:"AD7"}, {n:72, name:"PA6", func:"AD6"}, {n:73, name:"PA5", func:"AD5"}, {n:74, name:"PA4", func:"AD4"}, {n:75, name:"PA3", func:"AD3"},
+        {n:76, name:"PA2", func:"AD2"}, {n:77, name:"PA1", func:"AD1"}, {n:78, name:"PA0", func:"AD0"}, {n:79, name:"PJ7", func:"-"}, {n:80, name:"VCC", func:"Digital Supply"},
+        {n:81, name:"GND", func:"Ground"}, {n:82, name:"PK7", func:"ADC15"}, {n:83, name:"PK6", func:"ADC14"}, {n:84, name:"PK5", func:"ADC13"}, {n:85, name:"PK4", func:"ADC12"},
+        {n:86, name:"PK3", func:"ADC11"}, {n:87, name:"PK2", func:"ADC10"}, {n:88, name:"PK1", func:"ADC9"}, {n:89, name:"PK0", func:"ADC8"}, {n:90, name:"PF7", func:"ADC7 / TDI"},
+        {n:91, name:"PF6", func:"ADC6 / TDO"}, {n:92, name:"PF5", func:"ADC5 / TMS"}, {n:93, name:"PF4", func:"ADC4 / TCK"}, {n:94, name:"PF3", func:"ADC3"}, {n:95, name:"PF2", func:"ADC2"},
+        {n:96, name:"PF1", func:"ADC1"}, {n:97, name:"PF0", func:"ADC0"}, {n:98, name:"AREF", func:"Analog Ref"}, {n:99, name:"GND", func:"Ground"}, {n:100, name:"AVCC", func:"Analog Supply"}
+    ];
+
+    const componentInfo = {
+        'cpu_block': {title:"AVR CPU Core", content:"The AVR core combines a rich instruction set with 32 general purpose working registers. All the 32 registers are directly connected to the Arithmetic Logic Unit (ALU)."},
+        'flash': {title:"Flash Memory (256KB)", content:"In-System Reprogrammable Flash memory for program storage. Divided into Boot Loader section and Application section. Endurance: 10,000 cycles."},
+        'sram': {title:"SRAM (8KB)", content:"Static Random Access Memory. Used for storing variables and the call stack. The first 4608 bytes are reserved for Registers and I/O."},
+        'eeprom': {title:"EEPROM (4KB)", content:"Non-volatile storage. Endurance: 100,000 cycles. Accessed via EEAR, EEDR, EECR registers."},
+        'timers': {title:"8-bit Timer/Counters (x2)", content:"Timer 0 and 2. Timer 2 allows asynchronous clocking (RTC)."},
+        'timers16': {title:"16-bit Timer/Counters (x4)", content:"Timers 1, 3, 4, 5. Precision timing, Input Capture, 16-bit PWM."},
+        'usart': {title:"USART (x4)", content:"Serial communication (USART0-3). Full duplex, Asynchronous/Synchronous."},
+        'spi': {title:"SPI Interface", content:"Serial Peripheral Interface. High speed synchronous data transfer."},
+        'twi': {title:"TWI (I2C)", content:"Two-wire Serial Interface. Multi-master arbitration support."},
+        'adc': {title:"10-bit ADC", content:"16-channel Analog to Digital Converter. Supports differential inputs with programmable gain."},
+        'jtag': {title:"JTAG", content:"IEEE 1149.1 compliant interface for debugging and programming."},
+        'ports': {title:"I/O Ports", content:"Ports A-L. 86 GPIO lines with individual direction and pull-up control."},
+        'alu': {title:"ALU", content:"Arithmetic Logic Unit. Executes instructions in single clock cycle."},
+        'registers': {title:"General Purpose Registers", content:"32 x 8-bit registers (R0-R31). R16-R31 support immediate operands."},
+        'sreg': {title:"SREG", content:"Status Register containing flags (C, Z, N, V, S, H, T, I). Updated after ALU ops."},
+        'pc': {title:"Program Counter", content:"17-bit PC addressing 128K words (256KB)."},
+        'stack': {title:"Stack Pointer", content:"16-bit SP (SPH:SPL). Points to stack top in SRAM."},
+        'decoder': {title:"Instruction Decoder", content:"Decodes 16-bit opcodes to control CPU."},
+        'progmem': {title:"Program Memory Interface", content:"Fetches instructions from Flash via Harvard bus."},
+        'datamem': {title:"Data Memory Interface", content:"Handles Load/Store between CPU and SRAM/IO."}
+    };
+
+    function switchView(viewId) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        document.querySelector(`nav button[onclick="switchView('${viewId}')"]`).classList.add('active');
+    }
+
+    function drawPinout() {
+        const svgNS = "http://www.w3.org/2000/svg";
+        const container = document.getElementById('pinout-diagram');
+        container.innerHTML = '';
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("viewBox", "0 0 600 600");
+        
+        const body = document.createElementNS(svgNS, "rect");
+        body.setAttribute("x", "150"); body.setAttribute("y", "150");
+        body.setAttribute("width", "300"); body.setAttribute("height", "300");
+        body.setAttribute("rx", "5"); body.setAttribute("class", "package-body");
+        svg.appendChild(body);
+
+        const text = document.createElementNS(svgNS, "text");
+        text.setAttribute("x", "300"); text.setAttribute("y", "290");
+        text.setAttribute("fill", "white"); text.setAttribute("font-family", "sans-serif");
+        text.setAttribute("font-weight", "bold"); text.setAttribute("font-size", "24");
+        text.setAttribute("text-anchor", "middle"); text.textContent = "ATmega2560";
+        svg.appendChild(text);
+
+        const subtext = document.createElementNS(svgNS, "text");
+        subtext.setAttribute("x", "300"); subtext.setAttribute("y", "320");
+        subtext.setAttribute("fill", "#bdc3c7"); subtext.setAttribute("font-family", "sans-serif");
+        subtext.setAttribute("font-size", "14"); subtext.setAttribute("text-anchor", "middle");
+        subtext.textContent = "TQFP-100";
+        svg.appendChild(subtext);
+
+        const idx = document.createElementNS(svgNS, "circle");
+        idx.setAttribute("cx", "170"); idx.setAttribute("cy", "170");
+        idx.setAttribute("r", "8"); idx.setAttribute("fill", "#95a5a6");
+        svg.appendChild(idx);
+
+        const pinLength = 30; const pinWidth = 6;
+        const startOffset = 160; const spacing = 11.5;
+
+        function addPin(n, x, y, w, h, labelX, labelY) {
+            const g = document.createElementNS(svgNS, "g");
+            g.setAttribute("class", "pin-group");
+            g.onclick = () => showPinInfo(n);
+            const rect = document.createElementNS(svgNS, "rect");
+            rect.setAttribute("x", x); rect.setAttribute("y", y);
+            rect.setAttribute("width", w); rect.setAttribute("height", h);
+            rect.setAttribute("class", "pin"); rect.setAttribute("id", `pin-${n}`);
+            g.appendChild(rect);
+            const txt = document.createElementNS(svgNS, "text");
+            txt.setAttribute("x", labelX); txt.setAttribute("y", labelY);
+            txt.setAttribute("class", "label-text"); txt.textContent = n;
+            g.appendChild(txt);
+            svg.appendChild(g);
+        }
+
+        for(let i=0; i<25; i++) {
+            addPin(i+1, 120, startOffset + (i*spacing), pinLength, pinWidth, 110, startOffset + (i*spacing) + 6);
+            addPin(i+26, startOffset + (i*spacing), 450, pinWidth, pinLength, startOffset + (i*spacing) + 3, 490);
+            addPin(i+51, 450, (startOffset + (24*spacing)) - (i*spacing), pinLength, pinWidth, 490, (startOffset + (24*spacing)) - (i*spacing) + 6);
+            addPin(i+76, (startOffset + (24*spacing)) - (i*spacing), 120, pinWidth, pinLength, (startOffset + (24*spacing)) - (i*spacing) + 3, 110);
+        }
+        container.appendChild(svg);
+    }
+
+    function showPinInfo(pinNum) {
+        document.getElementById('default-pin-msg').style.display = 'none';
+        document.getElementById('pin-details').style.display = 'block';
+        document.querySelectorAll('.pin').forEach(el => el.classList.remove('selected'));
+        document.getElementById(`pin-${pinNum}`).classList.add('selected');
+        const info = pinMapping.find(p => p.n === pinNum);
+        if (info) {
+            document.getElementById('pin-title').textContent = `Pin ${info.n}`;
+            document.getElementById('detail-num').textContent = info.n;
+            document.getElementById('detail-name').textContent = info.name;
+            document.getElementById('detail-func').textContent = info.func;
+            let desc = info.name.startsWith("VCC") ? "Digital Supply Voltage." :
+                       info.name.startsWith("GND") ? "Ground." :
+                       info.func.includes("ADC") ? "Analog to Digital Converter input." :
+                       "General Purpose I/O / Peripheral Function.";
+            document.getElementById('detail-desc').textContent = desc;
+        }
+    }
+
+    function showInfo(key) {
+        const data = componentInfo[key];
+        const currentView = document.querySelector('.view-section.active').id;
+        let defaultId = currentView === 'block' ? 'block-default' : 'cpu-default';
+        let detailsId = currentView === 'block' ? 'block-details' : 'cpu-details';
+        let titleId = currentView === 'block' ? 'blk-title' : 'cpu-title';
+        let contentId = currentView === 'block' ? 'blk-content' : 'cpu-content';
+
+        if (data) {
+            document.getElementById(defaultId).style.display = 'none';
+            document.getElementById(detailsId).style.display = 'block';
+            document.getElementById(titleId).innerHTML = data.title;
+            document.getElementById(contentId).innerHTML = data.content;
+        }
+    }
+
+    function generateRegisters() {
+        const grid = document.querySelector('.gpr-grid');
+        grid.innerHTML = ''; 
+        for(let i=0; i<32; i++) {
+            const div = document.createElement('div');
+            let cssClass = "gpr-box";
+            let desc = i < 16 ? "Low" : "High";
+            if (i < 16) cssClass += " gpr-low";
+            else cssClass += " gpr-high";
+            if (i >= 26) { cssClass += " gpr-ptr"; desc = ["XL","XH","YL","YH","ZL","ZH"][i-26]; }
+            div.className = cssClass;
+            div.innerHTML = `<div class="gpr-name">R${i}</div><div class="gpr-desc">${desc}</div>`;
+            grid.appendChild(div);
+        }
+    }
+
+    window.onload = function() {
+        drawPinout();
+        generateRegisters();
+    };
+</script>
+
+</body>
+</html>
