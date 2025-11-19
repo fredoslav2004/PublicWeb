@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATmega2560 Assembly Simulator</title>
+    <style>
+        :root {
+            --bg-dark: #1e1e1e;
+            --bg-panel: #252526;
+            --bg-editor: #1e1e1e;
+            --border: #3e3e42;
+            --accent: #007acc;
+            --accent-hover: #0062a3;
+            --text-main: #d4d4d4;
+            --text-dim: #858585;
+            --keyword: #c586c0;
+            --number: #b5cea8;
+            --register: #9cdcfe;
+            --comment: #6a9955;
+            --led-off: #3a1d1d;
+            --led-on: #ff3333;
+            --pin-active: #4ec9b0;
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header / Toolbar */
+        .toolbar {
+            height: 50px;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 10px;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background-color: var(--accent-hover); }
+        .btn:disabled { background-color: var(--border); cursor: not-allowed; opacity: 0.6; }
+        .btn-danger { background-color: #a32a2a; }
+        .btn-danger:hover { background-color: #852020; }
+
+        .status-display {
+            margin-left: auto;
+            font-size: 12px;
+            color: var(--text-dim);
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0; /* Critical for flex nesting */
+        }
+
+        /* Editor Section */
+        .editor-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            min-width: 300px;
+            position: relative;
+            min-height: 0; /* Critical for flex nesting */
+        }
+
+        .editor-container {
+            position: relative;
+            flex: 1;
+            display: flex;
+            min-height: 0; /* Critical for flex nesting */
+            overflow: hidden; /* Contains the scrolling areas */
+        }
+
+        .line-numbers {
+            width: 40px;
+            background-color: var(--bg-panel);
+            color: var(--text-dim);
+            text-align: right;
+            padding: 10px 5px;
+            font-size: 14px;
+            line-height: 21px; /* Fixed pixel height for sync */
+            user-select: none;
+            border-right: 1px solid var(--border);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        textarea#code-editor {
+            flex: 1;
+            background-color: var(--bg-editor);
+            color: var(--text-main);
+            border: none;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 21px; /* Fixed pixel height for sync */
+            resize: none;
+            outline: none;
+            white-space: pre;
+            overflow: auto; /* Ensures scrollbar appears on textarea */
+            tab-size: 4;
+            height: 100%; /* Fill container */
+        }
+
+        /* Highlight current execution line */
+        .execution-line {
+            position: absolute;
+            left: 40px; /* Offset for line numbers */
+            right: 0;
+            height: 21px; /* Match line-height */
+            background-color: rgba(255, 255, 0, 0.1);
+            border-left: 2px solid yellow;
+            pointer-events: none;
+            display: none;
+            top: 0;
+            z-index: 10;
+        }
+
+        /* Simulation Panel */
+        .sim-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #1e1e1e;
+            overflow-y: auto;
+            min-width: 400px;
+            min-height: 0;
+        }
+
+        .panel-header {
+            background-color: var(--bg-panel);
+            padding: 8px 15px;
+            font-size: 13px;
+            font-weight: bold;
+            border-bottom: 1px solid var(--border);
+            border-top: 1px solid var(--border);
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+
+        .panel-header:first-child { border-top: none; }
+
+        /* Register Grid */
+        .register-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 5px;
+            padding: 10px;
+            flex-shrink: 0;
+        }
+
+        .reg-box {
+            background-color: #2d2d30;
+            border: 1px solid var(--border);
+            padding: 5px;
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .reg-name { font-size: 10px; color: var(--register); margin-bottom: 2px; }
+        .reg-val { font-size: 14px; font-weight: bold; }
+        .reg-changed { animation: flash 0.5s; color: #4ec9b0; }
+
+        @keyframes flash {
+            0% { background-color: #3e3e42; }
+            100% { background-color: #2d2d30; }
+        }
+
+        @keyframes errorFlash {
+            0% { background-color: #3a1d1d; }
+            100% { background-color: #111; }
+        }
+
+        /* Flags */
+        .flags-container {
+            display: flex;
+            padding: 10px;
+            gap: 10px;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .flag {
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            font-size: 12px;
+            color: #555;
+        }
+        .flag.active {
+            background-color: var(--accent);
+            color: white;
+            font-weight: bold;
+            border-color: var(--accent);
+        }
+
+        /* IO Ports Visual */
+        .io-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        .port-block {
+            background-color: #252526;
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .port-title {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .pin-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+        }
+
+        .pin-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .led {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: var(--led-off);
+            border: 2px solid #111;
+            transition: background-color 0.1s;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        .led.on {
+            background-color: var(--led-on);
+            box-shadow: 0 0 8px var(--led-on), inset 0 0 2px rgba(255,255,255,0.5);
+        }
+
+        .pin-input {
+            margin-top: 5px;
+            cursor: pointer;
+        }
+        
+        .pin-input:disabled {
+            cursor: not-allowed;
+            opacity: 0.2;
+        }
+
+        .pin-label {
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+        
+        .console-log {
+            height: 150px;
+            flex-shrink: 0;
+            border-top: 1px solid var(--border);
+            background: #111;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-y: auto;
+            color: #ccc;
+        }
+        .log-err { color: #f48771; border-left: 3px solid #f48771; padding-left: 5px; }
+        .log-info { color: #4ec9b0; }
+        .console-flash { animation: errorFlash 0.5s; }
+
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <button id="btn-assemble" class="btn">Assemble & Reset</button>
+    <button id="btn-step" class="btn" disabled>Step</button>
+    <button id="btn-run" class="btn" disabled>Run (Auto)</button>
+    <button id="btn-stop" class="btn btn-danger" disabled>Stop</button>
+    
+    <div class="status-display">
+        <span id="status-state">State: IDLE</span>
+        <span id="status-pc">PC: 0x0000</span>
+        <span id="status-cycles">Cycles: 0</span>
+    </div>
+</div>
+
+<div class="main-container">
+    <!-- Left: Code -->
+    <div class="editor-section">
+        <div class="editor-container">
+            <div id="line-numbers" class="line-numbers">1</div>
+            <textarea id="code-editor" spellcheck="false">; Simple Input Example
+; PORTB Bit 0: Button (Input with Pullup)
+; PORTB Bit 7: LED (Output)
+
+.DEF temp = R16
+
+; Constants
+.EQU PORTB = 0x05
+.EQU DDRB  = 0x04
+.EQU PINB  = 0x03
+
+RESET:
+    ; 1. Configure LED (Bit 7) as Output
+    LDI temp, 0b10000000 
+    OUT DDRB, temp
+    
+    ; 2. Configure Button (Bit 0) as Input (Default 0 in DDRB)
+    ; 3. Enable Pull-up Resistor on Bit 0
+    ;    (Write 1 to PORTB while DDRB is 0)
+    SBI PORTB, 0
+
+LOOP:
+    ; Check Button State
+    ; Since Pullup is ON, default is HIGH (1).
+    ; Pushing button (Checking Box) grounds it to LOW (0).
+    
+    SBIS PINB, 0   ; Skip next instruction if Bit 0 is Set (High)
+    RJMP LED_OFF   ; Jump if Bit 0 is Cleared (Low/Pressed)
+    
+    ; Button Released (High) -> LED ON
+    SBI PORTB, 7
+    RJMP LOOP
+
+LED_OFF:
+    ; Button Pressed (Low) -> LED OFF
+    CBI PORTB, 7
+    RJMP LOOP
+</textarea>
+            <div id="execution-highlight" class="execution-line"></div>
+        </div>
+        <div class="console-log" id="console-output">
+            <div>> System Ready.</div>
+        </div>
+    </div>
+
+    <!-- Right: Simulation -->
+    <div class="sim-panel">
+        
+        <div class="panel-header">Status Register (SREG)</div>
+        <div class="flags-container">
+            <div class="flag" id="flag-I">I</div>
+            <div class="flag" id="flag-T">T</div>
+            <div class="flag" id="flag-H">H</div>
+            <div class="flag" id="flag-S">S</div>
+            <div class="flag" id="flag-V">V</div>
+            <div class="flag" id="flag-N">N</div>
+            <div class="flag" id="flag-Z">Z</div>
+            <div class="flag" id="flag-C">C</div>
+        </div>
+
+        <div class="panel-header">General Purpose Registers</div>
+        <div class="register-grid" id="registers-container">
+            <!-- Generated via JS -->
+        </div>
+
+        <div class="panel-header">Physical I/O Ports</div>
+        <div class="io-container">
+            <!-- PORT B -->
+            <div class="port-block">
+                <div class="port-title">
+                    <span>PORT B (I/O: 0x05)</span>
+                    <span id="val-portb">0x00</span>
+                </div>
+                <div class="pin-row" id="pins-portb">
+                    <!-- Generated via JS -->
+                </div>
+            </div>
+
+            <!-- PORT A -->
+            <div class="port-block">
+                <div class="port-title">
+                    <span>PORT A (I/O: 0x02)</span>
+                    <span id="val-porta">0x00</span>
+                </div>
+                <div class="pin-row" id="pins-porta">
+                    <!-- Generated via JS -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+/**
+ * SIMPLE AVR SIMULATOR
+ * * Architecture:
+ * - 32 GP Registers (R0-R31)
+ * - PC (Program Counter)
+ * - SREG (Status Register)
+ * - Stack Pointer (SP)
+ * - Data Memory (SRAM) + IO Memory mapped
+ */
+
+// --- CONFIGURATION ---
+const IO_OFFSET = 0x20; // IO addresses are often accessed via offset in standard load/store, but OUT/IN use raw
+// Mapping some common addresses for the simulation visualization
+// ATmega2560 specific (simplified)
+// We will map IO Address 0x00-0x3F to Memory 0x20-0x5F
+const IO_PORTA = 0x02; 
+const IO_DDRA  = 0x01;
+const IO_PINA  = 0x00;
+
+const IO_PORTB = 0x05; 
+const IO_DDRB  = 0x04;
+const IO_PINB  = 0x03;
+
+// --- STATE ---
+const CPU = {
+    registers: new Uint8Array(32), // R0-R31
+    sram: new Uint8Array(4096),    // 4KB RAM (Includes IO mapping at bottom)
+    pc: 0,
+    sp: 0x10FF, // End of SRAM roughly
+    sreg: 0, // I T H S V N Z C (Bits 7-0)
+    
+    // Hardware Inputs (User checkboxes)
+    // Bitmask of active inputs (0-255)
+    inputs: {
+        portb: 0,
+        porta: 0
+    },
+
+    // Program Memory (Flash) - array of instruction objects
+    flash: [],
+    
+    // Label map for jump visualization
+    labels: {},
+
+    cycles: 0,
+    running: false,
+    animationId: null
+};
+
+// --- ASSEMBLER ---
+const MNEMONICS = [
+    'LDI', 'MOV', 'ADD', 'SUB', 'INC', 'DEC', 'AND', 'OR', 'EOR', 
+    'OUT', 'IN', 'SBI', 'CBI', 'SBIS', 'SBIC', 'RJMP', 'BREQ', 'BRNE', 'NOP', 'RCALL', 'RET'
+];
+
+function resetCPU() {
+    CPU.registers.fill(0);
+    CPU.sram.fill(0);
+    CPU.pc = 0;
+    CPU.sp = 0x10FF; // Default stack pointer for 2560 is usually end of RAM
+    CPU.sreg = 0;
+    CPU.cycles = 0;
+    CPU.running = false;
+    
+    // --- RESET INPUTS ---
+    CPU.inputs.porta = 0;
+    CPU.inputs.portb = 0;
+    
+    // Clear DOM checkboxes
+    const clearCheckboxes = (id, count) => {
+        for(let i=0; i<count; i++) {
+            const el = document.getElementById(`in-${id}-${i}`);
+            if(el) {
+                el.checked = false;
+                el.disabled = false; // Reset disabled state (will be re-eval'd by updateHardware)
+            }
+        }
+    };
+    clearCheckboxes('porta', 8);
+    clearCheckboxes('portb', 8);
+    // --------------------
+
+    if(CPU.animationId) cancelAnimationFrame(CPU.animationId);
+    
+    updateHardware(); // Sync initial hardware state
+    updateUI();
+    log("CPU Reset. PC at 0x0000. Inputs Cleared.");
+}
+
+function parseLine(line, index) {
+    // Remove comments
+    line = line.split(';')[0].trim();
+    if (!line) return null;
+
+    // Check for label
+    let label = null;
+    if (line.endsWith(':')) {
+        return { type: 'label', label: line.slice(0, -1) };
+    }
+    if (line.includes(':')) {
+        const parts = line.split(':');
+        label = parts[0].trim();
+        line = parts[1].trim(); // Remainder is instruction
+    }
+
+    // Tokenize
+    const tokens = line.replace(/,/g, ' ').split(/\s+/).filter(t => t.length > 0);
+    if (tokens.length === 0) {
+        return label ? { type: 'label', label: label } : null;
+    }
+
+    const opcode = tokens[0].toUpperCase();
+    const args = tokens.slice(1);
+
+    return {
+        type: 'instruction',
+        opcode: opcode,
+        args: args,
+        srcLine: index + 1,
+        label: label
+    };
+}
+
+function parseLiteral(str) {
+    if (!str) return 0;
+    str = str.trim();
+    
+    // Handle defines/constants
+    if (str.toUpperCase() === 'PORTB') return IO_PORTB;
+    if (str.toUpperCase() === 'DDRB') return IO_DDRB;
+    if (str.toUpperCase() === 'PINB') return IO_PINB;
+    if (str.toUpperCase() === 'PORTA') return IO_PORTA;
+    if (str.toUpperCase() === 'DDRA') return IO_DDRA;
+    if (str.toUpperCase() === 'PINA') return IO_PINA;
+    
+    // Handle numeric
+    if (str.startsWith('0x') || str.startsWith('0X')) return parseInt(str, 16);
+    if (str.startsWith('0b') || str.startsWith('0B')) return parseInt(str.slice(2), 2);
+    if (str.startsWith('$')) return parseInt(str.slice(1), 16);
+    return parseInt(str, 10);
+}
+
+function parseRegister(str) {
+    if (!str) return 0;
+    str = str.toUpperCase();
+    if (str.startsWith('R')) {
+        return parseInt(str.slice(1), 10);
+    }
+    return 0;
+}
+
+function assemble() {
+    const source = document.getElementById('code-editor').value;
+    const lines = source.split('\n');
+    const instructions = [];
+    const labelMap = {};
+    const constants = {};
+
+    let programCounter = 0;
+
+    // Pass 1: Labels and Constants
+    lines.forEach((line, idx) => {
+        const clean = line.split(';')[0].trim();
+        if (!clean) return;
+
+        if (clean.toUpperCase().startsWith('.DEF')) {
+            // .DEF name = Rxx
+            const parts = clean.replace(/=/g, ' ').split(/\s+/);
+            if (parts.length >= 3) constants[parts[1]] = parts[2]; 
+            return;
+        }
+        if (clean.toUpperCase().startsWith('.EQU')) {
+            const parts = clean.replace(/=/g, ' ').split(/\s+/);
+            if (parts.length >= 3) constants[parts[1]] = parts[2];
+            return;
+        }
+        
+        const parsed = parseLine(line, idx);
+        if (!parsed) return;
+
+        if (parsed.label) {
+            labelMap[parsed.label] = programCounter;
+        }
+        if (parsed.type === 'instruction') {
+            programCounter++;
+        }
+    });
+
+    // Pass 2: Generate Code
+    resetCPU();
+    let errors = [];
+
+    const resolveArg = (arg) => {
+        if (constants[arg]) arg = constants[arg]; // Replace aliases
+        return arg;
+    }
+
+    lines.forEach((line, idx) => {
+        const clean = line.split(';')[0].trim();
+        if (!clean) return;
+        if (clean.toUpperCase().startsWith('.DEF')) return; 
+        if (clean.toUpperCase().startsWith('.EQU')) return;
+
+        const parsed = parseLine(line, idx);
+        if (!parsed || parsed.type !== 'instruction') return;
+
+        const resolvedArgs = parsed.args.map(resolveArg);
+
+        const instr = {
+            opcode: parsed.opcode,
+            args: resolvedArgs,
+            line: parsed.srcLine,
+            op1: 0,
+            op2: 0
+        };
+
+        try {
+            switch (parsed.opcode) {
+                case 'LDI': 
+                    instr.op1 = parseRegister(resolvedArgs[0]); // Rd
+                    instr.op2 = parseLiteral(resolvedArgs[1]);  // K
+                    break;
+                case 'ADD':
+                case 'SUB':
+                case 'AND':
+                case 'OR':
+                case 'EOR':
+                case 'MOV': 
+                    instr.op1 = parseRegister(resolvedArgs[0]); // Rd
+                    instr.op2 = parseRegister(resolvedArgs[1]); // Rr
+                    break;
+                case 'INC':
+                case 'DEC':
+                    instr.op1 = parseRegister(resolvedArgs[0]);
+                    break;
+                case 'OUT': // OUT IO_Addr, Rr
+                    instr.op1 = parseLiteral(resolvedArgs[0]);  // IO Addr
+                    instr.op2 = parseRegister(resolvedArgs[1]); // Rr
+                    break;
+                case 'IN': // IN Rd, IO_Addr
+                    instr.op1 = parseRegister(resolvedArgs[0]); // Rd
+                    instr.op2 = parseLiteral(resolvedArgs[1]);  // IO Addr
+                    break;
+                case 'SBI': // SBI IO_Addr, bit
+                case 'CBI': // CBI IO_Addr, bit
+                case 'SBIS': // SBIS IO_Addr, bit
+                case 'SBIC': // SBIC IO_Addr, bit
+                    instr.op1 = parseLiteral(resolvedArgs[0]); // IO Addr
+                    instr.op2 = parseLiteral(resolvedArgs[1]); // bit
+                    break;
+                case 'RJMP':
+                case 'RCALL':
+                case 'BREQ':
+                case 'BRNE':
+                    const target = resolvedArgs[0];
+                    if (labelMap[target] !== undefined) {
+                        instr.op2 = labelMap[target] - instructions.length - 1; 
+                    } else {
+                        throw new Error(`Unknown label: ${target}`);
+                    }
+                    break;
+                case 'RET':
+                case 'NOP':
+                    break;
+                default:
+                    throw new Error(`Unsupported opcode: ${parsed.opcode}`);
+            }
+        } catch (e) {
+            errors.push(`Line ${parsed.srcLine}: ${e.message}`);
+        }
+
+        instructions.push(instr);
+    });
+
+    if (errors.length > 0) {
+        log("Assembly Failed:", true);
+        errors.forEach(e => log(e, true));
+        const c = document.getElementById('console-output');
+        c.classList.remove('console-flash');
+        void c.offsetWidth;
+        c.classList.add('console-flash');
+        return false;
+    }
+
+    CPU.flash = instructions;
+    log(`Assembled ${instructions.length} instructions successfully.`);
+    
+    document.getElementById('btn-step').disabled = false;
+    document.getElementById('btn-run').disabled = false;
+    document.getElementById('btn-stop').disabled = true;
+    
+    updateUI();
+    return true;
+}
+
+// --- EMULATION ---
+
+function updateFlags(res) {
+    const R = res & 0xFF;
+    let sreg = CPU.sreg;
+    // Z Flag
+    if (R === 0) sreg |= 2; else sreg &= ~2;
+    // N Flag
+    if (R & 0x80) sreg |= 4; else sreg &= ~4;
+    CPU.sreg = sreg;
+}
+
+// Calculates PIN register values based on DDR, PORT and External Inputs
+function updateHardware() {
+    // HARDWARE LOGIC FIX: "Smart Buttons"
+    // 1. Iterate Pins for PORT A
+    let pinA = 0;
+    const ddrA = CPU.sram[IO_DDRA + IO_OFFSET];
+    const portA = CPU.sram[IO_PORTA + IO_OFFSET];
+    const inputA = CPU.inputs.porta;
+
+    for(let i=0; i<8; i++) {
+        const mask = 1 << i;
+        if (ddrA & mask) {
+            // OUTPUT Mode: PIN reflects PORT state (driven by CPU)
+            if (portA & mask) pinA |= mask;
+        } else {
+            // INPUT Mode:
+            const pullup = (portA & mask);
+            const checked = (inputA & mask);
+            
+            if (pullup) {
+                // Pull-up Enabled (Default High).
+                // Checkbox behaves as "Short to Ground" (Active Low).
+                // Checked = 0, Unchecked = 1.
+                if (!checked) pinA |= mask;
+            } else {
+                // No Pull-up (High-Z / Low).
+                // Checkbox behaves as "Short to VCC" (Active High).
+                // Checked = 1, Unchecked = 0.
+                if (checked) pinA |= mask;
+            }
+        }
+    }
+    CPU.sram[IO_PINA + IO_OFFSET] = pinA;
+
+    // 2. Iterate Pins for PORT B
+    let pinB = 0;
+    const ddrB = CPU.sram[IO_DDRB + IO_OFFSET];
+    const portB = CPU.sram[IO_PORTB + IO_OFFSET];
+    const inputB = CPU.inputs.portb;
+
+    for(let i=0; i<8; i++) {
+        const mask = 1 << i;
+        if (ddrB & mask) {
+            // OUTPUT Mode
+            if (portB & mask) pinB |= mask;
+        } else {
+            // INPUT Mode
+            const pullup = (portB & mask);
+            const checked = (inputB & mask);
+            
+            if (pullup) {
+                // Pull-up Enabled: Active Low Button (GND)
+                // Checked -> 0. Unchecked -> 1.
+                if (!checked) pinB |= mask;
+            } else {
+                // No Pull-up: Active High Button (VCC)
+                // Checked -> 1. Unchecked -> 0.
+                if (checked) pinB |= mask;
+            }
+        }
+    }
+    CPU.sram[IO_PINB + IO_OFFSET] = pinB;
+}
+
+function step() {
+    if (CPU.pc >= CPU.flash.length) {
+        log("End of program.");
+        stop();
+        return;
+    }
+
+    // Update Hardware State before executing instruction
+    // This ensures IN instructions read fresh PIN values
+    updateHardware();
+
+    const instr = CPU.flash[CPU.pc];
+    let nextPC = CPU.pc + 1;
+    let cycles = 1;
+
+    try {
+        switch (instr.opcode) {
+            case 'LDI':
+                CPU.registers[instr.op1] = instr.op2;
+                break;
+            case 'MOV':
+                CPU.registers[instr.op1] = CPU.registers[instr.op2];
+                break;
+            case 'ADD':
+                var res = CPU.registers[instr.op1] + CPU.registers[instr.op2];
+                CPU.registers[instr.op1] = res & 0xFF;
+                updateFlags(CPU.registers[instr.op1]);
+                break;
+            case 'SUB':
+                var res = CPU.registers[instr.op1] - CPU.registers[instr.op2];
+                CPU.registers[instr.op1] = res & 0xFF;
+                updateFlags(CPU.registers[instr.op1]);
+                break;
+            case 'INC':
+                CPU.registers[instr.op1] = (CPU.registers[instr.op1] + 1) & 0xFF;
+                updateFlags(CPU.registers[instr.op1]);
+                break;
+            case 'DEC':
+                CPU.registers[instr.op1] = (CPU.registers[instr.op1] - 1) & 0xFF;
+                updateFlags(CPU.registers[instr.op1]);
+                break;
+            case 'OUT': 
+                CPU.sram[instr.op1 + IO_OFFSET] = CPU.registers[instr.op2];
+                break;
+            case 'IN': 
+                CPU.registers[instr.op1] = CPU.sram[instr.op2 + IO_OFFSET];
+                break;
+            case 'SBI': 
+                CPU.sram[instr.op1 + IO_OFFSET] |= (1 << instr.op2);
+                cycles = 2;
+                break;
+            case 'CBI': 
+                CPU.sram[instr.op1 + IO_OFFSET] &= ~(1 << instr.op2);
+                cycles = 2;
+                break;
+            case 'SBIS': // Skip if Bit in IO Register is Set
+                var val = CPU.sram[instr.op1 + IO_OFFSET];
+                if (val & (1 << instr.op2)) {
+                    nextPC++; // Skip next instruction
+                    cycles = 2; 
+                } else {
+                    cycles = 1;
+                }
+                break;
+            case 'SBIC': // Skip if Bit in IO Register is Cleared
+                var val = CPU.sram[instr.op1 + IO_OFFSET];
+                if (!(val & (1 << instr.op2))) {
+                    nextPC++; 
+                    cycles = 2; 
+                } else {
+                    cycles = 1;
+                }
+                break;
+            case 'RJMP':
+                nextPC = CPU.pc + 1 + instr.op2;
+                cycles = 2;
+                break;
+            case 'RCALL':
+                CPU.sram[CPU.sp] = (nextPC >> 8) & 0xFF;
+                CPU.sp--;
+                CPU.sram[CPU.sp] = nextPC & 0xFF;
+                CPU.sp--;
+                nextPC = CPU.pc + 1 + instr.op2;
+                cycles = 3;
+                break;
+            case 'RET':
+                CPU.sp++;
+                var low = CPU.sram[CPU.sp];
+                CPU.sp++;
+                var high = CPU.sram[CPU.sp];
+                nextPC = (high << 8) | low;
+                cycles = 4;
+                break;
+            case 'BREQ':
+                if (CPU.sreg & 2) { 
+                    nextPC = CPU.pc + 1 + instr.op2;
+                    cycles = 2;
+                }
+                break;
+            case 'BRNE':
+                if (!(CPU.sreg & 2)) { 
+                    nextPC = CPU.pc + 1 + instr.op2;
+                    cycles = 2;
+                }
+                break;
+            case 'NOP':
+                break;
+        }
+    } catch (e) {
+        log("Runtime Error: " + e.message, true);
+        stop();
+        return;
+    }
+
+    CPU.pc = nextPC;
+    CPU.cycles += cycles;
+    updateUI();
+}
+
+function runLoop() {
+    if (!CPU.running) return;
+    
+    for(let i=0; i<20; i++) {
+        if (!CPU.running) break;
+        step();
+    }
+    
+    if (CPU.running) {
+        CPU.animationId = requestAnimationFrame(runLoop);
+    }
+}
+
+function start() {
+    if (CPU.running) return;
+    CPU.running = true;
+    document.getElementById('btn-step').disabled = true;
+    document.getElementById('btn-run').disabled = true;
+    document.getElementById('btn-stop').disabled = false;
+    runLoop();
+}
+
+function stop() {
+    CPU.running = false;
+    cancelAnimationFrame(CPU.animationId);
+    document.getElementById('btn-step').disabled = false;
+    document.getElementById('btn-run').disabled = false;
+    document.getElementById('btn-stop').disabled = true;
+    document.getElementById('status-state').textContent = "State: PAUSED";
+}
+
+// --- UI RENDERING ---
+
+function initUI() {
+    // Create Register Grid
+    const regContainer = document.getElementById('registers-container');
+    for(let i=0; i<32; i++) {
+        const div = document.createElement('div');
+        div.className = 'reg-box';
+        div.innerHTML = `
+            <span class="reg-name">R${i}</span>
+            <span class="reg-val" id="reg-${i}">00</span>
+        `;
+        regContainer.appendChild(div);
+    }
+
+    // Create IO Port Pins
+    createPortPins('portb', 8);
+    createPortPins('porta', 8);
+
+    // Line Numbers
+    const editor = document.getElementById('code-editor');
+    const lineNums = document.getElementById('line-numbers');
+    
+    const updateLineNumbers = () => {
+        const lines = editor.value.split('\n').length;
+        lineNums.innerHTML = Array(lines).fill(0).map((_, i) => i + 1).join('<br>');
+    };
+    
+    editor.addEventListener('input', updateLineNumbers);
+    editor.addEventListener('scroll', () => {
+        lineNums.scrollTop = editor.scrollTop;
+        highlightLine();
+    });
+    updateLineNumbers();
+
+    // Buttons
+    document.getElementById('btn-assemble').addEventListener('click', assemble);
+    document.getElementById('btn-step').addEventListener('click', step);
+    document.getElementById('btn-run').addEventListener('click', start);
+    document.getElementById('btn-stop').addEventListener('click', stop);
+}
+
+function createPortPins(id, count) {
+    const container = document.getElementById(`pins-${id}`);
+    for(let i=count-1; i>=0; i--) {
+        const div = document.createElement('div');
+        div.className = 'pin-wrapper';
+        div.innerHTML = `
+            <div class="led" id="led-${id}-${i}"></div>
+            <input type="checkbox" class="pin-input" id="in-${id}-${i}" title="External Input">
+            <span class="pin-label">${i}</span>
+        `;
+        container.appendChild(div);
+        
+        // Add listener
+        document.getElementById(`in-${id}-${i}`).addEventListener('change', (e) => {
+            const bit = i;
+            if (e.target.checked) {
+                CPU.inputs[id] |= (1 << bit);
+            } else {
+                CPU.inputs[id] &= ~(1 << bit);
+            }
+            // Trigger visual update immediately so LED reflects change if Input
+            updateHardware();
+            updateUI();
+        });
+    }
+}
+
+function updateUI() {
+    document.getElementById('status-pc').textContent = `PC: 0x${CPU.pc.toString(16).padStart(4, '0').toUpperCase()}`;
+    document.getElementById('status-cycles').textContent = `Cycles: ${CPU.cycles}`;
+    document.getElementById('status-state').textContent = `State: ${CPU.running ? 'RUNNING' : 'IDLE'}`;
+
+    for(let i=0; i<32; i++) {
+        const el = document.getElementById(`reg-${i}`);
+        const val = CPU.registers[i].toString(16).padStart(2, '0').toUpperCase();
+        if (el.textContent !== val) {
+            el.textContent = val;
+            el.parentElement.classList.remove('reg-changed');
+            void el.parentElement.offsetWidth; 
+            el.parentElement.classList.add('reg-changed');
+        }
+    }
+
+    const sreg = CPU.sreg;
+    const flags = ['C', 'Z', 'N', 'V', 'S', 'H', 'T', 'I'];
+    flags.forEach((f, i) => {
+        const el = document.getElementById(`flag-${f}`);
+        if ((sreg >> i) & 1) el.classList.add('active');
+        else el.classList.remove('active');
+    });
+
+    // Update Ports
+    updatePortView('portb', IO_PINB + IO_OFFSET, IO_DDRB + IO_OFFSET, IO_PORTB + IO_OFFSET);
+    updatePortView('porta', IO_PINA + IO_OFFSET, IO_DDRA + IO_OFFSET, IO_PORTA + IO_OFFSET);
+
+    highlightLine();
+}
+
+function updatePortView(id, pinAddr, ddrAddr, portAddr) {
+    // Visuals are driven by the calculated PIN register (SRAM),
+    // which combines Port Output + External Input + Pullups
+    const pinVal = CPU.sram[pinAddr];
+    const ddrVal = CPU.sram[ddrAddr];
+    const portVal = CPU.sram[portAddr];
+    
+    // Show hex value of the PIN register (what CPU reads)
+    document.getElementById(`val-${id}`).textContent = `0x${pinVal.toString(16).padStart(2, '0').toUpperCase()}`;
+    
+    for(let i=0; i<8; i++) {
+        const led = document.getElementById(`led-${id}-${i}`);
+        const input = document.getElementById(`in-${id}-${i}`);
+        
+        // Update LED (Simulates physical voltage on pin)
+        if ((pinVal >> i) & 1) led.classList.add('on');
+        else led.classList.remove('on');
+        
+        // Disable input checkbox if pin is Output
+        if ((ddrVal >> i) & 1) {
+            input.disabled = true;
+            input.title = "Disabled: Pin is configured as OUTPUT (DDR=1)";
+        } else {
+            input.disabled = false;
+            // Smart Tooltip Logic
+            if ((portVal >> i) & 1) {
+                // Pullup Enabled
+                input.title = "Active Low Switch (Short to GND). Checked=0, Unchecked=1";
+            } else {
+                // No Pullup
+                input.title = "Active High Switch (Short to VCC). Checked=1, Unchecked=0";
+            }
+        }
+    }
+}
+
+function highlightLine() {
+    const hl = document.getElementById('execution-highlight');
+    const editor = document.getElementById('code-editor');
+    const instr = CPU.flash[CPU.pc];
+    if (instr) {
+        hl.style.display = 'block';
+        const topPos = 10 + ((instr.line - 1) * 21) - editor.scrollTop;
+        hl.style.top = topPos + 'px';
+    } else {
+        hl.style.display = 'none';
+    }
+}
+
+function log(msg, isError = false) {
+    const c = document.getElementById('console-output');
+    const div = document.createElement('div');
+    div.textContent = `> ${msg}`;
+    if (isError) div.className = 'log-err';
+    else div.className = 'log-info';
+    c.appendChild(div);
+    c.scrollTop = c.scrollHeight;
+}
+
+// Init
+initUI();
+
+</script>
+</body>
+</html>
