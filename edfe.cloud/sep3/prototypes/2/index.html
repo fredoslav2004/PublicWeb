@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learnify - Bootstrap Edition</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bs-font-sans-serif: 'Nunito', sans-serif;
+            --game-green: #58cc02;
+            --game-green-shadow: #46a302;
+            --game-blue: #1cb0f6;
+            --game-blue-shadow: #1899d6;
+            --game-yellow: #ffc800;
+            --game-yellow-shadow: #d6a800;
+            --game-red: #ff4b4b;
+            --game-red-shadow: #d43131;
+            --game-purple: #ce82ff;
+            --game-purple-shadow: #a568cc;
+            --game-gray: #e5e5e5;
+            --game-gray-shadow: #afafaf;
+            --game-bg: #ffffff;
+        }
+
+        body {
+            font-family: var(--bs-font-sans-serif);
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+
+        /* --- Gamified Bootstrap Overrides --- */
+        
+        .btn {
+            border: 0;
+            border-radius: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 12px 24px;
+            position: relative;
+            transition: filter 0.1s;
+            margin-bottom: 4px;
+        }
+
+        .btn-primary {
+            background-color: var(--game-green);
+            box-shadow: 0 4px 0 var(--game-green-shadow);
+        }
+        .btn-primary:hover { background-color: #61e002; color: white; filter: brightness(1.1); }
+        .btn-primary:active { transform: translateY(4px); box-shadow: none; margin-bottom: 0; margin-top: 4px; }
+
+        .btn-danger {
+            background-color: var(--game-red);
+            box-shadow: 0 4px 0 var(--game-red-shadow);
+        }
+        .btn-danger:hover { filter: brightness(1.1); }
+        .btn-danger:active { transform: translateY(4px); box-shadow: none; margin-bottom: 0; margin-top: 4px; }
+
+        .btn-outline-secondary {
+            background: white;
+            border: 2px solid var(--game-gray);
+            box-shadow: 0 4px 0 var(--game-gray);
+            color: #777;
+        }
+        .btn-outline-secondary:hover { background: #f8f9fa; border-color: var(--game-gray); color: #777; }
+        .btn-outline-secondary:active { transform: translateY(4px); box-shadow: none; margin-bottom: 0; margin-top: 4px; }
+
+        /* Navigation Styling */
+        .sidebar {
+            width: 256px; 
+            border-right: 2px solid var(--game-gray);
+            z-index: 1030;
+            padding: 24px 16px;
+        }
+
+        .nav-btn {
+            text-align: left;
+            background: transparent;
+            color: #777;
+            border: 2px solid transparent;
+            box-shadow: none;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            padding: 12px 16px;
+        }
+        .nav-btn:hover { background: #f7f7f7; }
+        .nav-btn.active {
+            background: #ddfffc;
+            color: var(--game-blue);
+            border: 2px solid #84d8ff;
+        }
+        .nav-btn.active i { color: var(--game-blue); }
+        .nav-btn i { width: 32px; text-align: center; font-size: 1.25rem; }
+
+        /* Course Cards */
+        .card-course {
+            border: 2px solid var(--game-gray);
+            border-radius: 16px;
+            box-shadow: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card-course:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 10px 0 rgba(0,0,0,0.05); 
+            border-color: var(--course-color, var(--game-gray));
+        }
+        .card-course:active { transform: translateY(0); box-shadow: none; }
+        
+        /* Mobile Nav */
+        .mobile-nav {
+            border-top: 2px solid var(--game-gray);
+            z-index: 1040;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Progress Bar */
+        .progress { height: 16px; border-radius: 8px; background-color: #e5e5e5; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .progress-bar { background-color: var(--game-green); border-radius: 8px; transition: width 0.5s ease; }
+
+        /* App Container */
+        #app-main { 
+            height: 100vh; 
+            overflow-y: auto; 
+            width: 100%;
+            transition: margin-left 0.2s; /* Smooth transition if resizing */
+        }
+
+        /* CRITICAL LAYOUT FIX: 
+           On desktop, if the sidebar is present, we push main content 256px to the right. 
+           We toggle the 'has-sidebar' class via JS to control this.
+        */
+        @media (min-width: 768px) {
+            #app-main.has-sidebar {
+                margin-left: 256px;
+                width: calc(100% - 256px);
+            }
+        }
+        
+        .content-wrapper { max-width: 1024px; } 
+
+        /* Colors */
+        .bg-blue-100 { background-color: #dbeafe; }
+        .text-blue-600 { color: #2563eb; }
+        .border-blue-200 { border-color: #bfdbfe !important; }
+        
+        .bg-yellow-100 { background-color: #fef9c3; }
+        .text-yellow-600 { color: #ca8a04; }
+        .border-yellow-200 { border-color: #fde047 !important; }
+
+        .bg-pink-100 { background-color: #fce7f3; }
+        .text-pink-600 { color: #db2777; }
+        .border-pink-200 { border-color: #fbcfe8 !important; }
+
+        .bg-purple-100 { background-color: #f3e8ff; }
+        .text-purple-600 { color: #9333ea; }
+        .border-purple-200 { border-color: #e9d5ff !important; }
+        
+        .bg-green-100 { background-color: #dcfce7; }
+        .text-green-600 { color: #16a34a; }
+        .border-green-200 { border-color: #bbf7d0 !important; }
+        
+        .bg-red-100 { background-color: #fee2e2; }
+        .text-red-600 { color: #dc2626; }
+        .border-red-200 { border-color: #fecaca !important; }
+
+    </style>
+</head>
+<body class="d-flex">
+
+    <!-- Sidebar (Desktop) -->
+    <aside class="sidebar d-none d-md-flex flex-column bg-white position-fixed h-100 start-0 top-0">
+        <h1 class="text-success fw-bolder fs-3 px-3 mb-5 tracking-tight">Learnify</h1>
+        <nav class="nav flex-column flex-grow-1">
+            <button onclick="router.navigate('home')" id="nav-home" class="btn nav-btn active">
+                <i class="fas fa-home"></i> Learn
+            </button>
+            <button onclick="router.navigate('profile')" id="nav-profile" class="btn nav-btn">
+                <i class="fas fa-user"></i> Profile
+            </button>
+            <button onclick="router.navigate('leaderboard')" id="nav-leaderboard" class="btn nav-btn">
+                <i class="fas fa-shield-alt"></i> Leaderboard
+            </button>
+            <button onclick="router.navigate('shop')" id="nav-shop" class="btn nav-btn">
+                <i class="fas fa-store"></i> Shop
+            </button>
+        </nav>
+        <div class="mt-auto px-2">
+            <button onclick="router.navigate('login')" class="btn btn-outline-secondary w-100 text-uppercase fs-6">Log Out</button>
+        </div>
+    </aside>
+
+    <!-- Mobile Nav (Bottom) -->
+    <nav class="mobile-nav d-md-none position-fixed bottom-0 w-100 bg-white d-flex justify-content-around py-3">
+        <button onclick="router.navigate('home')" class="btn btn-link text-secondary p-2"><i class="fas fa-home fa-xl"></i></button>
+        <button onclick="router.navigate('leaderboard')" class="btn btn-link text-secondary p-2"><i class="fas fa-shield-alt fa-xl"></i></button>
+        <button onclick="router.navigate('profile')" class="btn btn-link text-secondary p-2"><i class="fas fa-user fa-xl"></i></button>
+        <button onclick="router.navigate('login')" class="btn btn-link text-secondary p-2"><i class="fas fa-sign-out-alt fa-xl"></i></button>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app-main" class="flex-grow-1">
+        <div id="view-container" class="container-fluid p-4 p-md-5 content-wrapper mx-auto pb-5 mb-5">
+            <!-- Views injected here -->
+        </div>
+    </main>
+
+    <script>
+        // --- Data & State ---
+        const courses = [
+            // Computer Science Category
+            {
+                id: 'c1',
+                title: 'Intro to Python',
+                category: 'Computer Science',
+                icon: 'fa-brands fa-python',
+                colorClass: 'bg-blue-100 text-blue-600',
+                borderClass: 'border-blue-200',
+                steps: [
+                    { type: 'text', title: 'What is Python?', content: 'Python is a high-level, general-purpose programming language.' },
+                    { type: 'image', title: 'Python Logo', content: 'https://placehold.co/600x300/3b82f6/ffffff?text=Python+Logo+Visual' },
+                    { type: 'text', title: 'Variables', content: 'x = 5' }
+                ]
+            },
+            {
+                id: 'c_cs_2',
+                title: 'Data Structures',
+                category: 'Computer Science',
+                icon: 'fa-solid fa-database',
+                colorClass: 'bg-purple-100 text-purple-600',
+                borderClass: 'border-purple-200',
+                steps: [
+                    { type: 'text', title: 'Arrays', content: 'An array is a collection of items stored at contiguous memory locations.' }
+                ]
+            },
+            {
+                id: 'c_cs_3',
+                title: 'Web Development',
+                category: 'Computer Science',
+                icon: 'fa-solid fa-code',
+                colorClass: 'bg-green-100 text-green-600',
+                borderClass: 'border-green-200',
+                steps: [
+                    { type: 'text', title: 'HTML & CSS', content: 'The building blocks of the web.' }
+                ]
+            },
+            {
+                id: 'c_cs_4',
+                title: 'Algorithms 101',
+                category: 'Computer Science',
+                icon: 'fa-solid fa-calculator',
+                colorClass: 'bg-red-100 text-red-600',
+                borderClass: 'border-red-200',
+                steps: [
+                    { type: 'text', title: 'Sorting', content: 'Bubble sort is a simple sorting algorithm.' }
+                ]
+            },
+            
+            // Other Categories
+            {
+                id: 'c2',
+                title: 'Basic Spanish',
+                category: 'Languages',
+                icon: 'fa-solid fa-earth-americas',
+                colorClass: 'bg-yellow-100 text-yellow-600',
+                borderClass: 'border-yellow-200',
+                steps: [
+                    { type: 'text', title: 'Greetings', content: 'Hola means Hello!' },
+                    { type: 'image', title: 'Culture', content: 'https://placehold.co/600x300/fbbf24/ffffff?text=Spanish+Culture' }
+                ]
+            },
+            {
+                id: 'c3',
+                title: 'Art History 101',
+                category: 'Arts & Humanities',
+                icon: 'fa-solid fa-palette',
+                colorClass: 'bg-pink-100 text-pink-600',
+                borderClass: 'border-pink-200',
+                steps: [
+                    { type: 'text', title: 'The Renaissance', content: 'A period in European history marking the transition from the Middle Ages to modernity.' }
+                ]
+            },
+            {
+                id: 'c4',
+                title: 'Quantum Physics',
+                category: 'Science',
+                icon: 'fa-solid fa-atom',
+                colorClass: 'bg-purple-100 text-purple-600',
+                borderClass: 'border-purple-200',
+                steps: [
+                    { type: 'text', title: 'Atoms', content: 'Everything is made of atoms.' }
+                ]
+            }
+        ];
+
+        const state = {
+            currentView: 'home',
+            activeCourseId: null,
+            stepIndex: 0
+        };
+
+        // --- Router Logic ---
+        const router = {
+            container: document.getElementById('view-container'),
+            
+            navigate(view, params = null) {
+                state.currentView = view;
+                this.updateNavState(view);
+                
+                // Handle Layout Shifts
+                const sidebar = document.querySelector('aside');
+                const mobileNav = document.querySelector('.mobile-nav');
+                const appMain = document.getElementById('app-main');
+
+                if (view === 'login') {
+                    sidebar.classList.remove('d-md-flex');
+                    mobileNav.classList.add('d-none');
+                    appMain.classList.remove('has-sidebar'); // Remove layout shift
+                    
+                    document.body.style.backgroundColor = '#ffffff'; // Clean bg
+                    this.renderLogin();
+                } else {
+                    sidebar.classList.add('d-md-flex');
+                    mobileNav.classList.remove('d-none');
+                    appMain.classList.add('has-sidebar'); // Apply layout shift
+                    
+                    document.body.style.backgroundColor = ''; // Default bg
+                    
+                    if(view === 'home') this.renderHome();
+                    else if(view === 'course') this.renderCourse(params);
+                    else if(view === 'profile') this.renderProfile();
+                    else this.renderPlaceholder(view);
+                }
+            },
+
+            updateNavState(activeView) {
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                const btn = document.getElementById(`nav-${activeView}`);
+                if(btn) btn.classList.add('active');
+            },
+
+            // --- Views ---
+
+            renderLogin() {
+                this.container.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+                        <div class="text-center" style="max-width: 380px; width: 100%;">
+                            <h1 class="text-success fw-bolder display-4 mb-3">Learnify</h1>
+                            <p class="text-muted mb-5 fs-5 fw-bold">The free, fun, and effective way to learn.</p>
+                            
+                            <div class="d-grid gap-3 mb-4">
+                                <input type="email" class="form-control form-control-lg bg-light border-2 rounded-4 fs-6 fw-bold text-secondary" placeholder="Email">
+                                <input type="password" class="form-control form-control-lg bg-light border-2 rounded-4 fs-6 fw-bold text-secondary" placeholder="Password">
+                            </div>
+
+                            <button onclick="router.navigate('home')" class="btn btn-primary w-100 fs-5 mb-4">LOG IN</button>
+                            
+                            <div class="border-top pt-4">
+                                <button class="btn btn-link text-primary fw-bold text-decoration-none text-uppercase" style="letter-spacing:1px;">Create Account</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderHome() {
+                // Group courses
+                const grouped = courses.reduce((acc, c) => {
+                    (acc[c.category] = acc[c.category] || []).push(c);
+                    return acc;
+                }, {});
+
+                let html = `<h2 class="fw-bolder text-secondary mb-5">Course Dashboard</h2>`;
+                
+                for (const [cat, items] of Object.entries(grouped)) {
+                    html += `<h5 class="fw-bolder text-secondary text-uppercase mt-5 mb-3 ps-1" style="letter-spacing:0.5px">${cat}</h5><div class="row g-3">`;
+                    items.forEach(c => {
+                        const bgClass = c.colorClass.split(' ').find(cls => cls.startsWith('bg-'));
+                        
+                        html += `
+                            <div class="col-md-6 col-lg-4">
+                                <div onclick="router.startCourse('${c.id}')" class="card card-course h-100 text-center bg-white ${c.borderClass}" style="--course-color: var(--game-gray);">
+                                    <div class="w-100 ${bgClass}" style="height: 10px;"></div>
+                                    <div class="p-4 d-flex flex-column align-items-center justify-content-center flex-grow-1">
+                                        <i class="${c.icon} fa-3x mb-4 ${c.colorClass.split(' ')[1]}"></i>
+                                        <h5 class="fw-bolder text-dark mb-1">${c.title}</h5>
+                                        <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">${c.steps.length} Steps</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                }
+                this.container.innerHTML = html;
+            },
+
+            renderCourse(id) {
+                const course = courses.find(c => c.id === id);
+                if (!course) return this.navigate('home');
+                
+                const step = course.steps[state.stepIndex];
+                const progress = ((state.stepIndex + 1) / course.steps.length) * 100;
+
+                this.container.innerHTML = `
+                    <div class="d-flex flex-column h-100 mx-auto" style="max-width: 800px;">
+                        <!-- Header -->
+                        <div class="d-flex align-items-center mb-5 pt-2">
+                            <button onclick="router.navigate('home')" class="btn btn-link text-secondary p-0 me-4"><i class="fas fa-times fa-2x"></i></button>
+                            <div class="progress w-100" style="height: 16px;">
+                                <div class="progress-bar" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="flex-grow-1 d-flex flex-column justify-content-center align-items-center">
+                            <h2 class="fw-bolder mb-5 text-center text-dark fs-1">${step.title}</h2>
+                            
+                            ${step.type === 'image' 
+                                ? `<div class="w-100 text-center mb-4"><img src="${step.content}" class="img-fluid rounded-4 border border-2" alt="visual" style="max-height:400px;"></div>` 
+                                : step.type === 'video'
+                                ? `<div class="ratio ratio-16x9 bg-dark rounded-4 border border-2 mb-4"><div class="d-flex align-items-center justify-content-center h-100"><i class="fas fa-play-circle text-white fa-4x"></i></div></div>`
+                                : `<div class="card w-100 border-2 rounded-4 p-5 text-center shadow-sm"><p class="fs-3 text-secondary mb-0 lh-base">${step.content}</p></div>`
+                            }
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="d-flex justify-content-between border-top pt-4 mt-4">
+                            <button onclick="router.prevStep()" class="btn btn-outline-secondary px-4 py-3 border-2" ${state.stepIndex === 0 ? 'disabled' : ''}>PREVIOUS</button>
+                            <button onclick="router.nextStep('${id}')" class="btn btn-primary px-5 py-3 text-white">
+                                ${state.stepIndex === course.steps.length - 1 ? 'FINISH' : 'NEXT'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderProfile() {
+                this.container.innerHTML = `
+                    <div class="text-center mt-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning text-white border border-4 border-white shadow mb-3" style="width: 120px; height: 120px; font-size: 3rem; font-weight: 800;">J</div>
+                        <h2 class="fw-bolder text-dark mb-1">John Doe</h2>
+                        <p class="text-muted fw-bold text-uppercase fs-6 mb-5">Joined August 2023</p>
+                        
+                        <div class="row justify-content-center g-4 mx-auto" style="max-width: 600px;">
+                            <div class="col-6">
+                                <div class="card border-2 rounded-4 p-3 h-100 d-flex flex-column align-items-center justify-content-center" style="border-color: var(--game-gray);">
+                                    <i class="fas fa-fire text-danger fa-2x mb-2"></i>
+                                    <h3 class="fw-bolder mb-0 fs-2">12</h3>
+                                    <small class="text-muted fw-bold text-uppercase mt-1">Day Streak</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card border-2 rounded-4 p-3 h-100 d-flex flex-column align-items-center justify-content-center" style="border-color: var(--game-gray);">
+                                    <i class="fas fa-bolt text-warning fa-2x mb-2"></i>
+                                    <h3 class="fw-bolder mb-0 fs-2">1450</h3>
+                                    <small class="text-muted fw-bold text-uppercase mt-1">Total XP</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderPlaceholder(title) {
+                this.container.innerHTML = `<div class="text-center mt-5 opacity-50"><i class="fas fa-tools fa-5x text-muted mb-4"></i><h2 class="fw-bolder text-muted text-uppercase display-6">${title}</h2><p class="fw-bold fs-5">Coming Soon</p></div>`;
+            },
+
+            // --- Actions ---
+            startCourse(id) {
+                state.activeCourseId = id;
+                state.stepIndex = 0;
+                this.navigate('course', id);
+            },
+            nextStep(id) {
+                const course = courses.find(c => c.id === id);
+                if (state.stepIndex < course.steps.length - 1) {
+                    state.stepIndex++;
+                    this.renderCourse(id);
+                } else {
+                    alert('Course Complete! +10 XP');
+                    this.navigate('home');
+                }
+            },
+            prevStep() {
+                if (state.stepIndex > 0) {
+                    state.stepIndex--;
+                    this.renderCourse(state.activeCourseId);
+                }
+            }
+        };
+
+        // Init
+        router.navigate('home');
+    </script>
+</body>
+</html>
