@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dansk Mester | Comprehensive Danish Course</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom scrollbar for sidebar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .badge-vocab { background-color: #dbeafe; color: #1e40af; }
+        .badge-grammar { background-color: #fce7f3; color: #9d174d; }
+        .badge-culture { background-color: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- ICONS ---
+        const Icons = {
+            Book: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+            CheckCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+            Lock: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+            Menu: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>,
+            ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
+            Award: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>,
+            RotateCcw: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>,
+            Play: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
+            Star: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        };
+
+        // --- COURSE CONTENT DATA ---
+        const courseData = [
+            {
+                id: "A0",
+                title: "A0: Introduction",
+                description: "Absolute basics. Pronunciation, alphabet, and survival phrases.",
+                modules: [
+                    {
+                        id: "a0-1",
+                        title: "The Danish Alphabet",
+                        category: "Vocab",
+                        content: [
+                            { type: "text", text: "Danish has 29 letters. It's the same as English plus three special vowels at the end: Æ, Ø, and Å." },
+                            { type: "vocab", items: [
+                                { da: "Æ / æ", en: "Like 'e' in 'bet' or 'a' in 'cat'" },
+                                { da: "Ø / ø", en: "Like 'u' in 'burn' or 'eu' in French 'bleu'" },
+                                { da: "Å / å", en: "Like 'o' in 'born'" }
+                            ]},
+                            { type: "note", text: "Tip: 'Å' was historically written as 'Aa'. You still see 'Aa' in old city names like Aalborg or Aarhus." }
+                        ],
+                        quiz: [
+                            { question: "Which letter sounds like the 'u' in 'burn'?", options: ["Æ", "Ø", "Å"], correct: 1 },
+                            { question: "How many letters are in the Danish alphabet?", options: ["26", "28", "29"], correct: 2 }
+                        ]
+                    },
+                    {
+                        id: "a0-2",
+                        title: "Pronunciation: The Soft D",
+                        category: "Culture",
+                        content: [
+                            { type: "text", text: "The 'Soft D' (blødt d) is notorious. It sounds like a soft 'th' in English 'the', but your tongue rests behind your bottom teeth." },
+                            { type: "vocab", items: [
+                                { da: "Mad", en: "Food (sounds like 'math' with a soft th)" },
+                                { da: "Gade", en: "Street" },
+                                { da: "Rød", en: "Red" }
+                            ]},
+                            { type: "text", text: "It is NEVER pronounced like a hard English 'D' unless it starts a word." }
+                        ],
+                        quiz: [
+                            { question: "Where does the tongue go for the soft D?", options: ["Roof of mouth", "Behind bottom teeth", "Between lips"], correct: 1 },
+                            { question: "Does 'Rød' end with a hard D sound?", options: ["Yes", "No"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "a0-3",
+                        title: "Numbers 0-20",
+                        category: "Vocab",
+                        content: [
+                            { type: "vocab", items: [
+                                { da: "Nul", en: "0" }, { da: "En/Et", en: "1" }, { da: "To", en: "2" },
+                                { da: "Tre", en: "3" }, { da: "Fire", en: "4" }, { da: "Fem", en: "5" },
+                                { da: "Seks", en: "6" }, { da: "Syv", en: "7" }, { da: "Otte", en: "8" },
+                                { da: "Ni", en: "9" }, { da: "Ti", en: "10" },
+                                { da: "Elleve", en: "11" }, { da: "Tolv", en: "12" }, { da: "Tretten", en: "13" },
+                                { da: "Fjorten", en: "14" }, { da: "Femten", en: "15" }, { da: "Seksten", en: "16" },
+                                { da: "Sytten", en: "17" }, { da: "Atten", en: "18" }, { da: "Nitten", en: "19" }, { da: "Tyve", en: "20" }
+                            ]},
+                            { type: "note", text: "Danish has two words for 'one': En (common gender) and Et (neuter gender)." }
+                        ],
+                        quiz: [
+                            { question: "What is '8' in Danish?", options: ["Otte", "Seks", "Ni"], correct: 0 },
+                            { question: "Translate: 'Tolv'", options: ["Ten", "Eleven", "Twelve"], correct: 2 }
+                        ]
+                    },
+                    {
+                        id: "a0-4",
+                        title: "Colors & Shapes",
+                        category: "Vocab",
+                        content: [
+                            { type: "text", text: "Let's add some color to your vocabulary." },
+                            { type: "vocab", items: [
+                                { da: "Rød", en: "Red" }, { da: "Blå", en: "Blue" },
+                                { da: "Grøn", en: "Green" }, { da: "Gul", en: "Yellow" },
+                                { da: "Sort", en: "Black" }, { da: "Hvid", en: "White" },
+                                { da: "En cirkel", en: "A circle" }, { da: "En firkant", en: "A square" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "What color is 'Gul'?", options: ["Green", "Gold", "Yellow"], correct: 2 },
+                            { question: "Translate 'Sort'", options: ["Sort", "Black", "White"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "a0-5",
+                        title: "Days of the Week",
+                        category: "Vocab",
+                        content: [
+                            { type: "text", text: "Days are not capitalized in Danish unless they start a sentence." },
+                            { type: "vocab", items: [
+                                { da: "Mandag", en: "Monday" }, { da: "Tirsdag", en: "Tuesday" },
+                                { da: "Onsdag", en: "Wednesday" }, { da: "Torsdag", en: "Thursday" },
+                                { da: "Fredag", en: "Friday" }, { da: "Lørdag", en: "Saturday" },
+                                { da: "Søndag", en: "Sunday" }, { da: "En uge", en: "A week" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "Which day comes after Torsdag?", options: ["Fredag", "Lørdag", "Onsdag"], correct: 0 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "A1",
+                title: "A1: Beginner",
+                description: "Basic grammar, family, home, and present tense.",
+                modules: [
+                    {
+                        id: "a1-1",
+                        title: "Greetings & Introduction",
+                        category: "Vocab",
+                        content: [
+                            { type: "text", text: "Essential phrases for meeting people." },
+                            { type: "vocab", items: [
+                                { da: "Hej", en: "Hello" },
+                                { da: "Godmorgen", en: "Good morning" },
+                                { da: "Hvad hedder du?", en: "What is your name?" },
+                                { da: "Jeg hedder...", en: "My name is..." },
+                                { da: "Hvordan har du det?", en: "How are you?" },
+                                { da: "Tak", en: "Thank you" },
+                                { da: "Selv tak", en: "You're welcome" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "How do you say 'My name is'?", options: ["Du hedder", "Jeg hedder", "Han hedder"], correct: 1 },
+                            { question: "Translate: 'Tak'", options: ["Please", "Thanks", "No"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "a1-2",
+                        title: "Nouns: En vs Et",
+                        category: "Grammar",
+                        content: [
+                            { type: "text", text: "Danish nouns have two genders: Common (En) and Neuter (Et). There is no strict rule, you have to memorize them. About 75% of words are 'En'." },
+                            { type: "vocab", items: [
+                                { da: "En bil", en: "A car" },
+                                { da: "Et hus", en: "A house" },
+                                { da: "En stol", en: "A chair" },
+                                { da: "Et bord", en: "A table" }
+                            ]},
+                            { type: "note", text: "To make it specific (The car), you attach the article to the end: Bilen (The car), Huset (The house)." }
+                        ],
+                        quiz: [
+                            { question: "If 'Hus' is an 'Et' word, how do you say 'The house'?", options: ["Husen", "Huset", "Et hus"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "a1-3",
+                        title: "Verb: At være (To be)",
+                        category: "Grammar",
+                        content: [
+                            { type: "text", text: "Danish verbs do NOT conjugate by person. 'Er' works for everyone." },
+                            { type: "vocab", items: [
+                                { da: "Jeg er", en: "I am" },
+                                { da: "Du er", en: "You are" },
+                                { da: "Han/hun er", en: "He/she is" },
+                                { da: "Vi er", en: "We are" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "What is 'We are' in Danish?", options: ["Vi ere", "Vi er", "Vi var"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "a1-4",
+                        title: "Family Members",
+                        category: "Vocab",
+                        content: [
+                            { type: "text", text: "Talking about family is very common." },
+                            { type: "vocab", items: [
+                                { da: "En mor", en: "A mother" }, { da: "En far", en: "A father" },
+                                { da: "En søster", en: "A sister" }, { da: "En bror", en: "A brother" },
+                                { da: "En datter", en: "A daughter" }, { da: "En søn", en: "A son" },
+                                { da: "En bedstemor", en: "A grandmother" }, { da: "En familie", en: "A family" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "Translate 'Brother'", options: ["Søster", "Bror", "Far"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "a1-5",
+                        title: "Food & Supermarket",
+                        category: "Vocab",
+                        content: [
+                            { type: "vocab", items: [
+                                { da: "Brød", en: "Bread" }, { da: "Mælk", en: "Milk" },
+                                { da: "Ost", en: "Cheese" }, { da: "Kød", en: "Meat" },
+                                { da: "Grøntsager", en: "Vegetables" }, { da: "Frugt", en: "Fruit" },
+                                { da: "Kylling", en: "Chicken" }, { da: "Et æble", en: "An apple" },
+                                { da: "En øl", en: "A beer" }, { da: "Vand", en: "Water" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "What is 'Ost'?", options: ["Bread", "Cheese", "Meat"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "a1-6",
+                        title: "Word Order: V2 Rule",
+                        category: "Grammar",
+                        content: [
+                            { type: "text", text: "CRITICAL RULE: The verb must always be the SECOND element in a main clause." },
+                            { type: "example", da: "Jeg [spiser] æblet i dag.", en: "I eat the apple today." },
+                            { type: "example", da: "I dag [spiser] jeg æblet.", en: "Today eat I the apple. (Correct Danish structure)" }
+                        ],
+                        quiz: [
+                            { question: "Which is correct?", options: ["I dag jeg spiser brød", "I dag spiser jeg brød"], correct: 1 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "A2",
+                title: "A2: Elementary",
+                description: "Past tense, adjectives, body parts, and weather.",
+                modules: [
+                    {
+                        id: "a2-1",
+                        title: "Past Tense (Datid)",
+                        category: "Grammar",
+                        content: [
+                            { type: "text", text: "Most verbs add -ede or -te in past tense. Irregular verbs change vowels." },
+                            { type: "vocab", items: [
+                                { da: "At lave -> lavede", en: "To make -> made" },
+                                { da: "At spise -> spiste", en: "To eat -> ate" },
+                                { da: "At gå -> gik", en: "To walk -> walked" },
+                                { da: "At drikke -> drak", en: "To drink -> drank" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "Past tense of 'at lave'?", options: ["lavte", "lavede", "lavet"], correct: 1 },
+                            { question: "Past tense of 'at spise'?", options: ["spisede", "spiste", "spos"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "a2-2",
+                        title: "The Body & Health",
+                        category: "Vocab",
+                        content: [
+                            { type: "vocab", items: [
+                                { da: "Et hoved", en: "A head" }, { da: "En mave", en: "A stomach" },
+                                { da: "Et ben", en: "A leg" }, { da: "En hånd", en: "A hand" },
+                                { da: "Øjne", en: "Eyes" }, { da: "Hår", en: "Hair" },
+                                { da: "Jeg er syg", en: "I am sick" }, { da: "Lægen", en: "The doctor" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "What is 'Et hoved'?", options: ["A hand", "A head", "A heart"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "a2-3",
+                        title: "Adjectives: Basics",
+                        category: "Grammar",
+                        content: [
+                            { type: "text", text: "Adjectives match the noun gender." },
+                            { type: "text", text: "1. En-words: No change (En stor bil)." },
+                            { type: "text", text: "2. Et-words: Add 't' (Et stort hus)." },
+                            { type: "text", text: "3. Plural: Add 'e' (Store huse)." },
+                            { type: "vocab", items: [
+                                { da: "Stor", en: "Big" },
+                                { da: "Lille", en: "Small" },
+                                { da: "Smuk", en: "Beautiful" },
+                                { da: "Dyr", en: "Expensive" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "How do you say 'A big house' (Hus is Et-word)?", options: ["Et stor hus", "Et stort hus", "Et store hus"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "a2-4",
+                        title: "Weather & Seasons",
+                        category: "Vocab",
+                        content: [
+                            { type: "text", text: "Danes love talking about the weather." },
+                            { type: "vocab", items: [
+                                { da: "Det regner", en: "It is raining" }, { da: "Solen skinner", en: "The sun is shining" },
+                                { da: "Det blæser", en: "It is windy" }, { da: "Det er koldt", en: "It is cold" },
+                                { da: "Sommer", en: "Summer" }, { da: "Vinter", en: "Winter" },
+                                { da: "Forår", en: "Spring" }, { da: "Efterår", en: "Autumn" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "Translate 'Det blæser'", options: ["It is snowing", "It is windy", "It is hot"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "a2-5",
+                        title: "Modal Verbs",
+                        category: "Grammar",
+                        content: [
+                            { type: "text", text: "Modals express necessity, will, or ability." },
+                            { type: "vocab", items: [
+                                { da: "Vil", en: "Want to / Will" },
+                                { da: "Skal", en: "Have to / Going to" },
+                                { da: "Kan", en: "Can" },
+                                { da: "Må", en: "May / Must" },
+                                { da: "Burde", en: "Should" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "Translate: 'I can swim'", options: ["Jeg må svømme", "Jeg kan svømme"], correct: 1 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "B1",
+                title: "B1: Intermediate",
+                description: "Complex sentences, feelings, technology, and opinions.",
+                modules: [
+                    {
+                        id: "b1-1",
+                        title: "Feelings & Opinions",
+                        category: "Vocab",
+                        content: [
+                            { type: "vocab", items: [
+                                { da: "Glad", en: "Happy" }, { da: "Ked af det", en: "Sad" },
+                                { da: "Vred", en: "Angry" }, { da: "Bange", en: "Afraid" },
+                                { da: "Jeg synes at...", en: "I think that... (Opinion)" },
+                                { da: "Jeg tror at...", en: "I believe/think that... (Prediction/Uncertainty)" },
+                                { da: "Enig", en: "Agreed" }
+                            ]},
+                            { type: "note", text: "Use 'Synes' when you have a personal experience/opinion. Use 'Tror' when guessing or predicting." }
+                        ],
+                        quiz: [
+                            { question: "If you tasted the food and think it's good, do you use Synes or Tror?", options: ["Tror", "Synes"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "b1-2",
+                        title: "Inversion: Da & Når",
+                        category: "Grammar",
+                        content: [
+                            { type: "text", text: "When a sentence starts with a time conjunction, the verb and subject swap places in the main clause." },
+                            { type: "example", da: "Da jeg var barn, [boede] jeg i Aarhus.", en: "When I was a child, [lived] I in Aarhus." },
+                            { type: "text", text: "'Da' = Single past event. 'Når' = Repeated event or Future." }
+                        ],
+                        quiz: [
+                            { question: "Which implies a single past event?", options: ["Når", "Da"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "b1-3",
+                        title: "Media & Technology",
+                        category: "Vocab",
+                        content: [
+                            { type: "vocab", items: [
+                                { da: "En computer", en: "A computer" }, { da: "En skærm", en: "A screen" },
+                                { da: "At downloade", en: "To download" }, { da: "Et password", en: "A password" },
+                                { da: "Sociale medier", en: "Social media" }, { da: "Nyheder", en: "News" },
+                                { da: "En avis", en: "A newspaper" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "Translate 'En skærm'", options: ["A mouse", "A screen", "A keyboard"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "b1-4",
+                        title: "Workplace Culture",
+                        category: "Culture",
+                        content: [
+                            { type: "text", text: "Danish work culture is flat (flad struktur). You usually say 'du' to your boss." },
+                            { type: "vocab", items: [
+                                { da: "En chef", en: "A boss" },
+                                { da: "Et møde", en: "A meeting" },
+                                { da: "Frokostpause", en: "Lunch break" },
+                                { da: "Barsel", en: "Maternity/Paternity leave" },
+                                { da: "Fyraften", en: "Time to get off work" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "What is 'Fyraften'?", options: ["Lunch time", "End of work day", "Hiring someone"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "b1-5",
+                        title: "Present Perfect (Førnutid)",
+                        category: "Grammar",
+                        content: [
+                            { type: "text", text: "Used for things that happened in the past but are relevant now. Formed with 'har' or 'er' + past participle." },
+                            { type: "vocab", items: [
+                                { da: "Jeg har spist", en: "I have eaten" },
+                                { da: "Han har købt en bil", en: "He has bought a car" },
+                                { da: "Hun er gået", en: "She has gone/left (Movement verbs often use 'er')" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "Translate: 'I have eaten'", options: ["Jeg spiste", "Jeg har spist"], correct: 1 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "B2",
+                title: "B2: Upper Intermediate",
+                description: "Abstract topics, idioms, politics, and advanced passive.",
+                modules: [
+                    {
+                        id: "b2-1",
+                        title: "S-Passive vs. Bliver-Passive",
+                        category: "Grammar",
+                        content: [
+                            { type: "text", text: "1. Bliver-passive: 'Huset bliver malet' (The house is being painted - Process)." },
+                            { type: "text", text: "2. S-passive: 'Huset males' (The house is painted - General rule/Fact/Newspaper headline)." }
+                        ],
+                        quiz: [
+                            { question: "Which passive is common in headlines and recipes?", options: ["Bliver-passive", "S-passive"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "b2-2",
+                        title: "Advanced Conjunctions",
+                        category: "Vocab",
+                        content: [
+                            { type: "vocab", items: [
+                                { da: "Medmindre", en: "Unless" },
+                                { da: "Selvom", en: "Even though" },
+                                { da: "Hvorvidt", en: "Whether" },
+                                { da: "Alligevel", en: "Nevertheless/Anyway" },
+                                { da: "Jo... des...", en: "The... the... (e.g., The sooner, the better)" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "Translate: 'Unless'", options: ["Hvorvidt", "Medmindre", "Selvom"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "b2-3",
+                        title: "Danish Idioms",
+                        category: "Culture",
+                        content: [
+                            { type: "text", text: "Idioms make you sound fluent." },
+                            { type: "vocab", items: [
+                                { da: "Ingen ko på isen", en: "No problem (Lit: No cow on the ice)" },
+                                { da: "At gå agurk", en: "To go crazy (Lit: To go cucumber)" },
+                                { da: "En bjørnetjeneste", en: "A disservice (Lit: A bear favor - help that makes things worse)" },
+                                { da: "Det blæser en halv pelikan", en: "It's extremely windy (Lit: Blowing half a pelican)" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "What does 'Ingen ko på isen' mean?", options: ["No cows allowed", "No problem", "It is cold"], correct: 1 }
+                        ]
+                    },
+                    {
+                        id: "b2-4",
+                        title: "Environment & Society",
+                        category: "Vocab",
+                        content: [
+                            { type: "vocab", items: [
+                                { da: "Miljøet", en: "The environment" },
+                                { da: "Bæredygtighed", en: "Sustainability" },
+                                { da: "Klimaforandringer", en: "Climate change" },
+                                { da: "Et samfund", en: "A society" },
+                                { da: "Velfærdsstaten", en: "The welfare state" },
+                                { da: "Skat", en: "Tax (also means 'Sweetheart')" }
+                            ]}
+                        ],
+                        quiz: [
+                            { question: "Translate 'Sustainability'", options: ["Samfund", "Bæredygtighed", "Miljø"], correct: 1 }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // --- COMPONENTS ---
+
+        const Badge = ({ category }) => {
+            let style = "badge-culture";
+            if (category === 'Vocab') style = "badge-vocab";
+            if (category === 'Grammar') style = "badge-grammar";
+            
+            return (
+                <span className={`text-xs px-2 py-1 rounded-full font-semibold border ${style} border-opacity-20`}>
+                    {category}
+                </span>
+            );
+        };
+
+        const Button = ({ children, onClick, variant = "primary", className = "", disabled = false }) => {
+            const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2";
+            const variants = {
+                primary: "bg-red-600 text-white hover:bg-red-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed",
+                secondary: "bg-white text-gray-800 border border-gray-200 hover:border-red-300 hover:text-red-600 shadow-sm",
+                outline: "border-2 border-red-600 text-red-600 hover:bg-red-50"
+            };
+            return (
+                <button onClick={onClick} disabled={disabled} className={`${baseStyle} ${variants[variant]} ${className}`}>
+                    {children}
+                </button>
+            );
+        };
+
+        const LessonView = ({ module, onComplete, onBack }) => {
+            const [step, setStep] = useState(0);
+            const [quizAnswers, setQuizAnswers] = useState({});
+            const [showResult, setShowResult] = useState(false);
+            const [feedback, setFeedback] = useState(null);
+
+            // Reset state when module changes
+            useEffect(() => {
+                setStep(0);
+                setQuizAnswers({});
+                setShowResult(false);
+                setFeedback(null);
+            }, [module]);
+
+            const handleQuizSelect = (qIndex, optionIndex) => {
+                setQuizAnswers(prev => ({ ...prev, [qIndex]: optionIndex }));
+            };
+
+            const checkAnswers = () => {
+                let correctCount = 0;
+                module.quiz.forEach((q, idx) => {
+                    if (quizAnswers[idx] === q.correct) correctCount++;
+                });
+                const passed = correctCount === module.quiz.length;
+                
+                setFeedback({
+                    passed,
+                    score: correctCount,
+                    total: module.quiz.length
+                });
+                setShowResult(true);
+            };
+
+            const finishModule = () => {
+                onComplete(module.id);
+            };
+
+            return (
+                <div className="bg-white rounded-xl shadow-lg p-6 max-w-3xl mx-auto fade-in min-h-[80vh] flex flex-col">
+                    <div className="flex items-center justify-between mb-6 border-b pb-4">
+                        <div className="flex items-center gap-3">
+                            <button onClick={onBack} className="text-gray-500 hover:text-red-600 flex items-center gap-1">
+                                <Icons.RotateCcw size={16} />
+                            </button>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-2xl font-bold text-gray-800">{module.title}</h2>
+                                    <Badge category={module.category} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex-grow space-y-8">
+                        {/* Content Section */}
+                        {!showResult && (
+                            <div className="space-y-6">
+                                {module.content.map((item, idx) => (
+                                    <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                        {item.type === 'text' && <p className="text-gray-700 leading-relaxed text-lg">{item.text}</p>}
+                                        
+                                        {item.type === 'example' && (
+                                            <div className="pl-4 border-l-4 border-red-400">
+                                                <p className="font-semibold text-gray-800 italic text-lg">{item.da}</p>
+                                                <p className="text-gray-600">{item.en}</p>
+                                            </div>
+                                        )}
+
+                                        {item.type === 'vocab' && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {item.items.map((v, vIdx) => (
+                                                    <div key={vIdx} className="flex justify-between items-center bg-white p-3 rounded border border-gray-100">
+                                                        <span className="font-bold text-red-700 text-lg">{v.da}</span>
+                                                        <span className="text-gray-500 text-sm text-right">{v.en}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {item.type === 'note' && (
+                                            <div className="bg-yellow-50 text-yellow-800 p-4 rounded-lg border border-yellow-100 text-sm flex gap-3 items-start">
+                                                <span className="text-xl">💡</span> <span className="mt-1">{item.text}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {/* Quiz Section */}
+                                <div className="mt-8 pt-8 border-t border-gray-200">
+                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <Icons.CheckCircle className="text-red-600"/> Knowledge Check
+                                    </h3>
+                                    <div className="space-y-6">
+                                        {module.quiz.map((q, qIdx) => (
+                                            <div key={qIdx} className="space-y-3">
+                                                <p className="font-medium text-gray-800 text-lg">{qIdx + 1}. {q.question}</p>
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                    {q.options.map((opt, oIdx) => (
+                                                        <button
+                                                            key={oIdx}
+                                                            onClick={() => handleQuizSelect(qIdx, oIdx)}
+                                                            className={`p-3 text-left rounded-lg border transition-all ${
+                                                                quizAnswers[qIdx] === oIdx 
+                                                                    ? 'bg-red-600 text-white border-red-600 shadow-md' 
+                                                                    : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'
+                                                            }`}
+                                                        >
+                                                            {opt}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Results Section */}
+                        {showResult && (
+                            <div className="text-center py-10 fade-in">
+                                {feedback.passed ? (
+                                    <div className="space-y-4">
+                                        <div className="inline-block p-4 bg-green-100 rounded-full text-green-600 mb-2">
+                                            <Icons.Award size={48} />
+                                        </div>
+                                        <h3 className="text-3xl font-bold text-gray-800">Godt gået! (Well done!)</h3>
+                                        <p className="text-gray-600">You scored {feedback.score}/{feedback.total}</p>
+                                        <div className="pt-4">
+                                            <Button onClick={finishModule} className="mx-auto w-48 justify-center">Continue</Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="inline-block p-4 bg-red-100 rounded-full text-red-600 mb-2">
+                                            <Icons.RotateCcw size={48} />
+                                        </div>
+                                        <h3 className="text-3xl font-bold text-gray-800">Prøv igen (Try again)</h3>
+                                        <p className="text-gray-600">You scored {feedback.score}/{feedback.total}. You need 100% to pass.</p>
+                                        <div className="pt-4">
+                                            <Button onClick={() => setShowResult(false)} variant="secondary" className="mx-auto w-48 justify-center">Review Answers</Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer Actions */}
+                    {!showResult && (
+                        <div className="mt-8 pt-4 border-t flex justify-end">
+                            <Button 
+                                onClick={checkAnswers} 
+                                disabled={Object.keys(quizAnswers).length !== module.quiz.length}
+                            >
+                                Check Answers
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const Dashboard = ({ completedModules, onSelectModule }) => {
+            const totalModules = courseData.reduce((acc, level) => acc + level.modules.length, 0);
+            const completedCount = completedModules.length;
+            
+            return (
+                <div className="fade-in">
+                    <div className="bg-gradient-to-r from-red-700 to-red-900 text-white p-8 rounded-xl shadow-lg mb-8">
+                        <h1 className="text-4xl font-bold mb-2">Dansk Mester</h1>
+                        <p className="opacity-90 mb-6">From beginner (A0) to fluency (B2)</p>
+                        
+                        <div className="bg-white/10 p-4 rounded-lg backdrop-blur-sm max-w-md">
+                            <div className="flex justify-between text-sm font-medium mb-2">
+                                <span>Total Progress</span>
+                                <span>{Math.round((completedCount / totalModules) * 100)}%</span>
+                            </div>
+                            <div className="w-full bg-black/20 rounded-full h-3">
+                                <div 
+                                    className="bg-white h-3 rounded-full transition-all duration-1000 relative" 
+                                    style={{ width: `${(completedCount / totalModules) * 100}%` }}
+                                >
+                                     <div className="absolute right-0 -top-1 w-5 h-5 bg-white rounded-full shadow-md transform translate-x-1/2"></div>
+                                </div>
+                            </div>
+                            <p className="text-xs mt-2 opacity-75">{completedCount} of {totalModules} modules completed</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        {courseData.map((level) => {
+                            const levelProgress = level.modules.filter(m => completedModules.includes(m.id)).length;
+                            const isCompleted = levelProgress === level.modules.length;
+                            
+                            return (
+                                <div key={level.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                    <div className="p-5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                                        <div>
+                                            <h2 className="text-xl font-bold text-gray-800">{level.title}</h2>
+                                            <p className="text-sm text-gray-500 mt-1">{level.description}</p>
+                                        </div>
+                                        {isCompleted ? 
+                                            <div className="bg-green-100 text-green-600 p-2 rounded-full"><Icons.CheckCircle size={24} /></div> :
+                                            <div className="text-xs font-bold text-gray-400 border border-gray-200 px-2 py-1 rounded">{levelProgress}/{level.modules.length}</div>
+                                        }
+                                    </div>
+                                    <div className="divide-y divide-gray-100">
+                                        {level.modules.map((module) => {
+                                            const isDone = completedModules.includes(module.id);
+                                            return (
+                                                <div 
+                                                    key={module.id} 
+                                                    onClick={() => onSelectModule(module)}
+                                                    className="p-4 md:p-5 flex items-center justify-between hover:bg-red-50 cursor-pointer transition-colors group"
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`p-3 rounded-full transition-colors ${isDone ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400 group-hover:bg-red-100 group-hover:text-red-600'}`}>
+                                                            {isDone ? <Icons.CheckCircle size={20}/> : <Icons.Play size={20}/>}
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <h3 className={`font-medium text-lg ${isDone ? 'text-gray-800' : 'text-gray-700'}`}>{module.title}</h3>
+                                                                <Badge category={module.category} />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <Icons.ChevronRight className="text-gray-300 group-hover:text-red-400 transform transition-transform group-hover:translate-x-1"/>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [view, setView] = useState('dashboard'); 
+            const [activeModule, setActiveModule] = useState(null);
+            const [completedModules, setCompletedModules] = useState([]);
+
+            // Init & Load persistence
+            useEffect(() => {
+                const saved = localStorage.getItem('danishCourseProgress');
+                if (saved) {
+                    try {
+                        setCompletedModules(JSON.parse(saved));
+                    } catch(e) {
+                        console.error("Failed to parse progress", e);
+                    }
+                }
+            }, []);
+
+            const handleModuleComplete = (moduleId) => {
+                if (!completedModules.includes(moduleId)) {
+                    const newCompleted = [...completedModules, moduleId];
+                    setCompletedModules(newCompleted);
+                    // Save to localStorage
+                    localStorage.setItem('danishCourseProgress', JSON.stringify(newCompleted));
+                }
+                setView('dashboard');
+                setActiveModule(null);
+                window.scrollTo(0,0);
+            };
+
+            const handleSelectModule = (module) => {
+                setActiveModule(module);
+                setView('lesson');
+                window.scrollTo(0,0);
+            };
+
+            const resetProgress = () => {
+                if(confirm("Are you sure you want to reset all progress? This cannot be undone.")) {
+                    localStorage.removeItem('danishCourseProgress');
+                    setCompletedModules([]);
+                    setView('dashboard');
+                    setActiveModule(null);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col md:flex-row max-w-7xl mx-auto bg-white shadow-2xl my-0 md:my-8 md:rounded-2xl overflow-hidden min-h-[90vh]">
+                    {/* Sidebar */}
+                    <aside className="w-full md:w-72 bg-gray-900 text-gray-300 flex-shrink-0 flex flex-col">
+                        <div className="p-6 border-b border-gray-800">
+                            <div className="flex items-center gap-3 font-bold text-white text-2xl">
+                                <span className="text-3xl">🇩🇰</span> 
+                                <div className="flex flex-col">
+                                    <span>Dansk Mester</span>
+                                    <span className="text-xs font-normal text-gray-500">Language Learning</span>
+                                </div>
+                            </div>
+                        </div>
+                        <nav className="p-4 space-y-2 flex-grow">
+                            <button 
+                                onClick={() => { setView('dashboard'); setActiveModule(null); }}
+                                className={`w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors font-medium ${view === 'dashboard' ? 'bg-gray-800 text-white shadow-lg' : 'hover:bg-gray-800'}`}
+                            >
+                                <Icons.Menu size={20} /> Course Map
+                            </button>
+                            
+                            <div className="mt-8 px-3">
+                                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Your Stats</div>
+                                <div className="bg-gray-800 rounded-lg p-4 space-y-3">
+                                    <div className="flex justify-between text-sm">
+                                        <span>Completed</span>
+                                        <span className="text-white font-bold">{completedModules.length}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span>Total Modules</span>
+                                        <span className="text-white font-bold">{courseData.reduce((acc, l) => acc + l.modules.length, 0)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                        <div className="p-6 border-t border-gray-800 bg-gray-900">
+                            <button onClick={resetProgress} className="text-xs text-gray-500 hover:text-red-400 flex items-center gap-2 w-full justify-center p-2 hover:bg-gray-800 rounded transition-colors">
+                                <Icons.RotateCcw size={14} /> Reset Progress
+                            </button>
+                        </div>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="flex-grow bg-gray-100 p-4 md:p-8 overflow-y-auto h-[90vh] md:h-auto">
+                        {view === 'dashboard' && (
+                            <Dashboard 
+                                completedModules={completedModules}
+                                onSelectModule={handleSelectModule}
+                            />
+                        )}
+                        {view === 'lesson' && activeModule && (
+                            <LessonView 
+                                module={activeModule} 
+                                onComplete={handleModuleComplete}
+                                onBack={() => setView('dashboard')}
+                            />
+                        )}
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
