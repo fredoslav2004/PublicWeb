@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVR Comparison & Branching Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .instruction-card {
+            transition: all 0.2s ease;
+        }
+        .instruction-card:hover {
+            transform: translateY(-2px);
+            border-color: #38bdf8;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen p-4 md:p-8 lg:p-12">
+
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- Header -->
+        <header class="mb-12 border-b border-slate-700 pb-6">
+            <h1 class="text-4xl font-bold text-white mb-2">AVR Comparison & Branching Logic</h1>
+            <p class="text-slate-400 text-lg">Reference for ATmega2560 / AVR Instruction Set. <span class="text-red-400 font-mono text-sm ml-2"> // Strict Architecture Rules</span></p>
+        </header>
+
+        <!-- Core Mechanism -->
+        <section class="mb-16 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                <h2 class="text-xl font-bold text-blue-400 mb-4 flex items-center">
+                    <span class="w-2 h-8 bg-blue-500 mr-3 rounded-sm"></span>
+                    The Mechanism
+                </h2>
+                <p class="mb-4 text-slate-300">
+                    Both <span class="mono text-yellow-400">CP</span> and <span class="mono text-yellow-400">CPI</span> perform a subtraction internally:
+                </p>
+                <div class="bg-black/50 p-4 rounded border border-slate-600 mb-4">
+                    <code class="mono text-green-400">Result = Operand1 - Operand2</code>
+                </div>
+                <p class="text-slate-300 text-sm">
+                    The result is <strong>discarded</strong>. Only the Status Register (SREG) flags are updated. The subsequent <span class="mono text-purple-400">BRxx</span> instruction inspects these flags to jump or fall through.
+                </p>
+            </div>
+
+            <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                <h2 class="text-xl font-bold text-orange-400 mb-4 flex items-center">
+                    <span class="w-2 h-8 bg-orange-500 mr-3 rounded-sm"></span>
+                    Hardware Constraints
+                </h2>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="mono text-yellow-400 font-bold w-16">CP</div>
+                        <div class="text-slate-300">
+                            <span class="block text-white font-semibold">Compare Registers</span>
+                            <code class="text-xs text-slate-400">cp Rd, Rr</code>
+                            <p class="text-sm mt-1">Works on <span class="text-green-400">ALL</span> registers (r0 - r31).</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start pt-4 border-t border-slate-700">
+                        <div class="mono text-yellow-400 font-bold w-16">CPI</div>
+                        <div class="text-slate-300">
+                            <span class="block text-white font-semibold">Compare Immediate</span>
+                            <code class="text-xs text-slate-400">cpi Rd, K</code>
+                            <p class="text-sm mt-1 text-red-300">⚠ Only works on High Registers (r16 - r31).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- The Decision Matrix -->
+        <section class="mb-16">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white">Branch Selection Matrix</h2>
+                <span class="text-sm text-slate-500 bg-slate-900 px-3 py-1 rounded border border-slate-700">Select context carefully</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Unsigned Column -->
+                <div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
+                    <div class="bg-indigo-900/30 p-4 border-b border-indigo-900/50">
+                        <h3 class="text-indigo-300 font-bold text-center uppercase tracking-wider">Unsigned (uint8_t)</h3>
+                        <p class="text-center text-indigo-400/60 text-xs mt-1">0 to 255</p>
+                    </div>
+                    <div class="p-0">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs text-slate-500 border-b border-slate-800">
+                                    <th class="p-4 font-medium">Condition</th>
+                                    <th class="p-4 font-medium">Instruction</th>
+                                    <th class="p-4 font-medium">Mnemonic</th>
+                                    <th class="p-4 font-medium">Flags</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-800">
+                                <tr class="hover:bg-slate-800/50">
+                                    <td class="p-4 mono text-slate-300">A < B</td>
+                                    <td class="p-4 mono text-yellow-400 font-bold">BRLO</td>
+                                    <td class="p-4 text-slate-400">Branch Lower</td>
+                                    <td class="p-4 mono text-xs text-slate-500">C=1</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50">
+                                    <td class="p-4 mono text-slate-300">A <= B</td>
+                                    <td class="p-4 mono text-yellow-400 font-bold">BRLS</td>
+                                    <td class="p-4 text-slate-400">Branch Lower/Same</td>
+                                    <td class="p-4 mono text-xs text-slate-500">C=1 | Z=1</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50">
+                                    <td class="p-4 mono text-slate-300">A >= B</td>
+                                    <td class="p-4 mono text-yellow-400 font-bold">BRSH</td>
+                                    <td class="p-4 text-slate-400">Branch Same/Higher</td>
+                                    <td class="p-4 mono text-xs text-slate-500">C=0</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50">
+                                    <td class="p-4 mono text-slate-300">A > B</td>
+                                    <td class="p-4 mono text-yellow-400 font-bold">BRHI</td>
+                                    <td class="p-4 text-slate-400">Branch Higher</td>
+                                    <td class="p-4 mono text-xs text-slate-500">C=0 & Z=0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-slate-950 p-4 border-t border-slate-800">
+                        <p class="text-xs text-slate-400">
+                            <span class="text-indigo-400 font-bold">Note:</span> BRLO is an alias for BRCS (Carry Set). BRSH is an alias for BRCC (Carry Clear). Use the aliases for readability.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Signed Column -->
+                <div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
+                    <div class="bg-emerald-900/30 p-4 border-b border-emerald-900/50">
+                        <h3 class="text-emerald-300 font-bold text-center uppercase tracking-wider">Signed (int8_t)</h3>
+                        <p class="text-center text-emerald-400/60 text-xs mt-1">-128 to +127</p>
+                    </div>
+                    <div class="p-0">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-xs text-slate-500 border-b border-slate-800">
+                                    <th class="p-4 font-medium">Condition</th>
+                                    <th class="p-4 font-medium">Instruction</th>
+                                    <th class="p-4 font-medium">Mnemonic</th>
+                                    <th class="p-4 font-medium">Flags</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-800">
+                                <tr class="hover:bg-slate-800/50">
+                                    <td class="p-4 mono text-slate-300">A < B</td>
+                                    <td class="p-4 mono text-pink-400 font-bold">BRLT</td>
+                                    <td class="p-4 text-slate-400">Branch Less Than</td>
+                                    <td class="p-4 mono text-xs text-slate-500">S=1</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50">
+                                    <td class="p-4 mono text-slate-300">A <= B</td>
+                                    <td class="p-4 mono text-pink-400 font-bold">BRLE</td>
+                                    <td class="p-4 text-slate-400">Branch Less/Equal</td>
+                                    <td class="p-4 mono text-xs text-slate-500">S=1 | Z=1</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50">
+                                    <td class="p-4 mono text-slate-300">A >= B</td>
+                                    <td class="p-4 mono text-pink-400 font-bold">BRGE</td>
+                                    <td class="p-4 text-slate-400">Branch Greater/Equal</td>
+                                    <td class="p-4 mono text-xs text-slate-500">S=0</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50">
+                                    <td class="p-4 mono text-slate-300">A > B</td>
+                                    <td class="p-4 mono text-pink-400 font-bold">BRGT</td>
+                                    <td class="p-4 text-slate-400">Branch Greater Than</td>
+                                    <td class="p-4 mono text-xs text-slate-500">S=0 & Z=0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-slate-950 p-4 border-t border-slate-800">
+                        <p class="text-xs text-slate-400">
+                            <span class="text-emerald-400 font-bold">Note:</span> The <strong class="text-slate-200">S</strong> (Signed) flag is <code class="mono">N XOR V</code>. It handles overflow logic automatically. Never use Carry logic for signed math.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 16-bit Section -->
+        <section class="mb-16">
+            <h2 class="text-xl font-bold text-white mb-6">Multi-Byte Comparison (16-bit / 32-bit)</h2>
+            <div class="bg-slate-900 p-6 rounded-lg border border-slate-700">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <p class="text-slate-300 mb-4">
+                            To compare 16-bit numbers (e.g., <span class="mono text-blue-300">r25:r24</span> vs <span class="mono text-blue-300">r19:r18</span>), you must chain instructions.
+                        </p>
+                        <ul class="list-disc list-inside text-slate-400 space-y-2 text-sm">
+                            <li><strong class="text-white">Step 1:</strong> Compare low bytes (LSB) using <code class="mono text-yellow-400">CP</code>.</li>
+                            <li><strong class="text-white">Step 2:</strong> Compare high bytes (MSB) using <code class="mono text-yellow-400">CPC</code> (Compare with Carry).</li>
+                            <li><strong class="text-white">Step 3:</strong> Branch based on the <strong>final</strong> result.</li>
+                        </ul>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute -top-3 left-4 bg-slate-800 px-2 text-xs text-slate-400 border border-slate-600 rounded">16-bit Compare Example</div>
+                        <pre class="bg-black p-4 rounded border border-slate-800 overflow-x-auto text-sm"><code class="language-asm">
+; Compare r25:r24 with r19:r18
+cp   r24, r18    ; Compare LSB
+cpc  r25, r19    ; Compare MSB + Previous Carry
+
+; Now branch based on the FULL 16-bit result
+brlo target_label ; Jump if (r25:r24) < (r19:r18)
+                        </code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Equality Section -->
+        <section class="mb-12">
+            <div class="bg-slate-800/50 p-6 rounded-lg border border-slate-700/50">
+                <h2 class="text-lg font-bold text-white mb-2">Equality Checks</h2>
+                <p class="text-slate-400 text-sm mb-4">Equality logic is identical for both Signed and Unsigned types. It relies solely on the Zero (Z) flag.</p>
+                <div class="grid grid-cols-2 gap-4 max-w-md">
+                    <div class="bg-slate-900 p-3 rounded border border-slate-700 text-center">
+                        <span class="block mono text-green-400 font-bold">BREQ</span>
+                        <span class="text-xs text-slate-500">Branch if Equal (Z=1)</span>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded border border-slate-700 text-center">
+                        <span class="block mono text-red-400 font-bold">BRNE</span>
+                        <span class="text-xs text-slate-500">Branch if Not Equal (Z=0)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+</body>
+</html>
