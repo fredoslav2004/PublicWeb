@@ -310,18 +310,29 @@
 
         // --- URL Preview Logic ---
         async function handleUrlPreview(url) {
+            // Fix common issue where users omit protocol:
+            // If it doesn't start with http/https and doesn't look like a relative path (starting with / or .),
+            // assume it's a domain and prepend https://
+            if (!url.match(/^https?:\/\//i) && !url.startsWith('/') && !url.startsWith('./')) {
+                url = 'https://' + url;
+            }
+
             showModal("Loading Preview", `Fetching notebook from: ${url}`, false);
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`);
+
+                // Diagnostic check for the reported issue
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.includes("text/html")) {
+                     throw new Error("Endpoint returned HTML instead of JSON. Check URL validity/CORS.");
+                }
+
                 const content = await response.json();
                 
                 closeModal();
                 loadNotebookContent(content);
                 showToast("Preview loaded from URL");
-                
-                // Disable auto-save when in preview mode to avoid overwriting local work?
-                // For this lite version, we will let it save, assuming user wants to work on it.
 
             } catch (err) {
                 console.error(err);
