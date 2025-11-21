@@ -44,7 +44,7 @@
             line-height: 1.5;
         }
 
-        .output-area {
+        .output-text {
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
             white-space: pre-wrap;
             word-wrap: break-word;
@@ -104,47 +104,94 @@
             opacity: 1;
             bottom: 50px;
         }
+
+        /* File Sidebar */
+        #file-sidebar {
+            position: fixed;
+            right: -300px;
+            top: 60px; /* Height of header roughly */
+            bottom: 0;
+            width: 300px;
+            background: white;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 40;
+            display: flex;
+            flex-direction: column;
+        }
+        #file-sidebar.open {
+            right: 0;
+        }
+
+        /* Matplotlib Canvas Overrides */
+        /* Ensure the plot fits within the cell */
+        .output-plot div {
+            max-width: 100% !important;
+            overflow-x: auto;
+            box-shadow: none !important; 
+        }
+        .output-plot canvas {
+            max-width: 100% !important;
+            height: auto !important;
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
     <!-- Sidebar / Header -->
-    <div class="bg-white border-b border-gray-200 p-4 flex justify-between items-center shadow-sm z-10">
+    <div class="bg-white border-b border-gray-200 p-4 flex justify-between items-center shadow-sm z-10 shrink-0 h-[70px]">
         <div class="flex items-center gap-3">
             <div class="bg-blue-600 text-white p-2 rounded-lg">
                 <i class="fa-brands fa-python text-xl"></i>
             </div>
             <div>
-                <h1 class="font-bold text-gray-800 text-lg">PyBrowser Lite</h1>
+                <h1 class="font-bold text-gray-800 text-lg leading-tight">PyBrowser Lite</h1>
                 <div class="text-xs text-gray-500 flex items-center gap-2">
                     <span id="system-status-dot" class="status-dot status-loading"></span>
-                    <span id="system-status-text">Initializing Python Environment...</span>
+                    <span id="system-status-text">Initializing...</span>
                 </div>
             </div>
         </div>
-        <div class="flex gap-2">
-             <button id="btn-upload" onclick="triggerUpload()" class="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Upload File to Virtual FS" disabled>
-                <i class="fa-solid fa-upload mr-1"></i> Upload File
+        <div class="flex gap-2 items-center">
+            <!-- Action Buttons -->
+             <button id="btn-upload" onclick="triggerUpload()" class="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Upload File" disabled>
+                <i class="fa-solid fa-upload"></i>
             </button>
             <input type="file" id="file-upload" class="hidden" onchange="handleFileUpload(this)">
 
+            <button onclick="toggleFileSidebar()" class="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors relative" title="Show Files">
+                <i class="fa-solid fa-folder"></i>
+                <span id="file-count-badge" class="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full hidden"></span>
+            </button>
+
+            <div class="h-6 w-px bg-gray-300 mx-1"></div>
+
             <button onclick="clearAll()" class="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded transition-colors" title="Reset Notebook">
-                <i class="fa-solid fa-trash-can"></i> Clear All
+                <i class="fa-solid fa-trash-can"></i>
             </button>
             <button onclick="addCell()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm font-medium transition-colors">
-                <i class="fa-solid fa-plus mr-1"></i> New Code Block
+                <i class="fa-solid fa-plus mr-1"></i> Cell
             </button>
+        </div>
+    </div>
+
+    <!-- File Sidebar -->
+    <div id="file-sidebar">
+        <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+            <h2 class="font-bold text-gray-700"><i class="fa-solid fa-hard-drive mr-2"></i>Files</h2>
+            <button onclick="toggleFileSidebar()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-2" id="file-list">
+            <div class="text-center text-gray-400 text-sm mt-10">No files found</div>
+        </div>
+        <div class="p-2 border-t border-gray-100 bg-gray-50 text-xs text-center text-gray-500">
+            Files stored in memory (Virtual FS)
         </div>
     </div>
 
     <!-- Main Content -->
-    <div id="notebook-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pb-20">
+    <div id="notebook-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pb-20 relative">
         <!-- Cells will be injected here -->
-    </div>
-
-    <!-- Footer Help -->
-    <div class="bg-gray-100 border-t text-center py-2 text-xs text-gray-500">
-        Running Pyodide v0.25.0 • Client-Side Execution • Shift+Enter to Run
     </div>
 
     <!-- Toast Notification -->
@@ -155,7 +202,7 @@
         <div class="notebook-cell bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden" data-id="">
             
             <!-- Toolbar -->
-            <div class="bg-gray-50 border-b border-gray-100 px-3 py-2 flex justify-between items-center">
+            <div class="bg-gray-50 border-b border-gray-100 px-3 py-2 flex justify-between items-center select-none">
                 <span class="text-xs font-mono text-gray-400 cell-index">In [ ]</span>
                 <div class="flex gap-2">
                     <button class="run-btn text-gray-500 hover:text-green-600 transition-colors p-1" title="Run (Shift+Enter)">
@@ -181,7 +228,12 @@
                 <div class="p-4 text-sm">
                     <div class="flex items-start gap-2">
                         <span class="text-xs font-mono text-red-400 mt-1 select-none output-label">Out:</span>
-                        <pre class="output-area flex-1 text-gray-700"></pre>
+                        <div class="flex-1 overflow-hidden">
+                            <!-- Matplotlib Plot Target -->
+                            <div class="output-plot mb-2"></div>
+                            <!-- Stdout Text -->
+                            <pre class="output-text text-gray-700"></pre>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -190,6 +242,19 @@
             <div class="loading-overlay absolute inset-0 bg-white/80 z-10 hidden flex items-center justify-center">
                 <div class="loader"></div>
             </div>
+        </div>
+    </template>
+
+    <template id="file-item-template">
+        <div class="flex items-center justify-between p-2 hover:bg-blue-50 rounded group transition-colors cursor-default">
+            <div class="flex items-center gap-2 overflow-hidden">
+                <i class="fa-regular fa-file-lines text-blue-400"></i>
+                <span class="text-sm text-gray-700 font-mono truncate file-name">data.csv</span>
+                <span class="text-xs text-gray-400 file-size"></span>
+            </div>
+            <button class="download-btn text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Download">
+                <i class="fa-solid fa-download"></i>
+            </button>
         </div>
     </template>
 
@@ -220,24 +285,32 @@
                 document.getElementById('system-status-text').innerText = 'Ready';
                 document.getElementById('system-status-text').className = 'text-green-600 font-medium';
                 
-                // Enable upload button
                 document.getElementById('btn-upload').disabled = false;
+
+                // Initial file scan
+                updateFileList();
 
                 // Load saved state or create default cell
                 loadState();
                 
             } catch (err) {
                 document.getElementById('system-status-dot').className = 'status-dot status-error';
-                document.getElementById('system-status-text').innerText = 'Error loading Python';
+                document.getElementById('system-status-text').innerText = 'Error';
                 console.error("Pyodide failed to load", err);
-                alert("Failed to load Python environment. Please check your internet connection.");
+                alert("Failed to load Python environment.");
             }
         }
 
         main();
 
-        // --- File Upload Logic ---
+        // --- File System Logic ---
         
+        function toggleFileSidebar() {
+            const sidebar = document.getElementById('file-sidebar');
+            sidebar.classList.toggle('open');
+            updateFileList();
+        }
+
         function triggerUpload() {
             document.getElementById('file-upload').click();
         }
@@ -253,25 +326,88 @@
                     const buffer = e.target.result;
                     const data = new Uint8Array(buffer);
                     
-                    // Write file to Pyodide's virtual file system
                     pyodide.FS.writeFile(file.name, data);
                     
-                    showToast(`File "${file.name}" uploaded successfully!`);
+                    showToast(`File "${file.name}" uploaded!`);
+                    updateFileList();
                     
-                    // If user uploads a CSV, they likely want pandas. 
-                    // We can optimistically preload it, but let's stick to lazy loading 
-                    // via runPython to avoid blocking the UI unnecessarily right now.
+                    // Open sidebar to show user where it went
+                    document.getElementById('file-sidebar').classList.add('open');
                     
                 } catch (err) {
                     console.error(err);
-                    showToast("Error uploading file: " + err.message);
+                    showToast("Error: " + err.message);
                 }
             };
 
             reader.readAsArrayBuffer(file);
-            
-            // Reset input so same file can be selected again if needed
             input.value = '';
+        }
+
+        function updateFileList() {
+            if (!pyodide) return;
+            
+            const listContainer = document.getElementById('file-list');
+            const template = document.getElementById('file-item-template');
+            
+            try {
+                const files = pyodide.FS.readdir('.');
+                
+                // Filter out system dirs
+                const visibleFiles = files.filter(f => f !== '.' && f !== '..' && f !== 'tmp' && f !== 'home' && f !== 'dev' && f !== 'proc');
+
+                if (visibleFiles.length === 0) {
+                    listContainer.innerHTML = '<div class="text-center text-gray-400 text-sm mt-10">No files found.<br>Upload or create one!</div>';
+                    return;
+                }
+
+                listContainer.innerHTML = '';
+                visibleFiles.forEach(filename => {
+                    const clone = template.content.cloneNode(true);
+                    clone.querySelector('.file-name').innerText = filename;
+                    
+                    // Try to get size
+                    try {
+                        const stat = pyodide.FS.stat(filename);
+                        if(!pyodide.FS.isDir(stat.mode)) {
+                             clone.querySelector('.file-size').innerText = `(${Math.ceil(stat.size/1024)}KB)`;
+                        } else {
+                            clone.querySelector('.file-size').innerText = '(Dir)';
+                        }
+                    } catch(e){}
+
+                    clone.querySelector('.download-btn').onclick = () => downloadFile(filename);
+                    listContainer.appendChild(clone);
+                });
+                
+                // Update badge
+                const badge = document.getElementById('file-count-badge');
+                if(visibleFiles.length > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+
+            } catch(e) {
+                console.error("Error reading FS", e);
+            }
+        }
+
+        function downloadFile(filename) {
+            try {
+                const content = pyodide.FS.readFile(filename);
+                const blob = new Blob([content], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                showToast("Error downloading: " + e.message);
+            }
         }
 
         function showToast(message) {
@@ -287,20 +423,17 @@
             const template = document.getElementById('cell-template');
             const clone = template.content.cloneNode(true);
             const cellDiv = clone.querySelector('.notebook-cell');
-            
             cellDiv.dataset.id = id;
             
             const textarea = cellDiv.querySelector('textarea');
             textarea.value = content;
             
-            // Auto-resize textarea logic
             textarea.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
                 saveState();
             });
 
-            // Key binding for Shift+Enter
             textarea.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' && e.shiftKey) {
                     e.preventDefault();
@@ -308,7 +441,6 @@
                 }
             });
 
-            // Buttons
             cellDiv.querySelector('.run-btn').onclick = () => runCell(id);
             cellDiv.querySelector('.delete-btn').onclick = () => deleteCell(id);
 
@@ -322,16 +454,13 @@
             const cellEl = createCellElement(id, content);
             container.appendChild(cellEl);
             
-            // Scroll to new cell if added manually
             if(save) {
                 cellEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 saveState();
             }
             
-            // Update index labels
             updateIndices();
             
-            // Adjust height of textarea initially if content exists
             if(content) {
                 const ta = container.querySelector(`[data-id="${id}"] textarea`);
                 ta.style.height = 'auto';
@@ -350,7 +479,8 @@
 
             const code = cell.querySelector('textarea').value;
             const outputContainer = cell.querySelector('.output-container');
-            const outputArea = cell.querySelector('.output-area');
+            const outputText = cell.querySelector('.output-text');
+            const outputPlot = cell.querySelector('.output-plot');
             const loader = cell.querySelector('.loading-overlay');
             const label = cell.querySelector('.output-label');
 
@@ -359,26 +489,29 @@
             // UI State: Running
             loader.classList.remove('hidden');
             outputContainer.classList.add('hidden');
-            outputArea.textContent = "";
+            outputText.textContent = "";
+            outputPlot.innerHTML = ""; // Clear previous plots
             
             try {
-                // Reset stdout capture buffer in Python
+                // 1. Setup Stdout
                 await pyodide.runPythonAsync(`
                     sys.stdout = JSStream()
                     sys.stderr = JSStream()
                 `);
 
-                // Run the code
+                // 2. Setup Matplotlib Target
+                // We tell Pyodide where to render any matplotlib plots for this execution
+                document.pyodideMplTarget = outputPlot;
+
+                // 3. Load Packages (optimistic)
                 await pyodide.loadPackagesFromImports(code);
                 
-                // Evaluate
+                // 4. Evaluate Code
                 let result = await pyodide.runPythonAsync(code);
 
-                // Retrieve stdout content
+                // 5. Get Output
                 let stdout = await pyodide.runPythonAsync("sys.stdout.getvalue()");
                 let stderr = await pyodide.runPythonAsync("sys.stderr.getvalue()");
-
-                // Prioritize stdout/print. If execute returns a value (last line expression), append it.
                 let finalOutput = stdout + stderr;
                 
                 if (result !== undefined && result !== null) {
@@ -389,11 +522,19 @@
                      }
                 }
 
-                // Display Results
-                if (finalOutput.trim()) {
-                    outputArea.textContent = finalOutput.trim();
-                    outputArea.classList.remove('text-red-600');
-                    outputArea.classList.add('text-gray-700');
+                // 6. Update File List (in case code generated files)
+                updateFileList();
+
+                // 7. Display Results
+                const hasPlot = outputPlot.children.length > 0;
+                const hasText = finalOutput.trim().length > 0;
+
+                if (hasText || hasPlot) {
+                    outputText.textContent = finalOutput.trim();
+                    
+                    // Styling updates
+                    outputText.classList.remove('text-red-600');
+                    outputText.classList.add('text-gray-700');
                     label.textContent = "Out:";
                     label.classList.remove('text-red-500');
                     label.classList.add('text-gray-400');
@@ -401,17 +542,17 @@
                 }
 
             } catch (err) {
-                // Handle Python Errors
-                outputArea.textContent = err.message;
-                outputArea.classList.remove('text-gray-700');
-                outputArea.classList.add('text-red-600');
+                outputText.textContent = err.message;
+                outputText.classList.remove('text-gray-700');
+                outputText.classList.add('text-red-600');
                 label.textContent = "Err:";
                 label.classList.remove('text-gray-400');
                 label.classList.add('text-red-500');
                 outputContainer.classList.remove('hidden');
             } finally {
-                // Cleanup UI
                 loader.classList.add('hidden');
+                // Reset target to null so background tasks don't accidentally draw here
+                document.pyodideMplTarget = null;
             }
         }
 
@@ -422,7 +563,6 @@
                 updateIndices();
                 saveState();
             }
-            // Ensure at least one cell exists
             if (document.querySelectorAll('.notebook-cell').length === 0) {
                 addCell();
             }
@@ -443,8 +583,6 @@
             });
         }
 
-        // --- Persistence ---
-
         function saveState() {
             const cells = [];
             document.querySelectorAll('.notebook-cell').forEach(cell => {
@@ -462,8 +600,8 @@
                     return;
                 }
             }
-            // Default start
-            addCell("# Welcome to PyBrowser!\n# 1. Click 'Upload File' to load 'data.csv'\n# 2. Run the code below:\n\nimport pandas as pd\n\n# df = pd.read_csv('data.csv')\n# print(df.head())", false);
+            // Default Sample
+            addCell("# Example: Plotting with Matplotlib\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nx = np.linspace(0, 10, 100)\ny = np.sin(x)\n\nplt.figure(figsize=(6,4))\nplt.plot(x, y)\nplt.title('Sine Wave')\nplt.grid(True)\nplt.show()", false);
         }
 
     </script>
