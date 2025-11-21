@@ -4,10 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Python Client-Side Executor</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Pyodide -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
-    <!-- Font Awesome for Icons -->
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CodeMirror 5 Dependencies -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/eclipse.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+
     <style>
         body {
             background-color: #f3f4f6;
@@ -15,20 +29,10 @@
         }
         
         /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #c1c1c1; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8; 
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
 
         .notebook-cell {
             transition: box-shadow 0.2s ease, transform 0.1s ease;
@@ -37,17 +41,24 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border-left: 4px solid #3b82f6;
         }
-        
-        .code-input {
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            tab-size: 4;
-            line-height: 1.5;
-        }
 
         .output-text {
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
             white-space: pre-wrap;
             word-wrap: break-word;
+        }
+
+        /* CodeMirror Customization to match Notebook look */
+        .CodeMirror {
+            height: auto;
+            min-height: 80px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            padding: 10px 0;
+            background-color: #ffffff;
+        }
+        .CodeMirror-scroll {
+            min-height: 80px;
         }
 
         /* Spinner */
@@ -65,12 +76,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        .status-dot {
-            height: 10px;
-            width: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; }
         .status-ready { background-color: #10b981; box-shadow: 0 0 5px #10b981; }
         .status-loading { background-color: #f59e0b; animation: pulse 1.5s infinite; }
         .status-error { background-color: #ef4444; }
@@ -99,17 +105,13 @@
             opacity: 0;
             transition: opacity 0.3s, bottom 0.3s;
         }
-        #toast.show {
-            visibility: visible;
-            opacity: 1;
-            bottom: 50px;
-        }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
 
         /* File Sidebar */
         #file-sidebar {
             position: fixed;
             right: -300px;
-            top: 60px; /* Height of header roughly */
+            top: 60px;
             bottom: 0;
             width: 300px;
             background: white;
@@ -119,25 +121,14 @@
             display: flex;
             flex-direction: column;
         }
-        #file-sidebar.open {
-            right: 0;
-        }
+        #file-sidebar.open { right: 0; }
 
         /* Matplotlib Canvas Overrides */
-        .output-plot div {
-            max-width: 100% !important;
-            overflow-x: auto;
-            box-shadow: none !important; 
-        }
-        .output-plot canvas {
-            max-width: 100% !important;
-            height: auto !important;
-        }
+        .output-plot div { max-width: 100% !important; overflow-x: auto; box-shadow: none !important; }
+        .output-plot canvas { max-width: 100% !important; height: auto !important; }
 
         /* Custom Modal */
-        #custom-modal {
-            backdrop-filter: blur(2px);
-        }
+        #custom-modal { backdrop-filter: blur(2px); }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -227,7 +218,7 @@
 
     <!-- Templates -->
     <template id="cell-template">
-        <div class="notebook-cell bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden" data-id="">
+        <div class="notebook-cell bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-6" data-id="">
             <div class="bg-gray-50 border-b border-gray-100 px-3 py-2 flex justify-between items-center select-none">
                 <span class="text-xs font-mono text-gray-400 cell-index">In [ ]</span>
                 <div class="flex gap-2">
@@ -239,13 +230,10 @@
                     </button>
                 </div>
             </div>
-            <div class="relative group">
-                <textarea class="code-input w-full p-4 outline-none text-sm text-gray-800 bg-white resize-y min-h-[80px]" placeholder="Write Python code here..." spellcheck="false"></textarea>
-                <div class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none">
-                    <span class="text-[10px] bg-gray-200 px-1 rounded text-gray-500">Shift+Enter</span>
-                </div>
-            </div>
-            <div class="output-container hidden border-t border-gray-100 bg-gray-50">
+            <!-- CodeMirror Container -->
+            <div class="editor-container border-b border-gray-100"></div>
+            
+            <div class="output-container hidden bg-gray-50">
                 <div class="p-4 text-sm">
                     <div class="flex items-start gap-2">
                         <span class="text-xs font-mono text-red-400 mt-1 select-none output-label">Out:</span>
@@ -277,12 +265,18 @@
 
     <script>
         let pyodide = null;
-        let cellCount = 0;
         const STORAGE_KEY = 'py_notebook_data';
+        
+        // Registry for CodeMirror instances
+        const editors = {};
 
         // --- Initialization ---
         async function main() {
             try {
+                // Check URL for preview param first
+                const urlParams = new URLSearchParams(window.location.search);
+                const previewUrl = urlParams.get('preview');
+
                 pyodide = await loadPyodide();
                 await pyodide.runPythonAsync(`
                     import sys
@@ -291,20 +285,55 @@
                         def write(self, s):
                             return super().write(s)
                 `);
+                
                 document.getElementById('system-status-dot').className = 'status-dot status-ready';
                 document.getElementById('system-status-text').innerText = 'Ready';
                 document.getElementById('system-status-text').className = 'text-green-600 font-medium';
                 document.getElementById('btn-upload').disabled = false;
+                
                 updateFileList();
-                loadState();
+
+                if (previewUrl) {
+                    await handleUrlPreview(previewUrl);
+                } else {
+                    loadState();
+                }
+
             } catch (err) {
                 document.getElementById('system-status-dot').className = 'status-dot status-error';
                 document.getElementById('system-status-text').innerText = 'Error';
                 console.error("Pyodide failed to load", err);
-                showModal("System Error", "Failed to load Python environment. Please check your internet connection.", false);
+                showModal("System Error", "Failed to load Python environment.", false);
             }
         }
         main();
+
+        // --- URL Preview Logic ---
+        async function handleUrlPreview(url) {
+            showModal("Loading Preview", `Fetching notebook from: ${url}`, false);
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const content = await response.json();
+                
+                closeModal();
+                loadNotebookContent(content);
+                showToast("Preview loaded from URL");
+                
+                // Disable auto-save when in preview mode to avoid overwriting local work?
+                // For this lite version, we will let it save, assuming user wants to work on it.
+
+            } catch (err) {
+                console.error(err);
+                let msg = err.message;
+                if (msg.includes('Failed to fetch')) {
+                    msg = "CORS Error: The URL blocked the request. Try a raw GitHub/Gist URL.";
+                }
+                showModal("Preview Failed", msg, false);
+                // Fallback to local state
+                loadState();
+            }
+        }
 
         // --- Modal Logic ---
         function showModal(title, message, isConfirm = false, onConfirm = null) {
@@ -314,7 +343,6 @@
             const confirmBtn = document.getElementById('modal-confirm-btn');
             const cancelBtn = document.getElementById('modal-cancel-btn');
 
-            // Remove old listeners
             const newConfirm = confirmBtn.cloneNode(true);
             confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
 
@@ -434,7 +462,8 @@
         function downloadNotebook() {
             const cells = [];
             document.querySelectorAll('.notebook-cell').forEach(cell => {
-                const source = cell.querySelector('textarea').value;
+                const id = cell.dataset.id;
+                const source = editors[id].getValue(); // Get from CodeMirror
                 cells.push({
                     "cell_type": "code",
                     "execution_count": null,
@@ -470,16 +499,13 @@
             if (input.files.length === 0) return;
             const file = input.files[0];
             const reader = new FileReader();
-
             reader.onload = function(e) {
                 try {
                     const content = JSON.parse(e.target.result);
                     if (!content.cells) throw new Error("Invalid notebook format");
-
                     showModal("Import Notebook", "This will overwrite your current notebook. Are you sure?", true, () => {
                          loadNotebookContent(content);
                     });
-
                 } catch (err) {
                     console.error(err);
                     showToast("Error parsing notebook: " + err.message);
@@ -492,7 +518,10 @@
         function loadNotebookContent(content) {
              document.getElementById('notebook-container').innerHTML = '';
              localStorage.removeItem(STORAGE_KEY);
-             cellCount = 0;
+             
+             // Clean up old editors
+             for (const key in editors) delete editors[key];
+
              let loadedCount = 0;
              content.cells.forEach(cell => {
                 if (cell.cell_type === 'code') {
@@ -517,41 +546,63 @@
             const cellDiv = clone.querySelector('.notebook-cell');
             cellDiv.dataset.id = id;
             
-            const textarea = cellDiv.querySelector('textarea');
-            textarea.value = content;
-            textarea.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-                saveState();
-            });
-            textarea.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && e.shiftKey) {
-                    e.preventDefault();
-                    runCell(id);
-                }
-            });
+            // Initialize CodeMirror
+            // We need to append to DOM first before initializing CM normally, 
+            // or use the container method. Since we return the element, we'll find the container.
+            
+            const editorContainer = cellDiv.querySelector('.editor-container');
+            
+            // Delayed initialization to wait for DOM insertion
+            setTimeout(() => {
+                const cm = CodeMirror(editorContainer, {
+                    value: content,
+                    mode: "python",
+                    theme: "eclipse",
+                    lineNumbers: true,
+                    indentUnit: 4,
+                    matchBrackets: true,
+                    autoCloseBrackets: true,
+                    viewportMargin: Infinity, // Allow auto-height
+                    extraKeys: {
+                        "Shift-Enter": function(cm) {
+                            runCell(id);
+                        },
+                        "Tab": function(cm) {
+                            // Proper spacing for tab
+                            if (cm.somethingSelected()) {
+                                cm.indentSelection("add");
+                            } else {
+                                cm.replaceSelection("    ", "end");
+                            }
+                        }
+                    }
+                });
+                
+                // Save on change
+                cm.on("change", () => {
+                   saveState(); 
+                });
+
+                editors[id] = cm;
+            }, 0);
+
             cellDiv.querySelector('.run-btn').onclick = () => runCell(id);
             cellDiv.querySelector('.delete-btn').onclick = () => deleteCell(id);
             return cellDiv;
         }
 
         function addCell(content = "", save = true) {
-            cellCount++;
             const id = "cell_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
             const container = document.getElementById('notebook-container');
             const cellEl = createCellElement(id, content);
             container.appendChild(cellEl);
             
-            if(content) {
-                const ta = container.querySelector(`[data-id="${id}"] textarea`);
-                setTimeout(() => {
-                     ta.style.height = 'auto';
-                     ta.style.height = (ta.scrollHeight) + 'px';
-                }, 0);
-            }
             if(save) {
-                cellEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                saveState();
+                // Small delay to ensure CM is mounted
+                setTimeout(() => {
+                    cellEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    saveState();
+                }, 50);
             }
             updateIndices();
         }
@@ -565,7 +616,10 @@
             const cell = document.querySelector(`.notebook-cell[data-id="${id}"]`);
             if (!cell) return;
 
-            const code = cell.querySelector('textarea').value;
+            // Get code from CodeMirror instance
+            if (!editors[id]) return;
+            const code = editors[id].getValue();
+
             const outputContainer = cell.querySelector('.output-container');
             const outputText = cell.querySelector('.output-text');
             const outputPlot = cell.querySelector('.output-plot');
@@ -630,6 +684,12 @@
         function deleteCell(id) {
             const cell = document.querySelector(`.notebook-cell[data-id="${id}"]`);
             if (cell) {
+                // Remove CM instance to prevent memory leak
+                if (editors[id]) {
+                    // CM doesn't have a strict destroy method for the DOM version, 
+                    // but removing the reference allows GC.
+                    delete editors[id];
+                }
                 cell.remove();
                 updateIndices();
                 saveState();
@@ -643,6 +703,7 @@
             showModal("Reset Notebook", "Are you sure you want to clear all code cells?", true, () => {
                 document.getElementById('notebook-container').innerHTML = '';
                 localStorage.removeItem(STORAGE_KEY);
+                for (const key in editors) delete editors[key];
                 addCell();
             });
         }
@@ -657,7 +718,10 @@
         function saveState() {
             const cells = [];
             document.querySelectorAll('.notebook-cell').forEach(cell => {
-                cells.push(cell.querySelector('textarea').value);
+                const id = cell.dataset.id;
+                if (editors[id]) {
+                    cells.push(editors[id].getValue());
+                }
             });
             localStorage.setItem(STORAGE_KEY, JSON.stringify(cells));
         }
