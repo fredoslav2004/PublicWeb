@@ -1,311 +1,284 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="antialiased">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern PlantUML Studio</title>
+    <title>DocForge Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Pako for Deflate compression -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        neutral: {
+                            850: '#1f1f1f',
+                            900: '#171717',
+                            950: '#0a0a0a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .editor-font { font-family: 'JetBrains Mono', monospace; font-variant-ligatures: none; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .dark ::-webkit-scrollbar-thumb { background: #525252; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #737373; }
 
-        .editor-font {
-            font-family: 'JetBrains Mono', monospace;
-            font-variant-ligatures: none;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+        .app-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            grid-template-rows: 56px 1fr;
+            height: 100vh;
+            overflow: hidden;
         }
 
         .split-pane {
             display: grid;
-            grid-template-columns: 1fr;
-            height: calc(100vh - 64px); /* Subtract header height */
+            grid-template-columns: 1fr 1fr;
+            height: 100%;
+            overflow: hidden;
         }
 
-        @media (min-width: 768px) {
-            .split-pane {
-                grid-template-columns: 400px 1fr;
+        @media (max-width: 768px) {
+            .app-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: 56px auto 1fr;
             }
+            .sidebar { display: none; } 
+            .split-pane { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
         }
 
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3b82f6;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
+        /* Markdown Styles */
+        .markdown-body { font-size: 14px; line-height: 1.6; }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { margin-top: 1.5em; margin-bottom: 0.5em; font-weight: 600; }
+        .markdown-body h1 { font-size: 1.5em; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3em; }
+        .markdown-body h2 { font-size: 1.3em; }
+        .markdown-body p { margin-bottom: 1em; }
+        .markdown-body code { padding: 0.2em 0.4em; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+        .markdown-body pre { padding: 1em; border-radius: 8px; overflow-x: auto; margin-bottom: 1em; border: 1px solid #e2e8f0; }
+        .markdown-body pre code { background: none; padding: 0; }
+        .markdown-body blockquote { border-left: 4px solid #e2e8f0; padding-left: 1em; }
+        .markdown-body img { max-width: 100%; border-radius: 4px; }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        /* Dark Mode Overrides */
+        .dark .markdown-body { color: #e5e5e5; }
+        .dark .markdown-body h1, .dark .markdown-body h2, .dark .markdown-body h3 { color: #ffffff; border-color: #404040; }
+        .dark .markdown-body code { background-color: #262626; color: #ffffff; border: 1px solid #404040; }
+        .dark .markdown-body pre { background-color: #171717; border-color: #404040; }
+        .dark .markdown-body blockquote { border-color: #ffffff; color: #a3a3a3; }
 
-        /* Modal Transitions */
-        .modal-backdrop {
-            transition: opacity 0.2s ease-in-out;
+        /* Diagram Inversion for Dark Mode */
+        .dark #renderOutput img, 
+        .dark #renderOutput svg {
+            filter: invert(0.93) hue-rotate(180deg);
+            transition: filter 0.3s ease;
         }
-        .hidden {
-            display: none !important;
-        }
+        .dark #renderOutput img.no-invert { filter: none; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 h-screen overflow-hidden flex flex-col">
+<body class="bg-slate-50 dark:bg-black text-slate-800 dark:text-gray-200 overflow-hidden transition-colors duration-200">
 
-    <!-- Header -->
-    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 z-10 shadow-sm shrink-0">
-        <div class="flex items-center gap-3">
-            <div class="bg-indigo-600 p-1.5 rounded-lg">
-                <i data-lucide="flower-2" class="w-6 h-6 text-white"></i>
-            </div>
-            <h1 class="font-semibold text-lg tracking-tight text-slate-900">PlantUML <span class="text-slate-400 font-normal">Studio</span></h1>
-        </div>
-
-        <div class="flex items-center gap-3">
-            <button id="openSettingsBtn" class="p-2 hover:bg-slate-100 rounded-md text-slate-500 transition-colors" title="Global Settings & Themes">
-                <i data-lucide="settings" class="w-5 h-5"></i>
-            </button>
-            
-            <div class="h-6 w-px bg-slate-200 mx-1"></div>
-
-            <div class="hidden sm:flex items-center gap-2 mr-4">
-                <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Templates</span>
-                <select id="templateSelect" class="bg-slate-100 text-sm border-none rounded-md px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 cursor-pointer hover:bg-slate-200 transition-colors max-w-[150px] truncate">
-                    <option value="" disabled selected>Select...</option>
-                    <option value="sequence">Sequence</option>
-                    <option value="usecase">Use Case</option>
-                    <option value="class">Class</option>
-                    <option value="activity">Activity</option>
-                    <option value="component">Component</option>
-                    <option value="state">State</option>
-                    <option value="er">Entity Relationship</option>
-                    <option value="mindmap">Mind Map</option>
-                    <option value="gantt">Gantt</option>
-                    <option value="json">JSON</option>
-                </select>
-            </div>
-            
-            <button onclick="downloadSVG()" class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-md transition-colors">
-                <i data-lucide="download" class="w-4 h-4"></i>
-                <span class="hidden lg:inline">SVG</span>
-            </button>
-            <button onclick="copyLink()" class="flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md transition-colors shadow-sm">
-                <i data-lucide="link" class="w-4 h-4"></i>
-                <span class="hidden lg:inline">Link</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="split-pane">
+    <div class="app-layout">
         
-        <!-- Editor Section -->
-        <section class="flex flex-col border-r border-slate-200 bg-white h-full min-h-0">
-            <div class="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-100">
-                <div class="flex items-center gap-3">
-                    <span class="text-xs font-semibold text-slate-500 uppercase">Code Editor</span>
-                    <span class="text-[10px] text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <i data-lucide="save" class="w-3 h-3"></i> Auto-saved
-                    </span>
+        <!-- Header -->
+        <header class="col-span-2 bg-white dark:bg-black border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between px-4 z-20">
+            <div class="flex items-center gap-3">
+                <div class="bg-slate-900 dark:bg-neutral-800 p-1.5 rounded-lg transition-colors">
+                    <i data-lucide="anvil" class="w-5 h-5 text-white dark:text-gray-200"></i>
                 </div>
-                <button onclick="clearEditor()" class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Clear Editor">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                <h1 class="font-bold text-lg tracking-tight text-slate-900 dark:text-white">DocForge</h1>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="app.toggleSettings()" class="p-2 hover:bg-slate-100 dark:hover:bg-neutral-900 rounded-md text-slate-500 dark:text-gray-400 transition-colors" title="Settings">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </button>
+
+                <div class="h-6 w-px bg-slate-200 dark:bg-neutral-800 mx-1"></div>
+
+                <select id="templateSelect" class="bg-slate-100 dark:bg-black text-slate-700 dark:text-gray-300 text-xs border border-slate-200 dark:border-neutral-800 rounded-md px-2 py-1.5 focus:ring-2 focus:ring-gray-500 cursor-pointer hover:bg-slate-200 dark:hover:bg-neutral-900 transition-colors w-32 sm:w-40 truncate">
+                    <option value="" disabled selected>+ Template</option>
+                    <optgroup label="UML Diagrams">
+                        <option value="sequence">Sequence</option>
+                        <option value="usecase">Use Case</option>
+                        <option value="class">Class</option>
+                        <option value="activity">Activity</option>
+                        <option value="state">State Machine</option>
+                        <option value="component">Component</option>
+                        <option value="deployment">Deployment</option>
+                    </optgroup>
+                    <optgroup label="Architecture">
+                        <option value="c4context">C4 Context</option>
+                        <option value="c4container">C4 Container</option>
+                        <option value="archimate">ArchiMate</option>
+                    </optgroup>
+                    <optgroup label="Management/Analysis">
+                        <option value="mindmap">Mind Map</option>
+                        <option value="wbs">WBS</option>
+                        <option value="gantt">Gantt Chart</option>
+                        <option value="json">JSON Visualization</option>
+                        <option value="yaml">YAML Visualization</option>
+                    </optgroup>
+                    <optgroup label="UI/UX">
+                        <option value="salt">Wireframe (Salt)</option>
+                    </optgroup>
+                    <optgroup label="Documentation">
+                        <option value="md_basic">Markdown Basic</option>
+                        <option value="md_embedded">Markdown + PlantUML</option>
+                    </optgroup>
+                </select>
+                
+                <div class="relative">
+                    <button onclick="app.toggleDownloadMenu()" class="bg-slate-900 dark:bg-neutral-800 hover:bg-slate-800 dark:hover:bg-neutral-700 text-white dark:text-gray-200 px-3 py-1.5 rounded-md text-xs font-bold transition-colors flex items-center gap-2 border dark:border-neutral-700">
+                        <i data-lucide="download" class="w-3 h-3"></i> Download
+                    </button>
+                    <div id="downloadMenu" class="hidden absolute right-0 top-full mt-2 w-48 bg-white dark:bg-neutral-900 rounded-md shadow-lg border border-slate-200 dark:border-neutral-800 py-1 z-50">
+                        <div id="pumlDownloads" class="hidden">
+                            <div class="px-3 py-1.5 text-[10px] font-semibold text-slate-400 dark:text-gray-500 uppercase">Diagram</div>
+                            <button onclick="app.downloadImage('svg')" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-neutral-800 flex items-center justify-between">SVG Image <span class="text-xs text-slate-400">.svg</span></button>
+                            <button onclick="app.downloadImage('png')" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-neutral-800 flex items-center justify-between">PNG Image <span class="text-xs text-slate-400">.png</span></button>
+                            <button onclick="app.downloadSource()" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-neutral-800 flex items-center justify-between">Source Code <span class="text-xs text-slate-400">.puml</span></button>
+                        </div>
+                        <div id="mdDownloads" class="hidden">
+                            <div class="px-3 py-1.5 text-[10px] font-semibold text-slate-400 dark:text-gray-500 uppercase">Document</div>
+                            <button onclick="app.downloadSource()" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-neutral-800 flex items-center justify-between">Markdown <span class="text-xs text-slate-400">.md</span></button>
+                            <button onclick="app.generatePdf()" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-neutral-800 flex items-center justify-between">PDF (Direct) <span class="text-xs text-slate-400">.pdf</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar bg-slate-50 dark:bg-black border-r border-slate-200 dark:border-neutral-800 flex flex-col h-full overflow-hidden">
+            <div class="p-3 border-b border-slate-200 dark:border-neutral-800 flex justify-between items-center">
+                <span class="text-xs font-semibold text-slate-500 dark:text-gray-500 uppercase tracking-wider">Explorer</span>
+                <div class="flex gap-1">
+                    <button onclick="app.createFile('plantuml')" class="p-1 hover:bg-slate-200 dark:hover:bg-neutral-900 rounded text-slate-600 dark:text-gray-400" title="New Diagram">
+                        <i data-lucide="file-plus-2" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="app.createFile('markdown')" class="p-1 hover:bg-slate-200 dark:hover:bg-neutral-900 rounded text-slate-600 dark:text-gray-400" title="New Markdown">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="fileList" class="flex-1 overflow-y-auto p-2 space-y-0.5"></div>
+            <div class="p-3 border-t border-slate-200 dark:border-neutral-800 bg-slate-100/50 dark:bg-neutral-900">
+                <button onclick="app.resetAll()" class="flex items-center gap-2 text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 w-full p-2 rounded hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                    <i data-lucide="trash" class="w-3 h-3"></i> Reset Workspace
                 </button>
             </div>
-            <div class="relative flex-1 min-h-0 group">
-                <textarea 
-                    id="codeEditor" 
-                    class="w-full h-full p-4 resize-none focus:outline-none editor-font text-sm leading-relaxed text-slate-700 bg-white"
-                    placeholder="@startuml\nAlice -> Bob: Hello\n@enduml"
-                    spellcheck="false"
-                ></textarea>
-            </div>
-        </section>
+        </aside>
 
-        <!-- Preview Section -->
-        <section class="flex flex-col h-full min-h-0 bg-slate-100/50 relative">
-            <div class="flex items-center justify-between px-4 py-2 bg-white border-b border-slate-200">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-slate-500 uppercase">Preview</span>
-                    <span id="configBadge" class="hidden text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200">Config Applied</span>
-                </div>
-                <div id="loadingIndicator" class="opacity-0 transition-opacity duration-200">
-                    <div class="loader"></div>
-                </div>
-            </div>
-            
-            <div class="flex-1 overflow-auto p-8 flex items-center justify-center relative" id="previewContainer">
-                <!-- Image will be injected here -->
-                <img id="diagramImage" class="max-w-none shadow-lg bg-white rounded-sm" src="" alt="Diagram Preview" style="display: none;">
-                
-                <!-- Empty State -->
-                <div id="emptyState" class="text-center">
-                    <div class="bg-slate-200 p-4 rounded-full inline-block mb-4">
-                        <i data-lucide="image" class="w-8 h-8 text-slate-400"></i>
+        <!-- Main Area -->
+        <main class="split-pane min-h-0 relative bg-white dark:bg-black">
+            <!-- Editor -->
+            <div class="editor-pane flex flex-col h-full border-r border-slate-200 dark:border-neutral-800 min-w-0">
+                <div class="h-9 bg-white dark:bg-black border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between px-3 shrink-0">
+                    <div class="flex items-center gap-2 overflow-hidden flex-1 mr-2">
+                         <i id="editorIcon" data-lucide="code" class="w-3 h-3 text-slate-400 dark:text-gray-500"></i>
+                         <input id="fileNameInput" class="text-xs font-medium text-slate-700 dark:text-gray-300 bg-transparent border-none focus:ring-0 p-0 w-full focus:outline-none placeholder-slate-400" type="text" onchange="app.renameCurrentFile(this.value)">
                     </div>
-                    <h3 class="text-slate-900 font-medium">No Diagram Generated</h3>
-                    <p class="text-slate-500 text-sm mt-1">Start typing or select a template to begin.</p>
+                    <span class="text-[10px] text-slate-400 shrink-0">Auto-saved</span>
+                </div>
+                <div class="relative flex-1">
+                    <textarea id="codeEditor" class="absolute inset-0 w-full h-full p-4 resize-none focus:outline-none editor-font text-sm leading-relaxed text-slate-700 dark:text-gray-300 bg-white dark:bg-black placeholder-slate-300 dark:placeholder-gray-700" spellcheck="false" placeholder="Start typing..."></textarea>
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="preview-pane flex flex-col h-full min-w-0 bg-slate-100 dark:bg-black relative">
+                <div class="h-9 bg-white dark:bg-black border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between px-3 shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-gray-500 uppercase">Output</span>
+                        <span id="globalConfigBadge" class="hidden text-[10px] bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-gray-300 px-1.5 py-0.5 rounded border dark:border-neutral-700">+ Config</span>
+                    </div>
+                    <div id="loadingIndicator" class="opacity-0 transition-opacity duration-200">
+                        <div class="w-3 h-3 border-2 border-slate-200 dark:border-neutral-700 border-t-slate-600 dark:border-t-gray-300 rounded-full animate-spin"></div>
+                    </div>
+                </div>
+                <div id="previewContainer" class="flex-1 overflow-auto p-8 relative">
+                    <div id="renderOutput" class="w-full h-full flex items-start justify-center"></div>
                 </div>
 
-                <!-- Error State -->
-                <div id="errorState" class="hidden absolute bottom-4 left-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3 items-start shadow-sm animate-fade-in-up">
-                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-600 shrink-0 mt-0.5"></i>
+                <!-- Toast -->
+                <div id="errorToast" class="absolute bottom-4 right-4 max-w-sm bg-white dark:bg-neutral-900 border-l-4 border-red-500 shadow-lg dark:shadow-none dark:border dark:border-l-4 dark:border-r-0 dark:border-y-0 dark:border-red-500 rounded p-3 transform translate-y-20 opacity-0 transition-all duration-300 flex items-start gap-3 z-10">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-500 shrink-0"></i>
                     <div>
-                        <h4 class="text-sm font-medium text-red-800">Syntax Error</h4>
-                        <p class="text-xs text-red-600 mt-1">The diagram could not be rendered. Please check your syntax.</p>
+                        <p class="text-sm font-medium text-slate-800 dark:text-white">Notice</p>
+                        <p class="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Message content...</p>
                     </div>
                 </div>
             </div>
-        </section>
-
-    </main>
+        </main>
+    </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" role="dialog">
-        <!-- Backdrop -->
-        <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity" onclick="toggleSettings(false)"></div>
-        
-        <!-- Modal Content -->
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 z-10 overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <h2 class="font-semibold text-slate-900">Settings</h2>
-                <button onclick="toggleSettings(false)" class="text-slate-400 hover:text-slate-600">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="app.toggleSettings()"></div>
+        <div class="bg-white dark:bg-neutral-900 rounded-xl shadow-2xl w-full max-w-md mx-4 z-10 border border-slate-200 dark:border-neutral-800 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between">
+                <h2 class="font-semibold text-slate-900 dark:text-white">Settings</h2>
+                <button onclick="app.toggleSettings()" class="text-slate-400 hover:text-slate-600 dark:hover:text-gray-300"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+                <div class="space-y-3">
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-sm font-medium text-slate-700 dark:text-gray-300">Dark Mode</span>
+                        <input type="checkbox" id="darkModeToggle" class="sr-only peer" onchange="app.toggleDarkMode(this.checked)">
+                        <div class="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-neutral-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black peer-checked:after:border-black"></div>
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-sm font-medium text-slate-700 dark:text-gray-300">Confirm File Deletion</span>
+                        <input type="checkbox" id="confirmDeleteToggle" class="sr-only peer" onchange="app.setPreference('confirmDelete', this.checked)">
+                        <div class="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-neutral-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black peer-checked:after:border-black"></div>
+                    </label>
+                </div>
+                <hr class="border-slate-200 dark:border-neutral-800">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Global Configuration (Prepended)</label>
-                    <p class="text-xs text-slate-500 mb-2">Add global themes or skinparams here. This text is prepended to every diagram but hidden from the main editor.</p>
-                    <textarea id="globalConfig" 
-                        class="w-full h-32 p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 editor-font text-sm"
-                        placeholder="!theme plain&#10;skinparam backgroundColor transparent"></textarea>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">PlantUML Server URL</label>
+                    <input type="text" id="serverUrlInput" class="w-full p-2 text-sm border border-slate-300 dark:border-neutral-700 bg-white dark:bg-black text-slate-700 dark:text-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:outline-none" placeholder="https://www.plantuml.com/plantuml" onchange="app.saveSettings()">
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="presetTheme('plain')" class="text-xs bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded text-slate-600 border border-slate-200">Plain Theme</button>
-                    <button onclick="presetTheme('spacelab')" class="text-xs bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded text-slate-600 border border-slate-200">Spacelab Theme</button>
-                    <button onclick="presetTheme('')" class="text-xs bg-white hover:bg-red-50 px-2 py-1 rounded text-red-400 border border-red-100 ml-auto">Clear Config</button>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Global Config</label>
+                    <textarea id="globalConfigInput" class="w-full h-24 p-3 border border-slate-300 dark:border-neutral-700 bg-white dark:bg-black text-slate-700 dark:text-gray-300 rounded-md focus:ring-2 focus:ring-gray-500 focus:outline-none editor-font text-xs" placeholder="!theme plain" oninput="app.saveSettings()"></textarea>
                 </div>
-            </div>
-            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-                <button onclick="saveSettingsAndClose()" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors">
-                    Save & Apply
-                </button>
             </div>
         </div>
     </div>
 
-    <!-- Logic -->
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-2xl w-full max-w-sm mx-4 z-10 border border-slate-200 dark:border-neutral-800 p-6 relative">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Delete File?</h3>
+            <p class="text-sm text-slate-500 dark:text-gray-400 mb-6">This action cannot be undone. Are you sure you want to delete this file?</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="app.closeConfirmationModal()" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-md transition-colors">Cancel</button>
+                <button onclick="app.executeDelete()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // --- Initialize Icons ---
-        lucide.createIcons();
-
-        // --- State & DOM Elements ---
-        const editor = document.getElementById('codeEditor');
-        const diagramImg = document.getElementById('diagramImage');
-        const emptyState = document.getElementById('emptyState');
-        const errorState = document.getElementById('errorState');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const templateSelect = document.getElementById('templateSelect');
+        const generateId = () => Math.random().toString(36).substr(2, 9);
         
-        // Settings Elements
-        const settingsModal = document.getElementById('settingsModal');
-        const globalConfigInput = document.getElementById('globalConfig');
-        const configBadge = document.getElementById('configBadge');
-        const openSettingsBtn = document.getElementById('openSettingsBtn');
-
-        let currentEncodedUrl = '';
-        let debounceTimer;
-
-        // --- Persistence (LocalStorage) ---
-        const STORAGE_KEY_CODE = 'plantuml_code';
-        const STORAGE_KEY_CONFIG = 'plantuml_config';
-
-        function saveState() {
-            localStorage.setItem(STORAGE_KEY_CODE, editor.value);
-            localStorage.setItem(STORAGE_KEY_CONFIG, globalConfigInput.value);
-        }
-
-        function loadState() {
-            const savedCode = localStorage.getItem(STORAGE_KEY_CODE);
-            const savedConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
-
-            if (savedCode !== null) editor.value = savedCode;
-            if (savedConfig !== null) globalConfigInput.value = savedConfig;
-            
-            // Check config badge
-            updateConfigBadge();
-        }
-
-        // --- Settings Logic ---
-        function toggleSettings(show) {
-            if (show) {
-                settingsModal.classList.remove('hidden');
-            } else {
-                settingsModal.classList.add('hidden');
-            }
-        }
-
-        function saveSettingsAndClose() {
-            saveState();
-            updatePreview();
-            updateConfigBadge();
-            toggleSettings(false);
-        }
-
-        function updateConfigBadge() {
-            if (globalConfigInput.value.trim().length > 0) {
-                configBadge.classList.remove('hidden');
-            } else {
-                configBadge.classList.add('hidden');
-            }
-        }
-
-        function presetTheme(themeName) {
-            if (!themeName) {
-                globalConfigInput.value = "";
-                return;
-            }
-            globalConfigInput.value = `!theme ${themeName}`;
-        }
-
-        openSettingsBtn.addEventListener('click', () => toggleSettings(true));
-
-        // --- Editor Logic ---
-        function clearEditor() {
-            if (confirm('Are you sure you want to clear the editor?')) {
-                editor.value = '';
-                editor.focus();
-                saveState();
-                updatePreview();
-            }
-        }
-
-        // --- PlantUML Encoding Logic (Deflate + Custom Base64) ---
-        const plantUmlMapper = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
-
         function encode6bit(b) {
             if (b < 10) return String.fromCharCode(48 + b);
             b -= 10;
@@ -317,322 +290,452 @@
             if (b == 1) return '_';
             return '?';
         }
-
         function append3bytes(b1, b2, b3) {
             let c1 = b1 >> 2;
             let c2 = ((b1 & 0x3) << 4) | (b2 >> 4);
             let c3 = ((b2 & 0xF) << 2) | (b3 >> 6);
             let c4 = b3 & 0x3F;
-            let r = "";
-            r += encode6bit(c1 & 0x3F);
-            r += encode6bit(c2 & 0x3F);
-            r += encode6bit(c3 & 0x3F);
-            r += encode6bit(c4 & 0x3F);
-            return r;
+            return encode6bit(c1&0x3F) + encode6bit(c2&0x3F) + encode6bit(c3&0x3F) + encode6bit(c4&0x3F);
         }
-
         function encodePlantUML(data) {
             let r = "";
             for (let i = 0; i < data.length; i += 3) {
-                if (i + 2 == data.length) {
-                    r += append3bytes(data[i], data[i + 1], 0);
-                } else if (i + 1 == data.length) {
-                    r += append3bytes(data[i], 0, 0);
-                } else {
-                    r += append3bytes(data[i], data[i + 1], data[i + 2]);
-                }
+                if (i + 2 == data.length) r += append3bytes(data[i], data[i + 1], 0);
+                else if (i + 1 == data.length) r += append3bytes(data[i], 0, 0);
+                else r += append3bytes(data[i], data[i + 1], data[i + 2]);
             }
             return r;
         }
-
-        function compressAndEncode(text) {
-            const unescaped = unescape(encodeURIComponent(text));
+        function getDiagramUrl(baseUrl, code, type = 'svg') {
+            let base = baseUrl.replace(/\/$/, "");
+            const unescaped = unescape(encodeURIComponent(code));
             const deflated = pako.deflate(unescaped, { level: 9 });
-            return encodePlantUML(deflated);
+            const encoded = encodePlantUML(deflated);
+            return `${base}/${type}/~1${encoded}`;
         }
 
-        // --- Core Application Logic ---
-
-        function updatePreview() {
-            const rawCode = editor.value.trim();
-            const config = globalConfigInput.value.trim();
-            
-            // Merge Config + Code
-            // If rawCode is empty, we don't generate anything
-            if (!rawCode) {
-                diagramImg.style.display = 'none';
-                emptyState.style.display = 'block';
-                errorState.classList.add('hidden');
-                return;
-            }
-
-            const fullSource = (config ? config + '\n' : '') + rawCode;
-
-            loadingIndicator.classList.remove('opacity-0');
-            
-            try {
-                const encoded = compressAndEncode(fullSource);
-                const url = `https://www.plantuml.com/plantuml/svg/~1${encoded}`;
-                currentEncodedUrl = url;
-
-                diagramImg.onload = () => {
-                    loadingIndicator.classList.add('opacity-0');
-                    diagramImg.style.display = 'block';
-                    emptyState.style.display = 'none';
-                    errorState.classList.add('hidden');
+        class App {
+            constructor() {
+                this.files = [];
+                this.activeFileId = null;
+                this.lastValidPlantUmlSvg = null; 
+                this.debounceTimer = null;
+                this.fileIdToDelete = null;
+                this.settings = {
+                    darkMode: false,
+                    confirmDelete: true,
+                    globalConfig: '',
+                    serverUrl: 'https://www.plantuml.com/plantuml'
+                };
+                
+                this.dom = {
+                    editor: document.getElementById('codeEditor'),
+                    fileList: document.getElementById('fileList'),
+                    renderOutput: document.getElementById('renderOutput'),
+                    fileNameInput: document.getElementById('fileNameInput'),
+                    editorIcon: document.getElementById('editorIcon'),
+                    loading: document.getElementById('loadingIndicator'),
+                    errorToast: document.getElementById('errorToast'),
+                    templateSelect: document.getElementById('templateSelect'),
+                    settingsModal: document.getElementById('settingsModal'),
+                    confirmationModal: document.getElementById('confirmationModal'),
+                    globalConfigInput: document.getElementById('globalConfigInput'),
+                    serverUrlInput: document.getElementById('serverUrlInput'),
+                    globalConfigBadge: document.getElementById('globalConfigBadge'),
+                    darkModeToggle: document.getElementById('darkModeToggle'),
+                    confirmDeleteToggle: document.getElementById('confirmDeleteToggle'),
+                    downloadMenu: document.getElementById('downloadMenu'),
+                    pumlDownloads: document.getElementById('pumlDownloads'),
+                    mdDownloads: document.getElementById('mdDownloads')
                 };
 
-                diagramImg.onerror = () => {
-                    loadingIndicator.classList.add('opacity-0');
-                    errorState.classList.remove('hidden');
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('#downloadMenu') && !e.target.closest('button[onclick="app.toggleDownloadMenu()"]')) {
+                        this.dom.downloadMenu.classList.add('hidden');
+                    }
+                });
+
+                this.initEditorEnhancements();
+                this.init();
+            }
+
+            initEditorEnhancements() {
+                this.dom.editor.addEventListener('keydown', (e) => {
+                    const { value, selectionStart, selectionEnd } = this.dom.editor;
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        this.dom.editor.setRangeText('  ', selectionStart, selectionEnd, 'end');
+                        this.handleEditorChange();
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const lines = value.substring(0, selectionStart).split('\n');
+                        const currentLine = lines[lines.length - 1];
+                        const match = currentLine.match(/^(\s*)/);
+                        const indentation = match ? match[1] : '';
+                        this.dom.editor.setRangeText('\n' + indentation, selectionStart, selectionEnd, 'end');
+                        this.handleEditorChange();
+                    }
+                });
+            }
+
+            init() {
+                const saved = localStorage.getItem('docforge_files');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        this.files = parsed.files || [];
+                        this.activeFileId = parsed.activeFileId;
+                    } catch (e) { console.error("Storage corrupted"); }
+                }
+
+                const savedSettings = localStorage.getItem('docforge_settings');
+                if (savedSettings) {
+                    this.settings = { ...this.settings, ...JSON.parse(savedSettings) };
+                }
+
+                if (this.settings.darkMode) document.documentElement.classList.add('dark');
+                this.dom.darkModeToggle.checked = this.settings.darkMode;
+                this.dom.confirmDeleteToggle.checked = this.settings.confirmDelete;
+                this.dom.globalConfigInput.value = this.settings.globalConfig;
+                this.dom.serverUrlInput.value = this.settings.serverUrl;
+                this.updateGlobalConfigBadge();
+
+                if (this.files.length === 0) this.createFile('plantuml');
+
+                this.dom.editor.addEventListener('input', () => this.handleEditorChange());
+                this.dom.templateSelect.addEventListener('change', (e) => this.applyTemplate(e.target.value));
+
+                this.renderSidebar();
+                this.loadFile(this.activeFileId);
+                lucide.createIcons();
+            }
+
+            saveState() {
+                localStorage.setItem('docforge_files', JSON.stringify({
+                    files: this.files,
+                    activeFileId: this.activeFileId
+                }));
+            }
+
+            saveSettings() {
+                this.settings.globalConfig = this.dom.globalConfigInput.value;
+                this.settings.serverUrl = this.dom.serverUrlInput.value || 'https://www.plantuml.com/plantuml';
+                localStorage.setItem('docforge_settings', JSON.stringify(this.settings));
+                this.updateGlobalConfigBadge();
+                this.updatePreview(true);
+            }
+
+            setPreference(key, value) {
+                this.settings[key] = value;
+                localStorage.setItem('docforge_settings', JSON.stringify(this.settings));
+            }
+
+            toggleDarkMode(enabled) {
+                this.setPreference('darkMode', enabled);
+                if (enabled) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }
+
+            toggleSettings() { this.dom.settingsModal.classList.toggle('hidden'); }
+
+            updateGlobalConfigBadge() {
+                if (this.settings.globalConfig.trim().length > 0) this.dom.globalConfigBadge.classList.remove('hidden');
+                else this.dom.globalConfigBadge.classList.add('hidden');
+            }
+
+            createFile(type) {
+                const name = type === 'plantuml' ? 'untitled.puml' : 'notes.md';
+                const content = type === 'plantuml' ? '@startuml\n\n@enduml' : '# New Document';
+                const newFile = { id: generateId(), name, type, content };
+                this.files.push(newFile);
+                this.activeFileId = newFile.id;
+                this.renderSidebar();
+                this.loadFile(newFile.id);
+                this.saveState();
+            }
+
+            requestDeleteFile(id, e) {
+                e.stopPropagation();
+                if (this.files.length <= 1) {
+                    this.showError("Cannot delete the last file.");
+                    return;
+                }
+                
+                this.fileIdToDelete = id;
+                if (this.settings.confirmDelete) {
+                    this.dom.confirmationModal.classList.remove('hidden');
+                } else {
+                    this.executeDelete();
+                }
+            }
+
+            closeConfirmationModal() {
+                this.dom.confirmationModal.classList.add('hidden');
+                this.fileIdToDelete = null;
+            }
+
+            executeDelete() {
+                if (!this.fileIdToDelete) return;
+                
+                this.files = this.files.filter(f => f.id !== this.fileIdToDelete);
+                if (this.activeFileId === this.fileIdToDelete) {
+                    this.activeFileId = this.files[0].id;
+                    this.loadFile(this.activeFileId);
+                } else {
+                    this.renderSidebar();
+                }
+                this.saveState();
+                this.closeConfirmationModal();
+            }
+
+            renameCurrentFile(newName) {
+                const file = this.files.find(f => f.id === this.activeFileId);
+                if (file) { file.name = newName; this.renderSidebar(); this.saveState(); }
+            }
+
+            resetAll() {
+                if(confirm("Reset everything?")) {
+                    localStorage.removeItem('docforge_files');
+                    localStorage.removeItem('docforge_settings');
+                    location.reload();
+                }
+            }
+
+            loadFile(id) {
+                const file = this.files.find(f => f.id === id);
+                if (!file) return;
+                this.activeFileId = id;
+                this.dom.editor.value = file.content;
+                this.dom.fileNameInput.value = file.name;
+                if (file.type === 'plantuml') {
+                    this.dom.editorIcon.setAttribute('data-lucide', 'flower-2');
+                    this.lastValidPlantUmlSvg = null; 
+                } else {
+                    this.dom.editorIcon.setAttribute('data-lucide', 'file-text');
+                }
+                lucide.createIcons();
+                this.renderSidebar();
+                this.updatePreview(true);
+            }
+
+            handleEditorChange() {
+                const file = this.files.find(f => f.id === this.activeFileId);
+                if (file) {
+                    file.content = this.dom.editor.value;
+                    this.saveState();
+                    clearTimeout(this.debounceTimer);
+                    this.debounceTimer = setTimeout(() => this.updatePreview(), 600);
+                }
+            }
+
+            updatePreview() {
+                const file = this.files.find(f => f.id === this.activeFileId);
+                if (!file) return;
+
+                this.dom.loading.classList.remove('opacity-0');
+                this.hideError();
+
+                if (file.type === 'plantuml') {
+                    const fullCode = (this.settings.globalConfig ? this.settings.globalConfig + '\n' : '') + file.content;
+                    this.renderPlantUML(fullCode);
+                } else {
+                    this.renderMarkdown(file.content);
+                }
+            }
+
+            async renderPlantUML(code) {
+                const url = getDiagramUrl(this.settings.serverUrl, code, 'svg');
+                try {
+                    const response = await fetch(url);
+                    if(!response.ok) throw new Error('Network error');
+                    const svgText = await response.text();
+                    
+                    if (svgText.includes('Syntax Error') || svgText.includes('java.lang.')) {
+                        this.showError("Syntax Error detected");
+                        if (this.lastValidPlantUmlSvg) {
+                             this.dom.renderOutput.innerHTML = this.lastValidPlantUmlSvg;
+                             if(this.dom.renderOutput.firstChild) this.dom.renderOutput.firstChild.style.opacity = '0.5';
+                        } else {
+                             this.dom.renderOutput.innerHTML = svgText;
+                        }
+                    } else {
+                        this.lastValidPlantUmlSvg = svgText;
+                        this.dom.renderOutput.innerHTML = svgText;
+                        const svg = this.dom.renderOutput.querySelector('svg');
+                        if(svg) {
+                            svg.classList.add('max-w-none', 'bg-white', 'rounded', 'shadow-sm');
+                            svg.removeAttribute('height'); 
+                            svg.removeAttribute('width');
+                            svg.style.maxWidth = '100%';
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Fetch failed", e);
+                    if (this.lastValidPlantUmlSvg) {
+                        this.dom.renderOutput.innerHTML = this.lastValidPlantUmlSvg;
+                        if(this.dom.renderOutput.firstChild) this.dom.renderOutput.firstChild.style.opacity = '0.5';
+                        this.showError("Network/CORS Error - Preview Paused");
+                    } else {
+                        this.dom.renderOutput.innerHTML = `<img src="${url}" class="max-w-none bg-white rounded shadow-sm">`;
+                    }
+                } finally {
+                    this.dom.loading.classList.add('opacity-0');
+                }
+            }
+
+            renderMarkdown(markdown) {
+                const plantUmlRegex = /```plantuml([\s\S]*?)```/g;
+                const processedMarkdown = markdown.replace(plantUmlRegex, (match, codeBlock) => {
+                    const rawCode = codeBlock.trim();
+                    const fullCode = (this.settings.globalConfig ? this.settings.globalConfig + '\n' : '') + rawCode;
+                    const url = getDiagramUrl(this.settings.serverUrl, fullCode, 'svg');
+                    return `![Diagram](${url})`;
+                });
+                const html = DOMPurify.sanitize(marked.parse(processedMarkdown));
+                this.dom.renderOutput.innerHTML = `<div class="markdown-body w-full max-w-3xl mx-auto p-4 bg-white dark:bg-transparent rounded">${html}</div>`;
+                this.dom.loading.classList.add('opacity-0');
+            }
+
+            renderSidebar() {
+                this.dom.fileList.innerHTML = this.files.map(f => `
+                    <div onclick="app.loadFile('${f.id}')" 
+                         class="group flex items-center justify-between p-2 px-3 rounded cursor-pointer text-sm mb-0.5 border border-transparent
+                         ${f.id === this.activeFileId 
+                            ? 'bg-white dark:bg-neutral-900 text-indigo-600 dark:text-white border-slate-200 dark:border-neutral-700 shadow-sm font-medium' 
+                            : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-neutral-900'}">
+                        <div class="flex items-center gap-2 truncate">
+                            <i data-lucide="${f.type === 'plantuml' ? 'flower-2' : 'file-text'}" class="w-4 h-4 ${f.id === this.activeFileId ? 'text-indigo-500 dark:text-gray-200' : 'text-slate-400 dark:text-gray-500'}"></i>
+                            <span class="truncate font-medium">${f.name}</span>
+                        </div>
+                        <button onclick="app.requestDeleteFile('${f.id}', event)" class="text-slate-400 hover:text-red-500 dark:hover:text-red-400 p-1 rounded hover:bg-slate-100 dark:hover:bg-neutral-800">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            }
+
+            applyTemplate(key) {
+                const type = key.startsWith('md_') ? 'markdown' : 'plantuml';
+                const name = `${key}.${type === 'plantuml' ? 'puml' : 'md'}`;
+                const content = App.TEMPLATES[key] || ''; 
+                const newFile = { id: generateId(), name, type, content };
+                this.files.push(newFile);
+                this.activeFileId = newFile.id;
+                this.renderSidebar();
+                this.loadFile(newFile.id);
+                this.saveState();
+                this.dom.templateSelect.value = "";
+            }
+
+            toggleDownloadMenu() {
+                const file = this.files.find(f => f.id === this.activeFileId);
+                if(!file) return;
+                if(file.type === 'plantuml') {
+                    this.dom.pumlDownloads.classList.remove('hidden');
+                    this.dom.mdDownloads.classList.add('hidden');
+                } else {
+                    this.dom.pumlDownloads.classList.add('hidden');
+                    this.dom.mdDownloads.classList.remove('hidden');
+                }
+                this.dom.downloadMenu.classList.toggle('hidden');
+            }
+
+            downloadSource() {
+                const file = this.files.find(f => f.id === this.activeFileId);
+                if (!file) return;
+                const blob = new Blob([file.content], {type: "text/plain"});
+                this.triggerDownload(URL.createObjectURL(blob), file.name);
+            }
+
+            async downloadImage(format) {
+                const file = this.files.find(f => f.id === this.activeFileId);
+                if (!file) return;
+                const fullCode = (this.settings.globalConfig ? this.settings.globalConfig + '\n' : '') + file.content;
+                const url = getDiagramUrl(this.settings.serverUrl, fullCode, format);
+                
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('Network Error');
+                    const blob = await res.blob();
+                    const filename = file.name.replace(/\.[^/.]+$/, "") + "." + format;
+                    this.triggerDownload(URL.createObjectURL(blob), filename);
+                } catch(e) {
+                    alert("Download failed due to browser restrictions (CORS). Please save the image by right-clicking it and selecting 'Save Image As'.");
+                }
+            }
+
+            generatePdf() {
+                const element = this.dom.renderOutput.querySelector('.markdown-body');
+                if (!element) return;
+                
+                const file = this.files.find(f => f.id === this.activeFileId);
+                const opt = {
+                    margin: 10,
+                    filename: file.name.replace('.md', '.pdf'),
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
-
-                diagramImg.src = url;
-
-            } catch (e) {
-                console.error("Encoding error", e);
-                loadingIndicator.classList.add('opacity-0');
+                
+                html2pdf().set(opt).from(element).save();
+                this.dom.downloadMenu.classList.add('hidden');
             }
-        }
 
-        // Debounce input to prevent spamming the server
-        editor.addEventListener('input', () => {
-            saveState();
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(updatePreview, 500);
-        });
-
-        // --- Templates ---
-        const templates = {
-            sequence: `@startuml
-skinparam responseMessageBelowArrow true
-autonumber
-
-actor User
-participant "Frontend" as FE
-participant "Backend" as BE
-database "Database" as DB
-
-User -> FE: Login Request
-activate FE
-    FE -> BE: POST /login
-    activate BE
-        BE -> DB: Lookup User
-        activate DB
-        return User Data
-        
-        BE -> BE: Validate Password
-        alt Valid
-            BE --> FE: 200 OK (Token)
-        else Invalid
-            BE --> FE: 401 Unauthorized
-        end
-    return Response
-return Show Dashboard
-@enduml`,
-            usecase: `@startuml
-left to right direction
-actor Guest as g
-package Professional {
-  actor Chef as c
-  actor "Food Critic" as fc
-}
-
-package Restaurant {
-  usecase "Eat Food" as UC1
-  usecase "Pay for Food" as UC2
-  usecase "Drink" as UC3
-  usecase "Review" as UC4
-}
-
-g --> UC1
-g --> UC2
-g --> UC3
-fc --> UC4
-@enduml`,
-            class: `@startuml
-abstract class User {
-  - String id
-  - String name
-  + login()
-}
-
-class Student {
-  - List<Course> courses
-  + enroll()
-}
-
-class Teacher {
-  - String department
-  + grade()
-}
-
-User <|-- Student
-User <|-- Teacher
-@enduml`,
-            activity: `@startuml
-start
-:Receive Request;
-if (Is Valid?) then (yes)
-  :Process Data;
-  fork
-    :Save to DB;
-  fork again
-    :Send Email;
-  end fork
-else (no)
-  :Log Error;
-endif
-stop
-@enduml`,
-            component: `@startuml
-package "Some Group" {
-  HTTP - [First Component]
-  [Another Component]
-}
- 
-node "Other Groups" {
-  FTP - [Second Component]
-  [First Component] --> FTP
-} 
-@enduml`,
-            state: `@startuml
-[*] --> State1
-State1 --> [*]
-State1 : this is a string
-State1 : this is another string
-
-State1 -> State2
-State2 --> [*]
-@enduml`,
-            er: `@startuml
-entity "Customer" as c {
-  *id : number <<generated>>
-  --
-  *name : text
-  description : text
-}
-
-entity "Order" as o {
-  *id : number <<generated>>
-  --
-  *user_id : number <<FK>>
-  total : number
-}
-
-c ||..|{ o
-@enduml`,
-            mindmap: `@startmindmap
-* Project
-** Frontend
-*** HTML/CSS
-*** JavaScript
-** Backend
-*** API Design
-*** Database
-** Deploy
-*** CI/CD
-*** Cloud
-@endmindmap`,
-            gantt: `@startgantt
-[Prototype Design] lasts 7 days
-[Code Prototype] lasts 7 days
-[Write Tests] lasts 5 days
-[Code Prototype] starts at [Prototype Design]'s end
-[Write Tests] starts at [Code Prototype]'s end
-@endgantt`,
-            json: `@startjson
-{
-   "fruit":"Apple",
-   "size":"Large",
-   "color": ["Red", "Green"]
-}
-@endjson`
-        };
-
-        templateSelect.addEventListener('change', (e) => {
-            const key = e.target.value;
-            if(templates[key]) {
-                // If editor has content, maybe confirm? 
-                // For now we just overwrite as it's "selecting a template"
-                editor.value = templates[key];
-                saveState();
-                updatePreview();
-                templateSelect.value = ""; // Reset
-            }
-        });
-
-        // --- Actions ---
-        async function downloadSVG() {
-            if (!currentEncodedUrl) return;
-            
-            try {
-                const response = await fetch(currentEncodedUrl);
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
+            triggerDownload(url, filename) {
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "diagram.svg";
+                a.download = filename;
                 document.body.appendChild(a);
                 a.click();
-                window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
-            } catch (e) {
-                alert("Failed to download.");
+                URL.revokeObjectURL(url); 
+                this.dom.downloadMenu.classList.add('hidden');
             }
-        }
 
-        function copyLink() {
-            if (!currentEncodedUrl) return;
-            
-            // Fallback function for iFrame environments
-            const fallbackCopy = (text) => {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.top = "0";
-                textArea.style.left = "0";
-                textArea.style.position = "fixed";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    return true;
-                } catch (err) {
-                    console.error('Fallback: Oops, unable to copy', err);
-                    return false;
-                } finally {
-                    document.body.removeChild(textArea);
+            showError(msg) {
+                const el = this.dom.errorToast;
+                const titleEl = el.querySelector('p.font-medium');
+                const descEl = el.querySelector('p.text-xs');
+                
+                if(msg) {
+                    titleEl.textContent = "Notice";
+                    descEl.textContent = msg;
+                } else {
+                    titleEl.textContent = "Render Error";
+                    descEl.textContent = "Syntax error or connectivity issue.";
                 }
-            };
-
-            const showSuccess = () => {
-                const btn = document.querySelector('button i[data-lucide="link"]').parentNode;
-                const span = btn.querySelector('span');
-                const originalText = span.innerText;
-                span.innerText = "Copied!";
-                setTimeout(() => span.innerText = originalText, 2000);
-            };
-
-            // Try standard API first, then fallback
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(currentEncodedUrl)
-                    .then(showSuccess)
-                    .catch(() => {
-                        if(fallbackCopy(currentEncodedUrl)) showSuccess();
-                    });
-            } else {
-                if(fallbackCopy(currentEncodedUrl)) showSuccess();
+                
+                el.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => el.classList.add('translate-y-20', 'opacity-0'), 3000);
+            }
+            hideError() {
+                this.dom.errorToast.classList.add('translate-y-20', 'opacity-0');
             }
         }
+        
+        App.TEMPLATES = {
+            sequence: `@startuml\nautonumber\nAlice -> Bob: Authentication Request\nBob --> Alice: Response\n@enduml`,
+            usecase: `@startuml\nleft to right direction\nactor User\nrectangle System {\n  usecase "Login" as UC1\n  usecase "Process" as UC2\n}\nUser --> UC1\nUC1 .> UC2 : include\n@enduml`,
+            class: `@startuml\nclass Car {\n  - engine: Engine\n  + start()\n}\nclass Engine\nCar *-- Engine\n@enduml`,
+            activity: `@startuml\nstart\n:Initialize;\nif (Check?) then (yes)\n  :Process;\nelse (no)\n  :Error;\nendif\nstop\n@enduml`,
+            state: `@startuml\n[*] -> Idle\nIdle --> Processing : Event\nProcessing --> Idle : Finish\n@enduml`,
+            component: `@startuml\npackage "Backend" {\n  [API] -> [Database]\n}\n[Frontend] ..> [API] : HTTP\n@enduml`,
+            deployment: `@startuml\nnode "Server" {\n  artifact "App.jar"\n}\nnode "Database" {\n  database "MySQL"\n}\nServer -- Database\n@enduml`,
+            c4context: `@startuml\n!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml\nPerson(person, "User", "A user of the system")\nSystem(system, "System", "Main system")\nRel(person, system, "Uses")\n@enduml`,
+            c4container: `@startuml\n!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml\nContainer(web_app, "Web App", "Java, Spring MVC", "Delivers content")\nContainerDb(db, "Database", "PostgreSQL", "Stores data")\nRel(web_app, db, "Reads/Writes")\n@enduml`,
+            archimate: `@startuml\nsprite $bProcess jar:archimate/business-process\nbusiness_process "Handle Request" as BP1 <<$bProcess>>\n@enduml`,
+            mindmap: `@startmindmap\n* Root\n** Branch 1\n*** Leaf 1\n** Branch 2\n@endmindmap`,
+            wbs: `@startwbs\n* Project\n** Phase 1\n*** Task A\n** Phase 2\n@endwbs`,
+            gantt: `@startgantt\n[Task 1] lasts 10 days\n[Task 2] starts at [Task 1]'s end\n@endgantt`,
+            json: `@startjson\n{\n  "name": "DocForge",\n  "features": ["UML", "Markdown"]\n}\n@endjson`,
+            yaml: `@startyaml\nname: DocForge\nversion: 1.0\n@endyaml`,
+            salt: `@startsalt\n{\n  Login Box\n  "User" | "Password"\n  [Cancel] | [ OK ]\n}\n@endsalt`,
+            md_basic: `# Project Title\n\nThis is a **Markdown** file.\n\n## Features\n- Clean UI\n- Fast rendering`,
+            md_embedded: `# System Architecture\n\nHere is the high level design:\n\n\`\`\`plantuml\n@startuml\nAlice -> Bob: Hello\n@enduml\n\`\`\`\n\nAnd here is the data model:\n\n\`\`\`plantuml\n@startjson\n{"data": 123}\n@endjson\n\`\`\``
+        };
 
-        // --- Initialization ---
-        loadState();
-        if (!editor.value) {
-            editor.value = templates.sequence;
-        }
-        updatePreview();
-
+        const app = new App();
     </script>
 </body>
 </html>
