@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Client-Side Executor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8; 
+        }
+
+        .notebook-cell {
+            transition: box-shadow 0.2s ease, transform 0.1s ease;
+        }
+        .notebook-cell:focus-within {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .code-input {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            tab-size: 4;
+            line-height: 1.5;
+        }
+
+        .output-area {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Spinner */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-ready { background-color: #10b981; box-shadow: 0 0 5px #10b981; }
+        .status-loading { background-color: #f59e0b; animation: pulse 1.5s infinite; }
+        .status-error { background-color: #ef4444; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Toast Notification */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 50;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- Sidebar / Header -->
+    <div class="bg-white border-b border-gray-200 p-4 flex justify-between items-center shadow-sm z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg">
+                <i class="fa-brands fa-python text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-gray-800 text-lg">PyBrowser Lite</h1>
+                <div class="text-xs text-gray-500 flex items-center gap-2">
+                    <span id="system-status-dot" class="status-dot status-loading"></span>
+                    <span id="system-status-text">Initializing Python Environment...</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-2">
+             <button id="btn-upload" onclick="triggerUpload()" class="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Upload File to Virtual FS" disabled>
+                <i class="fa-solid fa-upload mr-1"></i> Upload File
+            </button>
+            <input type="file" id="file-upload" class="hidden" onchange="handleFileUpload(this)">
+
+            <button onclick="clearAll()" class="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded transition-colors" title="Reset Notebook">
+                <i class="fa-solid fa-trash-can"></i> Clear All
+            </button>
+            <button onclick="addCell()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm font-medium transition-colors">
+                <i class="fa-solid fa-plus mr-1"></i> New Code Block
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="notebook-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 pb-20">
+        <!-- Cells will be injected here -->
+    </div>
+
+    <!-- Footer Help -->
+    <div class="bg-gray-100 border-t text-center py-2 text-xs text-gray-500">
+        Running Pyodide v0.25.0 • Client-Side Execution • Shift+Enter to Run
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast">Message Here</div>
+
+    <!-- Templates -->
+    <template id="cell-template">
+        <div class="notebook-cell bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden" data-id="">
+            
+            <!-- Toolbar -->
+            <div class="bg-gray-50 border-b border-gray-100 px-3 py-2 flex justify-between items-center">
+                <span class="text-xs font-mono text-gray-400 cell-index">In [ ]</span>
+                <div class="flex gap-2">
+                    <button class="run-btn text-gray-500 hover:text-green-600 transition-colors p-1" title="Run (Shift+Enter)">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
+                    <button class="delete-btn text-gray-400 hover:text-red-500 transition-colors p-1" title="Delete Cell">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Input -->
+            <div class="relative group">
+                <textarea class="code-input w-full p-4 outline-none text-sm text-gray-800 bg-white resize-y min-h-[80px]" placeholder="Write Python code here..." spellcheck="false"></textarea>
+                <!-- Visual hint for execution -->
+                <div class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none">
+                    <span class="text-[10px] bg-gray-200 px-1 rounded text-gray-500">Shift+Enter</span>
+                </div>
+            </div>
+
+            <!-- Output Container (Hidden by default) -->
+            <div class="output-container hidden border-t border-gray-100 bg-gray-50">
+                <div class="p-4 text-sm">
+                    <div class="flex items-start gap-2">
+                        <span class="text-xs font-mono text-red-400 mt-1 select-none output-label">Out:</span>
+                        <pre class="output-area flex-1 text-gray-700"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Overlay (Hidden by default) -->
+            <div class="loading-overlay absolute inset-0 bg-white/80 z-10 hidden flex items-center justify-center">
+                <div class="loader"></div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        let pyodide = null;
+        let cellCount = 0;
+        const STORAGE_KEY = 'py_notebook_data';
+
+        // --- Initialization ---
+        
+        async function main() {
+            try {
+                // Initialize Pyodide
+                pyodide = await loadPyodide();
+                
+                // Setup stdout capture redirection
+                await pyodide.runPythonAsync(`
+                    import sys
+                    import io
+                    
+                    class JSStream(io.StringIO):
+                        def write(self, s):
+                            return super().write(s)
+                `);
+
+                // UI Updates
+                document.getElementById('system-status-dot').className = 'status-dot status-ready';
+                document.getElementById('system-status-text').innerText = 'Ready';
+                document.getElementById('system-status-text').className = 'text-green-600 font-medium';
+                
+                // Enable upload button
+                document.getElementById('btn-upload').disabled = false;
+
+                // Load saved state or create default cell
+                loadState();
+                
+            } catch (err) {
+                document.getElementById('system-status-dot').className = 'status-dot status-error';
+                document.getElementById('system-status-text').innerText = 'Error loading Python';
+                console.error("Pyodide failed to load", err);
+                alert("Failed to load Python environment. Please check your internet connection.");
+            }
+        }
+
+        main();
+
+        // --- File Upload Logic ---
+        
+        function triggerUpload() {
+            document.getElementById('file-upload').click();
+        }
+
+        async function handleFileUpload(input) {
+            if (input.files.length === 0) return;
+            
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                try {
+                    const buffer = e.target.result;
+                    const data = new Uint8Array(buffer);
+                    
+                    // Write file to Pyodide's virtual file system
+                    pyodide.FS.writeFile(file.name, data);
+                    
+                    showToast(`File "${file.name}" uploaded successfully!`);
+                    
+                    // If user uploads a CSV, they likely want pandas. 
+                    // We can optimistically preload it, but let's stick to lazy loading 
+                    // via runPython to avoid blocking the UI unnecessarily right now.
+                    
+                } catch (err) {
+                    console.error(err);
+                    showToast("Error uploading file: " + err.message);
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+            
+            // Reset input so same file can be selected again if needed
+            input.value = '';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // --- Core Logic ---
+
+        function createCellElement(id, content = "") {
+            const template = document.getElementById('cell-template');
+            const clone = template.content.cloneNode(true);
+            const cellDiv = clone.querySelector('.notebook-cell');
+            
+            cellDiv.dataset.id = id;
+            
+            const textarea = cellDiv.querySelector('textarea');
+            textarea.value = content;
+            
+            // Auto-resize textarea logic
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+                saveState();
+            });
+
+            // Key binding for Shift+Enter
+            textarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.shiftKey) {
+                    e.preventDefault();
+                    runCell(id);
+                }
+            });
+
+            // Buttons
+            cellDiv.querySelector('.run-btn').onclick = () => runCell(id);
+            cellDiv.querySelector('.delete-btn').onclick = () => deleteCell(id);
+
+            return cellDiv;
+        }
+
+        function addCell(content = "", save = true) {
+            cellCount++;
+            const id = "cell_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+            const container = document.getElementById('notebook-container');
+            const cellEl = createCellElement(id, content);
+            container.appendChild(cellEl);
+            
+            // Scroll to new cell if added manually
+            if(save) {
+                cellEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                saveState();
+            }
+            
+            // Update index labels
+            updateIndices();
+            
+            // Adjust height of textarea initially if content exists
+            if(content) {
+                const ta = container.querySelector(`[data-id="${id}"] textarea`);
+                ta.style.height = 'auto';
+                ta.style.height = (ta.scrollHeight) + 'px';
+            }
+        }
+
+        async function runCell(id) {
+            if (!pyodide) {
+                alert("Python is still loading...");
+                return;
+            }
+
+            const cell = document.querySelector(`.notebook-cell[data-id="${id}"]`);
+            if (!cell) return;
+
+            const code = cell.querySelector('textarea').value;
+            const outputContainer = cell.querySelector('.output-container');
+            const outputArea = cell.querySelector('.output-area');
+            const loader = cell.querySelector('.loading-overlay');
+            const label = cell.querySelector('.output-label');
+
+            if (!code.trim()) return;
+
+            // UI State: Running
+            loader.classList.remove('hidden');
+            outputContainer.classList.add('hidden');
+            outputArea.textContent = "";
+            
+            try {
+                // Reset stdout capture buffer in Python
+                await pyodide.runPythonAsync(`
+                    sys.stdout = JSStream()
+                    sys.stderr = JSStream()
+                `);
+
+                // Run the code
+                await pyodide.loadPackagesFromImports(code);
+                
+                // Evaluate
+                let result = await pyodide.runPythonAsync(code);
+
+                // Retrieve stdout content
+                let stdout = await pyodide.runPythonAsync("sys.stdout.getvalue()");
+                let stderr = await pyodide.runPythonAsync("sys.stderr.getvalue()");
+
+                // Prioritize stdout/print. If execute returns a value (last line expression), append it.
+                let finalOutput = stdout + stderr;
+                
+                if (result !== undefined && result !== null) {
+                     if (typeof result === 'object' && result.toString) {
+                         finalOutput += "\n" + result.toString();
+                     } else {
+                         finalOutput += "\n" + String(result);
+                     }
+                }
+
+                // Display Results
+                if (finalOutput.trim()) {
+                    outputArea.textContent = finalOutput.trim();
+                    outputArea.classList.remove('text-red-600');
+                    outputArea.classList.add('text-gray-700');
+                    label.textContent = "Out:";
+                    label.classList.remove('text-red-500');
+                    label.classList.add('text-gray-400');
+                    outputContainer.classList.remove('hidden');
+                }
+
+            } catch (err) {
+                // Handle Python Errors
+                outputArea.textContent = err.message;
+                outputArea.classList.remove('text-gray-700');
+                outputArea.classList.add('text-red-600');
+                label.textContent = "Err:";
+                label.classList.remove('text-gray-400');
+                label.classList.add('text-red-500');
+                outputContainer.classList.remove('hidden');
+            } finally {
+                // Cleanup UI
+                loader.classList.add('hidden');
+            }
+        }
+
+        function deleteCell(id) {
+            const cell = document.querySelector(`.notebook-cell[data-id="${id}"]`);
+            if (cell) {
+                cell.remove();
+                updateIndices();
+                saveState();
+            }
+            // Ensure at least one cell exists
+            if (document.querySelectorAll('.notebook-cell').length === 0) {
+                addCell();
+            }
+        }
+
+        function clearAll() {
+            if(confirm("Clear all code and reset?")) {
+                document.getElementById('notebook-container').innerHTML = '';
+                localStorage.removeItem(STORAGE_KEY);
+                addCell();
+            }
+        }
+
+        function updateIndices() {
+            const cells = document.querySelectorAll('.notebook-cell');
+            cells.forEach((cell, index) => {
+                cell.querySelector('.cell-index').innerText = `In [${index + 1}]`;
+            });
+        }
+
+        // --- Persistence ---
+
+        function saveState() {
+            const cells = [];
+            document.querySelectorAll('.notebook-cell').forEach(cell => {
+                cells.push(cell.querySelector('textarea').value);
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cells));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const contents = JSON.parse(saved);
+                if (contents.length > 0) {
+                    contents.forEach(content => addCell(content, false));
+                    return;
+                }
+            }
+            // Default start
+            addCell("# Welcome to PyBrowser!\n# 1. Click 'Upload File' to load 'data.csv'\n# 2. Run the code below:\n\nimport pandas as pd\n\n# df = pd.read_csv('data.csv')\n# print(df.head())", false);
+        }
+
+    </script>
+</body>
+</html>
