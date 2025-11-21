@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern PlantUML Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pako for Deflate compression -->
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .editor-font {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-ligatures: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .split-pane {
+            display: grid;
+            grid-template-columns: 1fr;
+            height: calc(100vh - 64px); /* Subtract header height */
+        }
+
+        @media (min-width: 768px) {
+            .split-pane {
+                grid-template-columns: 400px 1fr;
+            }
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal Transitions */
+        .modal-backdrop {
+            transition: opacity 0.2s ease-in-out;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen overflow-hidden flex flex-col">
+
+    <!-- Header -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 z-10 shadow-sm shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 p-1.5 rounded-lg">
+                <i data-lucide="flower-2" class="w-6 h-6 text-white"></i>
+            </div>
+            <h1 class="font-semibold text-lg tracking-tight text-slate-900">PlantUML <span class="text-slate-400 font-normal">Studio</span></h1>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button id="openSettingsBtn" class="p-2 hover:bg-slate-100 rounded-md text-slate-500 transition-colors" title="Global Settings & Themes">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+            
+            <div class="h-6 w-px bg-slate-200 mx-1"></div>
+
+            <div class="hidden sm:flex items-center gap-2 mr-4">
+                <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Templates</span>
+                <select id="templateSelect" class="bg-slate-100 text-sm border-none rounded-md px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 cursor-pointer hover:bg-slate-200 transition-colors max-w-[150px] truncate">
+                    <option value="" disabled selected>Select...</option>
+                    <option value="sequence">Sequence</option>
+                    <option value="usecase">Use Case</option>
+                    <option value="class">Class</option>
+                    <option value="activity">Activity</option>
+                    <option value="component">Component</option>
+                    <option value="state">State</option>
+                    <option value="er">Entity Relationship</option>
+                    <option value="mindmap">Mind Map</option>
+                    <option value="gantt">Gantt</option>
+                    <option value="json">JSON</option>
+                </select>
+            </div>
+            
+            <button onclick="downloadSVG()" class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-md transition-colors">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span class="hidden lg:inline">SVG</span>
+            </button>
+            <button onclick="copyLink()" class="flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md transition-colors shadow-sm">
+                <i data-lucide="link" class="w-4 h-4"></i>
+                <span class="hidden lg:inline">Link</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="split-pane">
+        
+        <!-- Editor Section -->
+        <section class="flex flex-col border-r border-slate-200 bg-white h-full min-h-0">
+            <div class="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Code Editor</span>
+                    <span class="text-[10px] text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <i data-lucide="save" class="w-3 h-3"></i> Auto-saved
+                    </span>
+                </div>
+                <button onclick="clearEditor()" class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Clear Editor">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="relative flex-1 min-h-0 group">
+                <textarea 
+                    id="codeEditor" 
+                    class="w-full h-full p-4 resize-none focus:outline-none editor-font text-sm leading-relaxed text-slate-700 bg-white"
+                    placeholder="@startuml\nAlice -> Bob: Hello\n@enduml"
+                    spellcheck="false"
+                ></textarea>
+            </div>
+        </section>
+
+        <!-- Preview Section -->
+        <section class="flex flex-col h-full min-h-0 bg-slate-100/50 relative">
+            <div class="flex items-center justify-between px-4 py-2 bg-white border-b border-slate-200">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Preview</span>
+                    <span id="configBadge" class="hidden text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200">Config Applied</span>
+                </div>
+                <div id="loadingIndicator" class="opacity-0 transition-opacity duration-200">
+                    <div class="loader"></div>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-auto p-8 flex items-center justify-center relative" id="previewContainer">
+                <!-- Image will be injected here -->
+                <img id="diagramImage" class="max-w-none shadow-lg bg-white rounded-sm" src="" alt="Diagram Preview" style="display: none;">
+                
+                <!-- Empty State -->
+                <div id="emptyState" class="text-center">
+                    <div class="bg-slate-200 p-4 rounded-full inline-block mb-4">
+                        <i data-lucide="image" class="w-8 h-8 text-slate-400"></i>
+                    </div>
+                    <h3 class="text-slate-900 font-medium">No Diagram Generated</h3>
+                    <p class="text-slate-500 text-sm mt-1">Start typing or select a template to begin.</p>
+                </div>
+
+                <!-- Error State -->
+                <div id="errorState" class="hidden absolute bottom-4 left-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3 items-start shadow-sm animate-fade-in-up">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-600 shrink-0 mt-0.5"></i>
+                    <div>
+                        <h4 class="text-sm font-medium text-red-800">Syntax Error</h4>
+                        <p class="text-xs text-red-600 mt-1">The diagram could not be rendered. Please check your syntax.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" role="dialog">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity" onclick="toggleSettings(false)"></div>
+        
+        <!-- Modal Content -->
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 z-10 overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <h2 class="font-semibold text-slate-900">Settings</h2>
+                <button onclick="toggleSettings(false)" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Global Configuration (Prepended)</label>
+                    <p class="text-xs text-slate-500 mb-2">Add global themes or skinparams here. This text is prepended to every diagram but hidden from the main editor.</p>
+                    <textarea id="globalConfig" 
+                        class="w-full h-32 p-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 editor-font text-sm"
+                        placeholder="!theme plain&#10;skinparam backgroundColor transparent"></textarea>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="presetTheme('plain')" class="text-xs bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded text-slate-600 border border-slate-200">Plain Theme</button>
+                    <button onclick="presetTheme('spacelab')" class="text-xs bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded text-slate-600 border border-slate-200">Spacelab Theme</button>
+                    <button onclick="presetTheme('')" class="text-xs bg-white hover:bg-red-50 px-2 py-1 rounded text-red-400 border border-red-100 ml-auto">Clear Config</button>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <button onclick="saveSettingsAndClose()" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors">
+                    Save & Apply
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script>
+        // --- Initialize Icons ---
+        lucide.createIcons();
+
+        // --- State & DOM Elements ---
+        const editor = document.getElementById('codeEditor');
+        const diagramImg = document.getElementById('diagramImage');
+        const emptyState = document.getElementById('emptyState');
+        const errorState = document.getElementById('errorState');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const templateSelect = document.getElementById('templateSelect');
+        
+        // Settings Elements
+        const settingsModal = document.getElementById('settingsModal');
+        const globalConfigInput = document.getElementById('globalConfig');
+        const configBadge = document.getElementById('configBadge');
+        const openSettingsBtn = document.getElementById('openSettingsBtn');
+
+        let currentEncodedUrl = '';
+        let debounceTimer;
+
+        // --- Persistence (LocalStorage) ---
+        const STORAGE_KEY_CODE = 'plantuml_code';
+        const STORAGE_KEY_CONFIG = 'plantuml_config';
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY_CODE, editor.value);
+            localStorage.setItem(STORAGE_KEY_CONFIG, globalConfigInput.value);
+        }
+
+        function loadState() {
+            const savedCode = localStorage.getItem(STORAGE_KEY_CODE);
+            const savedConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
+
+            if (savedCode !== null) editor.value = savedCode;
+            if (savedConfig !== null) globalConfigInput.value = savedConfig;
+            
+            // Check config badge
+            updateConfigBadge();
+        }
+
+        // --- Settings Logic ---
+        function toggleSettings(show) {
+            if (show) {
+                settingsModal.classList.remove('hidden');
+            } else {
+                settingsModal.classList.add('hidden');
+            }
+        }
+
+        function saveSettingsAndClose() {
+            saveState();
+            updatePreview();
+            updateConfigBadge();
+            toggleSettings(false);
+        }
+
+        function updateConfigBadge() {
+            if (globalConfigInput.value.trim().length > 0) {
+                configBadge.classList.remove('hidden');
+            } else {
+                configBadge.classList.add('hidden');
+            }
+        }
+
+        function presetTheme(themeName) {
+            if (!themeName) {
+                globalConfigInput.value = "";
+                return;
+            }
+            globalConfigInput.value = `!theme ${themeName}`;
+        }
+
+        openSettingsBtn.addEventListener('click', () => toggleSettings(true));
+
+        // --- Editor Logic ---
+        function clearEditor() {
+            if (confirm('Are you sure you want to clear the editor?')) {
+                editor.value = '';
+                editor.focus();
+                saveState();
+                updatePreview();
+            }
+        }
+
+        // --- PlantUML Encoding Logic (Deflate + Custom Base64) ---
+        const plantUmlMapper = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
+
+        function encode6bit(b) {
+            if (b < 10) return String.fromCharCode(48 + b);
+            b -= 10;
+            if (b < 26) return String.fromCharCode(65 + b);
+            b -= 26;
+            if (b < 26) return String.fromCharCode(97 + b);
+            b -= 26;
+            if (b == 0) return '-';
+            if (b == 1) return '_';
+            return '?';
+        }
+
+        function append3bytes(b1, b2, b3) {
+            let c1 = b1 >> 2;
+            let c2 = ((b1 & 0x3) << 4) | (b2 >> 4);
+            let c3 = ((b2 & 0xF) << 2) | (b3 >> 6);
+            let c4 = b3 & 0x3F;
+            let r = "";
+            r += encode6bit(c1 & 0x3F);
+            r += encode6bit(c2 & 0x3F);
+            r += encode6bit(c3 & 0x3F);
+            r += encode6bit(c4 & 0x3F);
+            return r;
+        }
+
+        function encodePlantUML(data) {
+            let r = "";
+            for (let i = 0; i < data.length; i += 3) {
+                if (i + 2 == data.length) {
+                    r += append3bytes(data[i], data[i + 1], 0);
+                } else if (i + 1 == data.length) {
+                    r += append3bytes(data[i], 0, 0);
+                } else {
+                    r += append3bytes(data[i], data[i + 1], data[i + 2]);
+                }
+            }
+            return r;
+        }
+
+        function compressAndEncode(text) {
+            const unescaped = unescape(encodeURIComponent(text));
+            const deflated = pako.deflate(unescaped, { level: 9 });
+            return encodePlantUML(deflated);
+        }
+
+        // --- Core Application Logic ---
+
+        function updatePreview() {
+            const rawCode = editor.value.trim();
+            const config = globalConfigInput.value.trim();
+            
+            // Merge Config + Code
+            // If rawCode is empty, we don't generate anything
+            if (!rawCode) {
+                diagramImg.style.display = 'none';
+                emptyState.style.display = 'block';
+                errorState.classList.add('hidden');
+                return;
+            }
+
+            const fullSource = (config ? config + '\n' : '') + rawCode;
+
+            loadingIndicator.classList.remove('opacity-0');
+            
+            try {
+                const encoded = compressAndEncode(fullSource);
+                const url = `https://www.plantuml.com/plantuml/svg/~1${encoded}`;
+                currentEncodedUrl = url;
+
+                diagramImg.onload = () => {
+                    loadingIndicator.classList.add('opacity-0');
+                    diagramImg.style.display = 'block';
+                    emptyState.style.display = 'none';
+                    errorState.classList.add('hidden');
+                };
+
+                diagramImg.onerror = () => {
+                    loadingIndicator.classList.add('opacity-0');
+                    errorState.classList.remove('hidden');
+                };
+
+                diagramImg.src = url;
+
+            } catch (e) {
+                console.error("Encoding error", e);
+                loadingIndicator.classList.add('opacity-0');
+            }
+        }
+
+        // Debounce input to prevent spamming the server
+        editor.addEventListener('input', () => {
+            saveState();
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(updatePreview, 500);
+        });
+
+        // --- Templates ---
+        const templates = {
+            sequence: `@startuml
+skinparam responseMessageBelowArrow true
+autonumber
+
+actor User
+participant "Frontend" as FE
+participant "Backend" as BE
+database "Database" as DB
+
+User -> FE: Login Request
+activate FE
+    FE -> BE: POST /login
+    activate BE
+        BE -> DB: Lookup User
+        activate DB
+        return User Data
+        
+        BE -> BE: Validate Password
+        alt Valid
+            BE --> FE: 200 OK (Token)
+        else Invalid
+            BE --> FE: 401 Unauthorized
+        end
+    return Response
+return Show Dashboard
+@enduml`,
+            usecase: `@startuml
+left to right direction
+actor Guest as g
+package Professional {
+  actor Chef as c
+  actor "Food Critic" as fc
+}
+
+package Restaurant {
+  usecase "Eat Food" as UC1
+  usecase "Pay for Food" as UC2
+  usecase "Drink" as UC3
+  usecase "Review" as UC4
+}
+
+g --> UC1
+g --> UC2
+g --> UC3
+fc --> UC4
+@enduml`,
+            class: `@startuml
+abstract class User {
+  - String id
+  - String name
+  + login()
+}
+
+class Student {
+  - List<Course> courses
+  + enroll()
+}
+
+class Teacher {
+  - String department
+  + grade()
+}
+
+User <|-- Student
+User <|-- Teacher
+@enduml`,
+            activity: `@startuml
+start
+:Receive Request;
+if (Is Valid?) then (yes)
+  :Process Data;
+  fork
+    :Save to DB;
+  fork again
+    :Send Email;
+  end fork
+else (no)
+  :Log Error;
+endif
+stop
+@enduml`,
+            component: `@startuml
+package "Some Group" {
+  HTTP - [First Component]
+  [Another Component]
+}
+ 
+node "Other Groups" {
+  FTP - [Second Component]
+  [First Component] --> FTP
+} 
+@enduml`,
+            state: `@startuml
+[*] --> State1
+State1 --> [*]
+State1 : this is a string
+State1 : this is another string
+
+State1 -> State2
+State2 --> [*]
+@enduml`,
+            er: `@startuml
+entity "Customer" as c {
+  *id : number <<generated>>
+  --
+  *name : text
+  description : text
+}
+
+entity "Order" as o {
+  *id : number <<generated>>
+  --
+  *user_id : number <<FK>>
+  total : number
+}
+
+c ||..|{ o
+@enduml`,
+            mindmap: `@startmindmap
+* Project
+** Frontend
+*** HTML/CSS
+*** JavaScript
+** Backend
+*** API Design
+*** Database
+** Deploy
+*** CI/CD
+*** Cloud
+@endmindmap`,
+            gantt: `@startgantt
+[Prototype Design] lasts 7 days
+[Code Prototype] lasts 7 days
+[Write Tests] lasts 5 days
+[Code Prototype] starts at [Prototype Design]'s end
+[Write Tests] starts at [Code Prototype]'s end
+@endgantt`,
+            json: `@startjson
+{
+   "fruit":"Apple",
+   "size":"Large",
+   "color": ["Red", "Green"]
+}
+@endjson`
+        };
+
+        templateSelect.addEventListener('change', (e) => {
+            const key = e.target.value;
+            if(templates[key]) {
+                // If editor has content, maybe confirm? 
+                // For now we just overwrite as it's "selecting a template"
+                editor.value = templates[key];
+                saveState();
+                updatePreview();
+                templateSelect.value = ""; // Reset
+            }
+        });
+
+        // --- Actions ---
+        async function downloadSVG() {
+            if (!currentEncodedUrl) return;
+            
+            try {
+                const response = await fetch(currentEncodedUrl);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "diagram.svg";
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (e) {
+                alert("Failed to download.");
+            }
+        }
+
+        function copyLink() {
+            if (!currentEncodedUrl) return;
+            
+            // Fallback function for iFrame environments
+            const fallbackCopy = (text) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                textArea.style.position = "fixed";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    return true;
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                    return false;
+                } finally {
+                    document.body.removeChild(textArea);
+                }
+            };
+
+            const showSuccess = () => {
+                const btn = document.querySelector('button i[data-lucide="link"]').parentNode;
+                const span = btn.querySelector('span');
+                const originalText = span.innerText;
+                span.innerText = "Copied!";
+                setTimeout(() => span.innerText = originalText, 2000);
+            };
+
+            // Try standard API first, then fallback
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentEncodedUrl)
+                    .then(showSuccess)
+                    .catch(() => {
+                        if(fallbackCopy(currentEncodedUrl)) showSuccess();
+                    });
+            } else {
+                if(fallbackCopy(currentEncodedUrl)) showSuccess();
+            }
+        }
+
+        // --- Initialization ---
+        loadState();
+        if (!editor.value) {
+            editor.value = templates.sequence;
+        }
+        updatePreview();
+
+    </script>
+</body>
+</html>
