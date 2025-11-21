@@ -124,7 +124,6 @@
         }
 
         /* Matplotlib Canvas Overrides */
-        /* Ensure the plot fits within the cell */
         .output-plot div {
             max-width: 100% !important;
             overflow-x: auto;
@@ -133,6 +132,11 @@
         .output-plot canvas {
             max-width: 100% !important;
             height: auto !important;
+        }
+
+        /* Custom Modal */
+        #custom-modal {
+            backdrop-filter: blur(2px);
         }
     </style>
 </head>
@@ -154,7 +158,19 @@
         </div>
         <div class="flex gap-2 items-center">
             <!-- Action Buttons -->
-             <button id="btn-upload" onclick="triggerUpload()" class="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Upload File" disabled>
+            <div class="flex bg-gray-100 rounded-lg p-1 gap-1 mr-2">
+                <button onclick="triggerNotebookLoad()" class="px-3 py-1 text-sm text-gray-600 hover:bg-white hover:text-blue-600 rounded shadow-sm transition-all" title="Import .ipynb">
+                    <i class="fa-solid fa-file-import"></i>
+                </button>
+                <button onclick="downloadNotebook()" class="px-3 py-1 text-sm text-gray-600 hover:bg-white hover:text-blue-600 rounded shadow-sm transition-all" title="Save as .ipynb">
+                    <i class="fa-solid fa-file-export"></i>
+                </button>
+            </div>
+            <input type="file" id="notebook-upload" class="hidden" accept=".ipynb" onchange="handleNotebookLoad(this)">
+
+            <div class="h-6 w-px bg-gray-300 mx-1"></div>
+
+             <button id="btn-upload" onclick="triggerUpload()" class="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Upload File to FS" disabled>
                 <i class="fa-solid fa-upload"></i>
             </button>
             <input type="file" id="file-upload" class="hidden" onchange="handleFileUpload(this)">
@@ -197,11 +213,21 @@
     <!-- Toast Notification -->
     <div id="toast">Message Here</div>
 
+    <!-- Custom Modal -->
+    <div id="custom-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 border border-gray-200">
+            <h3 id="modal-title" class="text-lg font-bold mb-2 text-gray-800">Title</h3>
+            <p id="modal-message" class="text-gray-600 mb-6 text-sm leading-relaxed">Message goes here.</p>
+            <div class="flex justify-end gap-3" id="modal-actions">
+                <button id="modal-cancel-btn" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm font-medium transition-colors" onclick="closeModal()">Cancel</button>
+                <button id="modal-confirm-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium shadow-sm transition-colors">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Templates -->
     <template id="cell-template">
         <div class="notebook-cell bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden" data-id="">
-            
-            <!-- Toolbar -->
             <div class="bg-gray-50 border-b border-gray-100 px-3 py-2 flex justify-between items-center select-none">
                 <span class="text-xs font-mono text-gray-400 cell-index">In [ ]</span>
                 <div class="flex gap-2">
@@ -213,32 +239,23 @@
                     </button>
                 </div>
             </div>
-
-            <!-- Input -->
             <div class="relative group">
                 <textarea class="code-input w-full p-4 outline-none text-sm text-gray-800 bg-white resize-y min-h-[80px]" placeholder="Write Python code here..." spellcheck="false"></textarea>
-                <!-- Visual hint for execution -->
                 <div class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none">
                     <span class="text-[10px] bg-gray-200 px-1 rounded text-gray-500">Shift+Enter</span>
                 </div>
             </div>
-
-            <!-- Output Container (Hidden by default) -->
             <div class="output-container hidden border-t border-gray-100 bg-gray-50">
                 <div class="p-4 text-sm">
                     <div class="flex items-start gap-2">
                         <span class="text-xs font-mono text-red-400 mt-1 select-none output-label">Out:</span>
                         <div class="flex-1 overflow-hidden">
-                            <!-- Matplotlib Plot Target -->
                             <div class="output-plot mb-2"></div>
-                            <!-- Stdout Text -->
                             <pre class="output-text text-gray-700"></pre>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Loading Overlay (Hidden by default) -->
             <div class="loading-overlay absolute inset-0 bg-white/80 z-10 hidden flex items-center justify-center">
                 <div class="loader"></div>
             </div>
@@ -264,109 +281,109 @@
         const STORAGE_KEY = 'py_notebook_data';
 
         // --- Initialization ---
-        
         async function main() {
             try {
-                // Initialize Pyodide
                 pyodide = await loadPyodide();
-                
-                // Setup stdout capture redirection
                 await pyodide.runPythonAsync(`
                     import sys
                     import io
-                    
                     class JSStream(io.StringIO):
                         def write(self, s):
                             return super().write(s)
                 `);
-
-                // UI Updates
                 document.getElementById('system-status-dot').className = 'status-dot status-ready';
                 document.getElementById('system-status-text').innerText = 'Ready';
                 document.getElementById('system-status-text').className = 'text-green-600 font-medium';
-                
                 document.getElementById('btn-upload').disabled = false;
-
-                // Initial file scan
                 updateFileList();
-
-                // Load saved state or create default cell
                 loadState();
-                
             } catch (err) {
                 document.getElementById('system-status-dot').className = 'status-dot status-error';
                 document.getElementById('system-status-text').innerText = 'Error';
                 console.error("Pyodide failed to load", err);
-                alert("Failed to load Python environment.");
+                showModal("System Error", "Failed to load Python environment. Please check your internet connection.", false);
             }
         }
-
         main();
 
+        // --- Modal Logic ---
+        function showModal(title, message, isConfirm = false, onConfirm = null) {
+            const modal = document.getElementById('custom-modal');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            const cancelBtn = document.getElementById('modal-cancel-btn');
+
+            // Remove old listeners
+            const newConfirm = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+
+            if (isConfirm) {
+                cancelBtn.classList.remove('hidden');
+                newConfirm.textContent = "Yes";
+                newConfirm.onclick = () => {
+                    closeModal();
+                    if (onConfirm) onConfirm();
+                };
+            } else {
+                cancelBtn.classList.add('hidden');
+                newConfirm.textContent = "OK";
+                newConfirm.onclick = closeModal;
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('custom-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
         // --- File System Logic ---
-        
         function toggleFileSidebar() {
             const sidebar = document.getElementById('file-sidebar');
             sidebar.classList.toggle('open');
             updateFileList();
         }
-
-        function triggerUpload() {
-            document.getElementById('file-upload').click();
-        }
+        function triggerUpload() { document.getElementById('file-upload').click(); }
 
         async function handleFileUpload(input) {
             if (input.files.length === 0) return;
-            
             const file = input.files[0];
             const reader = new FileReader();
-
             reader.onload = async function(e) {
                 try {
                     const buffer = e.target.result;
                     const data = new Uint8Array(buffer);
-                    
                     pyodide.FS.writeFile(file.name, data);
-                    
                     showToast(`File "${file.name}" uploaded!`);
                     updateFileList();
-                    
-                    // Open sidebar to show user where it went
                     document.getElementById('file-sidebar').classList.add('open');
-                    
                 } catch (err) {
                     console.error(err);
                     showToast("Error: " + err.message);
                 }
             };
-
             reader.readAsArrayBuffer(file);
             input.value = '';
         }
 
         function updateFileList() {
             if (!pyodide) return;
-            
             const listContainer = document.getElementById('file-list');
             const template = document.getElementById('file-item-template');
-            
             try {
                 const files = pyodide.FS.readdir('.');
-                
-                // Filter out system dirs
                 const visibleFiles = files.filter(f => f !== '.' && f !== '..' && f !== 'tmp' && f !== 'home' && f !== 'dev' && f !== 'proc');
-
                 if (visibleFiles.length === 0) {
                     listContainer.innerHTML = '<div class="text-center text-gray-400 text-sm mt-10">No files found.<br>Upload or create one!</div>';
                     return;
                 }
-
                 listContainer.innerHTML = '';
                 visibleFiles.forEach(filename => {
                     const clone = template.content.cloneNode(true);
                     clone.querySelector('.file-name').innerText = filename;
-                    
-                    // Try to get size
                     try {
                         const stat = pyodide.FS.stat(filename);
                         if(!pyodide.FS.isDir(stat.mode)) {
@@ -375,19 +392,15 @@
                             clone.querySelector('.file-size').innerText = '(Dir)';
                         }
                     } catch(e){}
-
                     clone.querySelector('.download-btn').onclick = () => downloadFile(filename);
                     listContainer.appendChild(clone);
                 });
-                
-                // Update badge
                 const badge = document.getElementById('file-count-badge');
                 if(visibleFiles.length > 0) {
                     badge.classList.remove('hidden');
                 } else {
                     badge.classList.add('hidden');
                 }
-
             } catch(e) {
                 console.error("Error reading FS", e);
             }
@@ -417,8 +430,87 @@
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
         }
 
-        // --- Core Logic ---
+        // --- Jupyter Notebook Import/Export Logic ---
+        function downloadNotebook() {
+            const cells = [];
+            document.querySelectorAll('.notebook-cell').forEach(cell => {
+                const source = cell.querySelector('textarea').value;
+                cells.push({
+                    "cell_type": "code",
+                    "execution_count": null,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": source.split('\n').map(line => line + '\n')
+                });
+            });
+            const notebook = {
+                "metadata": {
+                    "kernelspec": { "display_name": "Python 3 (Pyodide)", "language": "python", "name": "python3" },
+                    "language_info": { "codemirror_mode": { "name": "ipython", "version": 3 }, "file_extension": ".py", "mimetype": "text/x-python", "name": "python", "nbconvert_exporter": "python", "pygments_lexer": "ipython3", "version": "3.8" }
+                },
+                "nbformat": 4,
+                "nbformat_minor": 4,
+                "cells": cells
+            };
+            const blob = new Blob([JSON.stringify(notebook, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'notebook.ipynb';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Notebook downloaded");
+        }
 
+        function triggerNotebookLoad() { document.getElementById('notebook-upload').click(); }
+
+        function handleNotebookLoad(input) {
+            if (input.files.length === 0) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const content = JSON.parse(e.target.result);
+                    if (!content.cells) throw new Error("Invalid notebook format");
+
+                    showModal("Import Notebook", "This will overwrite your current notebook. Are you sure?", true, () => {
+                         loadNotebookContent(content);
+                    });
+
+                } catch (err) {
+                    console.error(err);
+                    showToast("Error parsing notebook: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+            input.value = ''; 
+        }
+
+        function loadNotebookContent(content) {
+             document.getElementById('notebook-container').innerHTML = '';
+             localStorage.removeItem(STORAGE_KEY);
+             cellCount = 0;
+             let loadedCount = 0;
+             content.cells.forEach(cell => {
+                if (cell.cell_type === 'code') {
+                    let sourceCode = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
+                    addCell(sourceCode, false);
+                    loadedCount++;
+                }
+             });
+             saveState();
+             if (loadedCount === 0) {
+                 addCell();
+                 showToast("No code cells found");
+             } else {
+                 showToast(`Loaded ${loadedCount} cells`);
+             }
+        }
+
+        // --- Core Logic ---
         function createCellElement(id, content = "") {
             const template = document.getElementById('cell-template');
             const clone = template.content.cloneNode(true);
@@ -427,23 +519,19 @@
             
             const textarea = cellDiv.querySelector('textarea');
             textarea.value = content;
-            
             textarea.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
                 saveState();
             });
-
             textarea.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' && e.shiftKey) {
                     e.preventDefault();
                     runCell(id);
                 }
             });
-
             cellDiv.querySelector('.run-btn').onclick = () => runCell(id);
             cellDiv.querySelector('.delete-btn').onclick = () => deleteCell(id);
-
             return cellDiv;
         }
 
@@ -454,23 +542,23 @@
             const cellEl = createCellElement(id, content);
             container.appendChild(cellEl);
             
+            if(content) {
+                const ta = container.querySelector(`[data-id="${id}"] textarea`);
+                setTimeout(() => {
+                     ta.style.height = 'auto';
+                     ta.style.height = (ta.scrollHeight) + 'px';
+                }, 0);
+            }
             if(save) {
                 cellEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 saveState();
             }
-            
             updateIndices();
-            
-            if(content) {
-                const ta = container.querySelector(`[data-id="${id}"] textarea`);
-                ta.style.height = 'auto';
-                ta.style.height = (ta.scrollHeight) + 'px';
-            }
         }
 
         async function runCell(id) {
             if (!pyodide) {
-                alert("Python is still loading...");
+                showModal("Please Wait", "Python environment is still initializing.", false);
                 return;
             }
 
@@ -486,30 +574,20 @@
 
             if (!code.trim()) return;
 
-            // UI State: Running
             loader.classList.remove('hidden');
             outputContainer.classList.add('hidden');
             outputText.textContent = "";
-            outputPlot.innerHTML = ""; // Clear previous plots
+            outputPlot.innerHTML = ""; 
             
             try {
-                // 1. Setup Stdout
                 await pyodide.runPythonAsync(`
                     sys.stdout = JSStream()
                     sys.stderr = JSStream()
                 `);
-
-                // 2. Setup Matplotlib Target
-                // We tell Pyodide where to render any matplotlib plots for this execution
                 document.pyodideMplTarget = outputPlot;
-
-                // 3. Load Packages (optimistic)
                 await pyodide.loadPackagesFromImports(code);
                 
-                // 4. Evaluate Code
                 let result = await pyodide.runPythonAsync(code);
-
-                // 5. Get Output
                 let stdout = await pyodide.runPythonAsync("sys.stdout.getvalue()");
                 let stderr = await pyodide.runPythonAsync("sys.stderr.getvalue()");
                 let finalOutput = stdout + stderr;
@@ -521,18 +599,13 @@
                          finalOutput += "\n" + String(result);
                      }
                 }
-
-                // 6. Update File List (in case code generated files)
                 updateFileList();
 
-                // 7. Display Results
                 const hasPlot = outputPlot.children.length > 0;
                 const hasText = finalOutput.trim().length > 0;
 
                 if (hasText || hasPlot) {
                     outputText.textContent = finalOutput.trim();
-                    
-                    // Styling updates
                     outputText.classList.remove('text-red-600');
                     outputText.classList.add('text-gray-700');
                     label.textContent = "Out:";
@@ -540,7 +613,6 @@
                     label.classList.add('text-gray-400');
                     outputContainer.classList.remove('hidden');
                 }
-
             } catch (err) {
                 outputText.textContent = err.message;
                 outputText.classList.remove('text-gray-700');
@@ -551,7 +623,6 @@
                 outputContainer.classList.remove('hidden');
             } finally {
                 loader.classList.add('hidden');
-                // Reset target to null so background tasks don't accidentally draw here
                 document.pyodideMplTarget = null;
             }
         }
@@ -569,11 +640,11 @@
         }
 
         function clearAll() {
-            if(confirm("Clear all code and reset?")) {
+            showModal("Reset Notebook", "Are you sure you want to clear all code cells?", true, () => {
                 document.getElementById('notebook-container').innerHTML = '';
                 localStorage.removeItem(STORAGE_KEY);
                 addCell();
-            }
+            });
         }
 
         function updateIndices() {
@@ -600,10 +671,8 @@
                     return;
                 }
             }
-            // Default Sample
             addCell("# Example: Plotting with Matplotlib\nimport matplotlib.pyplot as plt\nimport numpy as np\n\nx = np.linspace(0, 10, 100)\ny = np.sin(x)\n\nplt.figure(figsize=(6,4))\nplt.plot(x, y)\nplt.title('Sine Wave')\nplt.grid(True)\nplt.show()", false);
         }
-
     </script>
 </body>
 </html>
