@@ -58,7 +58,7 @@
         @media (max-width: 768px) {
             .app-layout {
                 grid-template-columns: 1fr;
-                grid-template-rows: 56px auto 1fr;
+                grid-template-rows: 56px 1fr;
             }
             .sidebar { display: none; } 
             .split-pane { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
@@ -198,7 +198,7 @@
                     <span class="text-[10px] text-slate-400 shrink-0">Auto-saved</span>
                 </div>
                 <div class="relative flex-1">
-                    <textarea id="codeEditor" class="absolute inset-0 w-full h-full p-4 resize-none focus:outline-none editor-font text-sm leading-relaxed text-slate-700 dark:text-gray-300 bg-white dark:bg-black placeholder-slate-300 dark:placeholder-gray-700" spellcheck="false" placeholder="Start typing..."></textarea>
+                    <textarea id="codeEditor" class="absolute inset-0 w-full h-full p-4 pb-40 resize-none focus:outline-none editor-font text-sm leading-relaxed text-slate-700 dark:text-gray-300 bg-white dark:bg-black placeholder-slate-300 dark:placeholder-gray-700" spellcheck="false" placeholder="Start typing..."></textarea>
                 </div>
             </div>
 
@@ -213,8 +213,9 @@
                         <div class="w-3 h-3 border-2 border-slate-200 dark:border-neutral-700 border-t-slate-600 dark:border-t-gray-300 rounded-full animate-spin"></div>
                     </div>
                 </div>
-                <div id="previewContainer" class="flex-1 overflow-auto p-8 relative">
-                    <div id="renderOutput" class="w-full h-full flex items-start justify-center"></div>
+                <!-- Corrected: Remove fixed justify-center to allow full scroll when overflow occurs -->
+                <div id="previewContainer" class="flex-1 overflow-auto p-8 pb-40 relative">
+                    <div id="renderOutput" class="w-full min-h-full flex"></div>
                 </div>
 
                 <!-- Toast -->
@@ -563,10 +564,10 @@
                         this.dom.renderOutput.innerHTML = svgText;
                         const svg = this.dom.renderOutput.querySelector('svg');
                         if(svg) {
-                            svg.classList.add('max-w-none', 'bg-white', 'rounded', 'shadow-sm');
+                            svg.classList.add('max-w-none', 'bg-white', 'rounded', 'shadow-sm', 'm-auto'); // Added m-auto for safe centering
                             svg.removeAttribute('height'); 
                             svg.removeAttribute('width');
-                            svg.style.maxWidth = '100%';
+                            svg.style.maxWidth = 'none'; // DISABLED: allow full scroll width
                         }
                     }
                 } catch (e) {
@@ -576,7 +577,7 @@
                         if(this.dom.renderOutput.firstChild) this.dom.renderOutput.firstChild.style.opacity = '0.5';
                         this.showError("Network/CORS Error - Preview Paused");
                     } else {
-                        this.dom.renderOutput.innerHTML = `<img src="${url}" class="max-w-none bg-white rounded shadow-sm">`;
+                        this.dom.renderOutput.innerHTML = `<img src="${url}" class="max-w-none bg-white rounded shadow-sm m-auto">`;
                     }
                 } finally {
                     this.dom.loading.classList.add('opacity-0');
@@ -601,7 +602,7 @@
                     <div onclick="app.loadFile('${f.id}')" 
                          class="group flex items-center justify-between p-2 px-3 rounded cursor-pointer text-sm mb-0.5 border border-transparent
                          ${f.id === this.activeFileId 
-                            ? 'bg-white dark:bg-neutral-900 text-indigo-600 dark:text-white border-slate-200 dark:border-neutral-700 shadow-sm font-medium' 
+                            ? 'bg-white dark:bg-neutral-800 text-indigo-600 dark:text-white border-slate-200 dark:border-neutral-700 shadow-sm font-medium' 
                             : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-neutral-900'}">
                         <div class="flex items-center gap-2 truncate">
                             <i data-lucide="${f.type === 'plantuml' ? 'flower-2' : 'file-text'}" class="w-4 h-4 ${f.id === this.activeFileId ? 'text-indigo-500 dark:text-gray-200' : 'text-slate-400 dark:text-gray-500'}"></i>
@@ -715,24 +716,381 @@
         }
         
         App.TEMPLATES = {
-            sequence: `@startuml\nautonumber\nAlice -> Bob: Authentication Request\nBob --> Alice: Response\n@enduml`,
-            usecase: `@startuml\nleft to right direction\nactor User\nrectangle System {\n  usecase "Login" as UC1\n  usecase "Process" as UC2\n}\nUser --> UC1\nUC1 .> UC2 : include\n@enduml`,
-            class: `@startuml\nclass Car {\n  - engine: Engine\n  + start()\n}\nclass Engine\nCar *-- Engine\n@enduml`,
-            activity: `@startuml\nstart\n:Initialize;\nif (Check?) then (yes)\n  :Process;\nelse (no)\n  :Error;\nendif\nstop\n@enduml`,
-            state: `@startuml\n[*] -> Idle\nIdle --> Processing : Event\nProcessing --> Idle : Finish\n@enduml`,
-            component: `@startuml\npackage "Backend" {\n  [API] -> [Database]\n}\n[Frontend] ..> [API] : HTTP\n@enduml`,
-            deployment: `@startuml\nnode "Server" {\n  artifact "App.jar"\n}\nnode "Database" {\n  database "MySQL"\n}\nServer -- Database\n@enduml`,
-            c4context: `@startuml\n!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml\nPerson(person, "User", "A user of the system")\nSystem(system, "System", "Main system")\nRel(person, system, "Uses")\n@enduml`,
-            c4container: `@startuml\n!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml\nContainer(web_app, "Web App", "Java, Spring MVC", "Delivers content")\nContainerDb(db, "Database", "PostgreSQL", "Stores data")\nRel(web_app, db, "Reads/Writes")\n@enduml`,
-            archimate: `@startuml\nsprite $bProcess jar:archimate/business-process\nbusiness_process "Handle Request" as BP1 <<$bProcess>>\n@enduml`,
-            mindmap: `@startmindmap\n* Root\n** Branch 1\n*** Leaf 1\n** Branch 2\n@endmindmap`,
-            wbs: `@startwbs\n* Project\n** Phase 1\n*** Task A\n** Phase 2\n@endwbs`,
-            gantt: `@startgantt\n[Task 1] lasts 10 days\n[Task 2] starts at [Task 1]'s end\n@endgantt`,
-            json: `@startjson\n{\n  "name": "DocForge",\n  "features": ["UML", "Markdown"]\n}\n@endjson`,
-            yaml: `@startyaml\nname: DocForge\nversion: 1.0\n@endyaml`,
-            salt: `@startsalt\n{\n  Login Box\n  "User" | "Password"\n  [Cancel] | [ OK ]\n}\n@endsalt`,
-            md_basic: `# Project Title\n\nThis is a **Markdown** file.\n\n## Features\n- Clean UI\n- Fast rendering`,
-            md_embedded: `# System Architecture\n\nHere is the high level design:\n\n\`\`\`plantuml\n@startuml\nAlice -> Bob: Hello\n@enduml\n\`\`\`\n\nAnd here is the data model:\n\n\`\`\`plantuml\n@startjson\n{"data": 123}\n@endjson\n\`\`\``
+            sequence: `@startuml
+autonumber
+actor User
+participant "Frontend" as UI
+participant "Auth Service" as Auth
+database "User DB" as DB
+
+User -> UI: Open Login Page
+activate UI
+UI -> Auth: Check Session
+activate Auth
+alt Session Valid
+    Auth --> UI: 200 OK
+else Session Invalid
+    Auth --> UI: 401 Unauthorized
+    UI -> User: Redirect to Login
+end
+deactivate Auth
+deactivate UI
+@enduml`,
+            usecase: `@startuml
+left to right direction
+actor "Food Critic" as fc
+actor "Regular Diner" as rd
+
+package Restaurant {
+  usecase "Eat Food" as UC1
+  usecase "Pay for Food" as UC2
+  usecase "Drink" as UC3
+  usecase "Review" as UC4
+}
+
+fc --> UC1
+fc --> UC4
+rd --> UC1
+rd --> UC2
+rd --> UC3
+@enduml`,
+            class: `@startuml
+abstract class AbstractList
+abstract AbstractCollection
+interface List
+interface Collection
+
+List <|-- AbstractList
+Collection <|-- AbstractCollection
+
+Collection <|- List
+AbstractCollection <|- AbstractList
+AbstractList <|-- ArrayList
+
+class ArrayList {
+  Object[] elementData
+  size()
+}
+
+enum TimeUnit {
+  DAYS
+  HOURS
+  MINUTES
+}
+@enduml`,
+            activity: `@startuml
+|User|
+start
+:Click "Submit";
+|System|
+if (Form Valid?) then (no)
+  :Show Error;
+  stop
+else (yes)
+  :Save Data;
+  fork
+    :Send Email;
+  fork again
+    :Update Cache;
+  end fork
+  :Redirect;
+endif
+stop
+@enduml`,
+            state: `@startuml
+[*] --> Simple
+
+state Simple {
+  [*] --> Idle
+  Idle --> Processing : Submit
+  Processing --> Idle : Finish
+}
+
+Simple --> Composite : Upgrade
+state Composite {
+  state "Parallel Task 1" as T1
+  state "Parallel Task 2" as T2
+  [*] --> T1
+  [*] --> T2
+}
+@enduml`,
+            component: `@startuml
+package "Front End" {
+  [UI]
+}
+database "PostgreSQL" {
+  [Data Store]
+}
+node "Middleware" {
+  [API]
+  [Auth Service]
+}
+
+[UI] --> [API] : HTTP
+[API] --> [Auth Service]
+[API] --> [Data Store] : JDBC
+@enduml`,
+            deployment: `@startuml
+node "Client Workstation" {
+  artifact "Browser"
+}
+
+cloud "AWS Cloud" {
+  node "EC2 Instance" {
+    component "Web Server"
+  }
+  database "RDS" {
+    component "PostgreSQL"
+  }
+}
+
+Browser --> "Web Server" : HTTPS
+"Web Server" --> PostgreSQL : TCP/5432
+@enduml`,
+            c4context: `@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(customer, "Banking Customer", "A customer of the bank.")
+System(banking_system, "Internet Banking System", "Allows customers to view information about their bank accounts, and make payments.")
+
+System_Ext(mail_system, "E-mail System", "The internal Microsoft Exchange e-mail system.")
+System_Ext(mainframe, "Mainframe Banking System", "Stores all of the core banking information.")
+
+Rel(customer, banking_system, "Uses")
+Rel(banking_system, mail_system, "Sends e-mails", "SMTP")
+Rel(banking_system, mainframe, "Uses")
+@enduml`,
+            c4container: `@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, "User")
+System_Boundary(c1, "Sample System") {
+    Container(web_app, "Web Application", "Java, Spring MVC", "Delivers the static content and the Internet banking SPA")
+    Container(spa, "Single-Page App", "JavaScript, Angular", "Provides all the Internet banking functionality to customers via their web browser")
+    ContainerDb(database, "Database", "Relational Database Schema", "Stores user registration information, hashed auth credentials, etc.")
+}
+
+Rel(user, spa, "Uses", "HTTPS")
+Rel(spa, web_app, "Uses", "JSON/HTTPS")
+Rel(web_app, database, "Reads/Writes")
+@enduml`,
+            archimate: `@startuml
+' Custom ArchiMate Styling for maximum compatibility
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200
+skinparam maxMessageSize 150
+
+skinparam rectangle {
+    RoundCorner 10
+}
+
+' Business Layer (Yellow)
+skinparam rectangle<<business-process>> {
+    BackgroundColor #ffffcc
+    BorderColor #888800
+    StereotypeFontColor #888800
+}
+skinparam rectangle<<business-event>> {
+    BackgroundColor #ffffcc
+    BorderColor #888800
+    RoundCorner 25
+}
+
+' Application Layer (Blue)
+skinparam rectangle<<application-service>> {
+    BackgroundColor #bdf3ff
+    BorderColor #005588
+    RoundCorner 25
+}
+skinparam component<<application-component>> {
+    BackgroundColor #bdf3ff
+    BorderColor #005588
+}
+
+' Technology Layer (Green)
+skinparam node<<technology-node>> {
+    BackgroundColor #ccffcc
+    BorderColor #008800
+}
+skinparam rectangle<<technology-service>> {
+    BackgroundColor #ccffcc
+    BorderColor #008800
+    RoundCorner 25
+}
+
+!define Business_Process(id, label) rectangle "label" as id <<business-process>>
+!define Business_Event(id, label) rectangle "label" as id <<business-event>>
+!define Application_Service(id, label) rectangle "label" as id <<application-service>>
+!define Application_Component(id, label) component "label" as id <<application-component>>
+!define Technology_Node(id, label) node "label" as id <<technology-node>>
+!define Technology_Service(id, label) rectangle "label" as id <<technology-service>>
+
+!define Rel_Trigger(from, to, label) from -[#444444]-> to : label
+!define Rel_Serving(from, to, label) from -[#444444]up-> to : label
+!define Rel_Realization(from, to, label) from .[#444444]up.|> to : label
+!define Rel_Assignment(from, to, label) from .[#444444]up.> to : label
+!define Rel_Access_ReadWrite(from, to, label) from .[#444444]down.> to : label
+
+title ArchiMate Layered View: Claims Processing
+
+' Business Layer
+Business_Process(process, "Handle Claim")
+Business_Event(event, "Claim Received")
+Rel_Trigger(event, process, "triggers")
+
+' Application Layer
+Application_Service(service, "Claim Service")
+Application_Component(app, "Claim System")
+Rel_Serving(service, process, "supported by")
+Rel_Realization(app, service, "realized by")
+
+' Technology Layer
+Technology_Node(server, "App Server")
+Technology_Service(db, "Database")
+Rel_Assignment(server, app, "deployed on")
+Rel_Access_ReadWrite(app, db, "reads/writes")
+@enduml`,
+            mindmap: `@startmindmap
+* Project Launch
+** 1. Conception
+*** Market Research
+*** Feasibility Study
+** 2. Planning
+*** Resource Allocation
+*** Timeline
+** 3. Execution
+*** Development
+*** Testing
+** 4. Closure
+*** Final Report
+@endmindmap`,
+            wbs: `@startwbs
+* Website Project
+** Design Phase
+*** Wireframes
+*** Mockups
+** Development
+*** Backend
+**** Database
+**** API
+*** Frontend
+**** HTML/CSS
+**** React
+** Deployment
+*** CI/CD
+*** Hosting
+@endwbs`,
+            gantt: `@startgantt
+[Project Conception] lasts 10 days
+[Prototype Design] lasts 10 days
+[Prototype Design] starts at [Project Conception]'s end
+[Test Prototype] lasts 10 days
+[Test Prototype] starts at [Prototype Design]'s end
+[Deploy] lasts 5 days
+[Deploy] starts at [Test Prototype]'s end
+@endgantt`,
+            json: `@startjson
+{
+   "firstName": "John",
+   "lastName": "Smith",
+   "isAlive": true,
+   "age": 27,
+   "address": {
+       "streetAddress": "21 2nd Street",
+       "city": "New York",
+       "state": "NY",
+       "postalCode": "10021-3100"
+   },
+   "phoneNumbers": [
+       {
+           "type": "home",
+           "number": "212 555-1234"
+       },
+       {
+           "type": "office",
+           "number": "646 555-4567"
+       }
+   ]
+}
+@endjson`,
+            yaml: `@startyaml
+name: DocForge
+version: 1.0.0
+dependencies:
+  - marked: ^4.0.0
+  - pako: ^2.0.0
+scripts:
+  build: "npm run build"
+  test: "npm run test"
+author:
+  name: Developer
+  email: dev@example.com
+@endyaml`,
+            salt: `@startsalt
+{
+  Just a simple UI mockup
+  {+
+    Login    | "MyName   "
+    Password | "**** "
+    [Cancel] | [  OK   ]
+  }
+  {^"Other controls"
+    [X] Checkbox
+    () Radio button
+    ^Droplist^
+  }
+}
+@endsalt`,
+            md_basic: `# Project Documentation
+
+## Overview
+This document describes the architecture and design of the system.
+
+## Key Features
+* **Fast Rendering**: Uses local or remote PlantUML servers.
+* **Secure**: Runs in a sandboxed environment.
+* **Portable**: Single file distribution.
+
+## Usage
+1. Select a template.
+2. Edit code.
+3. Download result.
+`,
+            md_embedded: `# System Architecture
+
+The system follows a standard 3-tier architecture.
+
+### 1. High Level Overview
+Here is how the user interacts with the system:
+
+\`\`\`plantuml
+@startuml
+!theme plain
+User -> LoadBalancer: HTTP Request
+LoadBalancer -> WebServer: Forward
+WebServer -> Database: Query
+@enduml
+\`\`\`
+
+### 2. Data Model
+The core entities are strictly defined:
+
+\`\`\`plantuml
+@startuml
+!theme plain
+hide circle
+class User {
+  +id: UUID
+  +email: String
+}
+class Order {
+  +id: UUID
+  +total: Float
+}
+User "1" -- "0..*" Order : places
+@enduml
+\`\`\`
+`
         };
 
         const app = new App();
