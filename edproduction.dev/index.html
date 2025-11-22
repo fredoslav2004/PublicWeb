@@ -18,28 +18,59 @@
     }
     .wrap { position: relative; height: 100vh; width: 100vw; display: grid; place-items: center; }
     
+    /* Animation Logic:
+       Size is 200%. Beam is in the middle (at 100% width relative to element).
+       Start: -200% (Beam is at -100%, fully left of text).
+       End: 200% (Beam is at 300%, fully right of text).
+    */
+    @keyframes textShine {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+
     h1 {
       position: relative; z-index: 3; margin: 0;
       font-size: clamp(42px, 9vw, 160px); font-weight: 800;
       letter-spacing: -0.02em; line-height: 1; text-align: center;
-      pointer-events: none; /* Let clicks pass through to canvas */
-      mix-blend-mode: overlay; /* Blends text with particles */
+      pointer-events: none;
+      
+      /* 1. The Base Color (Solid Dark Grey) - Keeps text visible */
+      background-color: #444;
+      
+      /* 2. The Light Beam (Transparent -> White -> Transparent) */
+      background-image: linear-gradient(
+        110deg, 
+        transparent 45%, 
+        #ffffff 50%, 
+        transparent 55%
+      );
+      
+      /* Sizing and Clipping */
+      background-size: 200% 100%;
+      background-repeat: no-repeat;
+      background-clip: text;
+      -webkit-background-clip: text;
+      
+      /* Transparent fill lets the background-color + image show through */
+      -webkit-text-fill-color: transparent; 
+      color: #444; /* Fallback */
+
+      animation: textShine 8s linear infinite;
     }
 
-    /* The Subtle Link Container */
     .links {
       position: absolute; bottom: 40px; width: 100%; text-align: center; z-index: 10;
       display: flex; justify-content: center; gap: 20px;
-      pointer-events: none; /* Allow click-through unless on exact link */
+      pointer-events: none; 
     }
 
-    /* The Reveal Mechanism */
     .ghost-link {
       color: var(--fg); text-decoration: none; font-size: 14px; font-weight: 500;
       text-transform: uppercase; letter-spacing: 0.1em;
-      opacity: 0; /* Hidden by default */
+      opacity: 0; 
       transition: opacity 0.1s linear, transform 0.2s ease;
-      pointer-events: auto; padding: 10px 20px;
+      pointer-events: auto; 
+      padding: 10px 20px;
       border: 1px solid rgba(255,255,255,0.1); border-radius: 99px;
     }
     
@@ -50,6 +81,7 @@
     @media (prefers-reduced-motion: reduce) {
       canvas.fx { display: none; }
       .ghost-link { opacity: 1; } 
+      h1 { animation: none; -webkit-text-fill-color: var(--fg); background: none; }
     }
   </style>
 </head>
@@ -59,9 +91,9 @@
     <canvas id="light" class="fx"></canvas>
     <h1>EdProduction</h1>
     
-    <!-- Subtle Links Section -->
     <div class="links">
-      <a href="https://edproduction.dev/playground" class="ghost-link" id="lnk-playground">Playground</a>
+      <a href="https://edproduction.dev/playground" class="ghost-link">Playground</a>
+      <a href="https://eduardfekete.com" class="ghost-link">Eduard Fekete</a>
     </div>
   </div>
 
@@ -69,32 +101,32 @@
   (function(){
     const cb = document.getElementById('bokeh');
     const cl = document.getElementById('light');
-    const link = document.getElementById('lnk-playground');
+    const links = document.querySelectorAll('.ghost-link');
+    
     const ctxB = cb.getContext('2d');
     const ctxL = cl.getContext('2d');
 
-    // State
     let W = 0, H = 0, T = 0;
     let dpr = 1;
     let isWarping = false;
+    let chaos = 0; 
     
-    const mouse = { x: -9999, y: -9999, vx: 0, vy: 0 }; // Init off-screen
+    const mouse = { x: -9999, y: -9999, vx: 0, vy: 0 }; 
     const particles = [];
     
     const RANGES = {
       count: [50, 80],
-      radius: [2, 60], // Varied sizes for depth
+      radius: [2, 60], 
       speed: [0.2, 1.5]
     };
 
     const PALETTE = [
-      [210, 100, 60], // Blue
-      [280, 100, 62], // Violet
-      [160, 100, 55], // Teal
-      [320, 100, 60]  // Pink
+      [210, 100, 60], 
+      [280, 100, 62], 
+      [160, 100, 55], 
+      [320, 100, 60]  
     ];
 
-    // --- Math Utils ---
     const rand = (min, max) => Math.random() * (max - min) + min;
     const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
     const dist = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
@@ -108,36 +140,36 @@
         const [h, s, l] = pick(PALETTE);
         this.x = rand(0, W);
         this.y = rand(0, H);
-        this.r = rand(...RANGES.radius); // visual radius
+        this.r = rand(...RANGES.radius); 
         this.hue = h; this.sat = s; this.lig = l;
         this.a = rand(0.1, 0.5);
         
-        // Physics props
         this.vx = rand(-0.5, 0.5);
         this.vy = rand(-0.5, 0.5);
         this.friction = 0.96;
-        this.mass = this.r * 0.5; // Heavy particles move slower
       }
 
-      update(dt) {
-        // 1. Basic movement
+      update() {
         this.x += this.vx;
         this.y += this.vy;
 
-        // 2. Mouse Interaction (Repulsion/Warp)
+        if (chaos > 0.1) {
+            const flowAngle = (this.x * 0.002) + (this.y * 0.002) + (T * 0.0005);
+            const speed = chaos * 0.08; 
+            this.vx += Math.cos(flowAngle) * speed;
+            this.vy += Math.sin(flowAngle) * speed;
+        }
+
         const dx = this.x - mouse.x;
         const dy = this.y - mouse.y;
         const d = Math.sqrt(dx*dx + dy*dy);
         
         if (isWarping) {
-          // WARP SPEED: Suck into center then explode or stream
-          // Simple implementation: Stream away from center at high speed
           const cx = W/2, cy = H/2;
           const ang = Math.atan2(this.y - cy, this.x - cx);
           this.vx += Math.cos(ang) * 2;
           this.vy += Math.sin(ang) * 2;
         } else if (d < 300) {
-          // MOUSE WAKE: Push away gently based on mouse movement
           const force = (300 - d) / 300;
           const ang = Math.atan2(dy, dx);
           const push = force * 0.5;
@@ -145,16 +177,13 @@
           this.vy += Math.sin(ang) * push;
         }
 
-        // 3. Friction & Limits
         this.vx *= this.friction;
         this.vy *= this.friction;
 
-        // Constant ambient float
         const timeScale = T * 0.001;
         this.vx += Math.sin(timeScale + this.y * 0.01) * 0.02;
         this.vy += Math.cos(timeScale + this.x * 0.01) * 0.02;
 
-        // 4. Wrap around
         if (this.x < -this.r) this.x = W + this.r;
         if (this.x > W + this.r) this.x = -this.r;
         if (this.y < -this.r) this.y = H + this.r;
@@ -164,7 +193,6 @@
       draw(ctx) {
         ctx.beginPath();
         const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r);
-        // Warping changes color intensity
         const alpha = isWarping ? this.a * 1.5 : this.a;
         g.addColorStop(0, `hsla(${this.hue}, ${this.sat}%, ${this.lig}%, ${alpha})`);
         g.addColorStop(1, `hsla(${this.hue}, ${this.sat}%, ${this.lig}%, 0)`);
@@ -192,13 +220,12 @@
       init();
     }
 
-    // --- Render Loop ---
     function render(now) {
       T = now;
-      
-      // 1. Particles
+      chaos *= 0.92; 
+      if (chaos < 0.01) chaos = 0;
+
       ctxB.clearRect(0, 0, W, H);
-      // Subtle trail effect during warp
       if(isWarping) {
          ctxB.fillStyle = 'rgba(11, 11, 12, 0.2)';
          ctxB.fillRect(0,0,W,H);
@@ -210,14 +237,10 @@
         p.draw(ctxB);
       });
 
-      // 2. Light & Link Reveal Logic
       ctxL.clearRect(0, 0, W, H);
-      
-      // Draw Flashlight
       const lx = mouse.x, ly = mouse.y;
       const lightR = 250;
       
-      // Draw the cursor light on canvas
       const g = ctxL.createRadialGradient(lx, ly, 0, lx, ly, lightR);
       g.addColorStop(0, 'rgba(255,255,255,0.1)');
       g.addColorStop(0.5, 'rgba(255,255,255,0.02)');
@@ -225,31 +248,26 @@
       ctxL.fillStyle = g;
       ctxL.fillRect(0, 0, W, H);
 
-      // DOM MANIPULATION in the loop (synced with physics)
-      // Calculate distance from mouse to link center
-      if (link) {
-        const rect = link.getBoundingClientRect();
-        const linkCx = rect.left + rect.width/2;
-        const linkCy = rect.top + rect.height/2;
-        const dLink = dist(lx, ly, linkCx, linkCy);
-        
-        // Map distance to opacity. 0 distance = 1 opacity. 200 distance = 0.1 opacity.
-        // Clamp minimum opacity to 0.05 so it's barely there, max 1.
-        let op = 1 - (dLink / 250);
-        if (op < 0.05) op = 0.05; 
-        if (op > 1) op = 1;
-        
-        link.style.opacity = op;
-        // Slight parallax for the link button itself (fun detail)
-        const paraX = (lx - W/2) * 0.02;
-        const paraY = (ly - H/2) * 0.02;
-        link.style.transform = `translate(${paraX}px, ${paraY}px) scale(${0.9 + (op*0.1)})`;
+      if (links.length > 0) {
+        links.forEach(link => {
+          const rect = link.getBoundingClientRect();
+          const linkCx = rect.left + rect.width/2;
+          const linkCy = rect.top + rect.height/2;
+          const dLink = dist(lx, ly, linkCx, linkCy);
+          
+          let op = 1 - (dLink / 250);
+          if (op < 0.05) op = 0.05; 
+          if (op > 1) op = 1;
+          
+          link.style.opacity = op;
+          const paraX = (lx - W/2) * 0.02;
+          const paraY = (ly - H/2) * 0.02;
+          link.style.transform = `translate(${paraX}px, ${paraY}px) scale(${0.9 + (op*0.1)})`;
+        });
       }
-
       requestAnimationFrame(render);
     }
 
-    // --- Inputs ---
     window.addEventListener('resize', resize);
     window.addEventListener('pointermove', e => {
       mouse.x = e.clientX;
@@ -257,8 +275,13 @@
     });
     window.addEventListener('pointerdown', () => isWarping = true);
     window.addEventListener('pointerup', () => isWarping = false);
+    
+    window.addEventListener('wheel', (e) => {
+        const strength = Math.min(Math.abs(e.deltaY), 50); 
+        chaos += strength * 0.8;
+        if (chaos > 60) chaos = 60;
+    }, { passive: true });
 
-    // Boot
     resize();
     requestAnimationFrame(render);
   })();
