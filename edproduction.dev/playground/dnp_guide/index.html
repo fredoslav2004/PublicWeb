@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNP Exam Cheat Sheet</title>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Dark Theme (Default) */
+            --bg-body: #0d1117;
+            --bg-sidebar: #161b22;
+            --bg-card: #21262d;
+            --bg-header: #30363d;
+            --border: #30363d;
+            --accent: #58a6ff;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --code-bg: #0d1117;
+            --scroll-thumb: #30363d;
+            
+            /* Syntax Highlighting (Dark) */
+            --syn-kwd: #ff7b72;
+            --syn-str: #a5d6ff;
+            --syn-cls: #d2a8ff;
+            --syn-cmt: #8b949e;
+        }
+
+        [data-theme="light"] {
+            /* Light Theme */
+            --bg-body: #ffffff;
+            --bg-sidebar: #f6f8fa;
+            --bg-card: #ffffff;
+            --bg-header: #f6f8fa;
+            --border: #d0d7de;
+            --accent: #0969da;
+            --text-main: #24292f;
+            --text-muted: #57606a;
+            --code-bg: #f6f8fa;
+            --scroll-thumb: #d0d7de;
+
+            /* Syntax Highlighting (Light) */
+            --syn-kwd: #d73a49;
+            --syn-str: #032f62;
+            --syn-cls: #6f42c1;
+            --syn-cmt: #6a737d;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden; /* Prevents body scroll */
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- Sidebar --- */
+        #sidebar {
+            width: 280px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .brand {
+            padding: 20px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .theme-toggle:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .nav-scroll {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 10px 0;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 4px; }
+
+        .nav-group h3 {
+            padding: 15px 20px 5px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 8px 20px;
+            color: var(--text-main);
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .nav-link i { width: 20px; color: var(--text-muted); margin-right: 8px; font-size: 0.8rem; }
+
+        .nav-link:hover {
+            background-color: var(--bg-header);
+            color: var(--accent);
+            border-left-color: var(--accent);
+        }
+        
+        .nav-link:hover i { color: var(--accent); }
+
+        /* --- Main Content --- */
+        #main {
+            flex: 1; /* flex-grow: 1 */
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-width: 0; /* CRITICAL FIX: prevents flex item from overflowing screen */
+        }
+
+        #content-area {
+            padding: 30px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        /* --- Cards --- */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .card-header {
+            background-color: var(--bg-header);
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-desc {
+            padding: 15px 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .copy-btn {
+            background-color: var(--bg-body);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* --- Code Blocks --- */
+        pre {
+            margin: 0;
+            padding: 20px;
+            overflow-x: auto; /* Handles internal scrolling */
+            background-color: var(--code-bg);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            transition: background-color 0.3s;
+        }
+
+        /* Syntax Highlighting */
+        .kwd { color: var(--syn-kwd); font-weight: bold; }
+        .str { color: var(--syn-str); }
+        .cls { color: var(--syn-cls); }
+        .cmt { color: var(--syn-cmt); font-style: italic; }
+
+        /* --- Toast Notification --- */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #2da44e;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-header {
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+            color: var(--text-main);
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        .section-header:first-of-type { margin-top: 0; }
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-blazor { background: #512bd4; color: white; }
+        .badge-api { background: #0078d4; color: white; }
+        .badge-efc { background: #107c10; color: white; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #sidebar { display: none; } /* Hide sidebar on small mobile for simplicity */
+            #main { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <div class="brand">
+        <span><i class="fa-solid fa-graduation-cap"></i> Exam Guide</span>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+            <i class="fa-solid fa-moon" id="theme-icon"></i>
+        </button>
+    </div>
+    <div class="nav-scroll">
+        <div class="nav-group">
+            <h3>Setup</h3>
+            <a onclick="scrollToId('cli-setup')" class="nav-link"><i class="fa-solid fa-terminal"></i> CLI Commands</a>
+        </div>
+        <div class="nav-group">
+            <h3>1. Blazor</h3>
+            <a onclick="scrollToId('blazor-model')" class="nav-link"><i class="fa-solid fa-database"></i> Entity Model</a>
+            <a onclick="scrollToId('blazor-interface')" class="nav-link"><i class="fa-solid fa-file-contract"></i> Interface</a>
+            <a onclick="scrollToId('blazor-service')" class="nav-link"><i class="fa-solid fa-memory"></i> InMemory Service</a>
+            <a onclick="scrollToId('blazor-program')" class="nav-link"><i class="fa-solid fa-syringe"></i> DI Registration</a>
+            <a onclick="scrollToId('blazor-create')" class="nav-link"><i class="fa-solid fa-plus-square"></i> Page: Create</a>
+            <a onclick="scrollToId('blazor-view')" class="nav-link"><i class="fa-solid fa-list"></i> Page: View</a>
+            <a onclick="scrollToId('blazor-comp')" class="nav-link"><i class="fa-solid fa-cube"></i> Child Comp</a>
+        </div>
+        <div class="nav-group">
+            <h3>2. Web API</h3>
+            <a onclick="scrollToId('api-models')" class="nav-link"><i class="fa-solid fa-project-diagram"></i> Models (DTOs)</a>
+            <a onclick="scrollToId('api-controller')" class="nav-link"><i class="fa-solid fa-gamepad"></i> Controller Base</a>
+            <a onclick="scrollToId('api-create')" class="nav-link"><i class="fa-solid fa-paper-plane"></i> POST (Create)</a>
+            <a onclick="scrollToId('api-child')" class="nav-link"><i class="fa-solid fa-code-branch"></i> POST (Child)</a>
+            <a onclick="scrollToId('api-filter')" class="nav-link"><i class="fa-solid fa-filter"></i> GET (Filter)</a>
+        </div>
+        <div class="nav-group">
+            <h3>3. EFC (Console)</h3>
+            <a onclick="scrollToId('efc-setup')" class="nav-link"><i class="fa-solid fa-cogs"></i> Setup & Context</a>
+            <a onclick="scrollToId('efc-access')" class="nav-link"><i class="fa-solid fa-server"></i> DataAccess</a>
+            <a onclick="scrollToId('efc-complex')" class="nav-link"><i class="fa-solid fa-sort-amount-down"></i> Complex Query</a>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+
+    <div id="content-area">
+
+        <!-- SETUP SECTION -->
+        <h2 class="section-header">0. Project Setup</h2>
+        
+        <div class="card" id="cli-setup">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-terminal"></i> CLI Quick Start</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Generates the 3 required projects and links them to a solution. Run this in your exam folder immediately.
+            </div>
+            <pre><code><span class="cmt"># 1. Create Solution</span>
+dotnet new sln -n DnpExam123456
+
+<span class="cmt"># 2. Blazor Project (Check exam: 'Standalone' or 'Server')</span>
+dotnet new blazor -o Blazor --interactivity server --empty
+
+<span class="cmt"># 3. Web API Project</span>
+dotnet new webapi -o WebApi --use-controllers
+
+<span class="cmt"># 4. Console App (EFC)</span>
+dotnet new console -o EFC
+
+<span class="cmt"># 5. Link projects</span>
+dotnet sln add Blazor
+dotnet sln add WebApi
+dotnet sln add EFC</code></pre>
+        </div>
+
+        <!-- BLAZOR SECTION -->
+        <h2 class="section-header">1. Blazor <span class="badge badge-blazor">Frontend</span></h2>
+
+        <div class="card" id="blazor-model">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-code"></i> Entity Model</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Standard POCO. <strong>Tip:</strong> Initialize strings to empty `""` to avoid null reference warnings in the UI.
+            </div>
+            <pre><code><span class="kwd">public class</span> <span class="cls">MyItem</span>
+{
+    <span class="kwd">public int</span> Id { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+    <span class="kwd">public string</span> Name { <span class="kwd">get</span>; <span class="kwd">set</span>; } = <span class="str">""</span>;
+    <span class="kwd">public string</span> Category { <span class="kwd">get</span>; <span class="kwd">set</span>; } = <span class="str">""</span>;
+    <span class="kwd">public double</span> Price { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+    <span class="kwd">public string</span> ImageUrl { <span class="kwd">get</span>; <span class="kwd">set</span>; } = <span class="str">"https://placehold.co/100"</span>;
+}</code></pre>
+        </div>
+
+        <div class="card" id="blazor-interface">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-file-contract"></i> Service Interface</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Contract for DI. Define <strong>Add</strong> and <strong>Get</strong> methods here first.
+            </div>
+            <pre><code><span class="kwd">public interface</span> <span class="cls">IService</span>
+{
+    <span class="kwd">void</span> AddItem(<span class="cls">MyItem</span> item);
+    <span class="cls">List</span>&lt;<span class="cls">MyItem</span>&gt; GetAll();
+}</code></pre>
+        </div>
+
+        <div class="card" id="blazor-service">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-memory"></i> InMemory Service</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                <strong>Critical:</strong> Uses a `private readonly List`. Includes Dummy Data in constructor as required by most exams.
+            </div>
+            <pre><code><span class="kwd">public class</span> <span class="cls">InMemoryService</span> : <span class="cls">IService</span>
+{
+    <span class="kwd">private readonly</span> <span class="cls">List</span>&lt;<span class="cls">MyItem</span>&gt; _items = <span class="kwd">new</span>();
+
+    <span class="kwd">public</span> <span class="cls">InMemoryService</span>()
+    {
+        <span class="cmt">// Dummy Data</span>
+        _items.Add(<span class="kwd">new</span> <span class="cls">MyItem</span> { Id = 1, Name = <span class="str">"Alpha"</span>, Category = <span class="str">"Red"</span>, Price = 10 });
+        _items.Add(<span class="kwd">new</span> <span class="cls">MyItem</span> { Id = 2, Name = <span class="str">"Beta"</span>, Category = <span class="str">"Blue"</span>, Price = 20 });
+    }
+
+    <span class="kwd">public void</span> AddItem(<span class="cls">MyItem</span> item)
+    {
+        <span class="cmt">// Auto-ID: if list empty, id=1, else max+1</span>
+        item.Id = _items.Any() ? _items.Max(x => x.Id) + 1 : 1;
+        _items.Add(item);
+    }
+
+    <span class="kwd">public</span> <span class="cls">List</span>&lt;<span class="cls">MyItem</span>&gt; GetAll() => _items;
+}</code></pre>
+        </div>
+
+        <div class="card" id="blazor-program">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-syringe"></i> Program.cs Registration</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Use `AddScoped` for Server or `AddSingleton` if you want state to persist for all users.
+            </div>
+            <pre><code><span class="cmt">// In Program.cs</span>
+builder.Services.AddScoped&lt;<span class="cls">IService</span>, <span class="cls">InMemoryService</span>&gt;();</code></pre>
+        </div>
+
+        <div class="card" id="blazor-create">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-regular fa-square-plus"></i> Page: Create (Form)</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Uses standard `EditForm`. Resets the model after submission.
+            </div>
+            <pre><code>@page <span class="str">"/create"</span>
+@inject <span class="cls">IService</span> Service
+@inject <span class="cls">NavigationManager</span> Nav
+
+&lt;h3&gt;Create Item&lt;/h3&gt;
+
+@if (msg != null) { &lt;p style=<span class="str">"color:green"</span>&gt;@msg&lt;/p&gt; }
+
+&lt;<span class="cls">EditForm</span> Model=<span class="str">"@newItem"</span> OnValidSubmit=<span class="str">"@HandleSubmit"</span>&gt;
+    &lt;<span class="cls">DataAnnotationsValidator</span> /&gt;
+    &lt;<span class="cls">ValidationSummary</span> /&gt;
+
+    &lt;div class=<span class="str">"mb-3"</span>&gt;
+        &lt;label&gt;Name&lt;/label&gt;
+        &lt;<span class="cls">InputText</span> @bind-Value=<span class="str">"newItem.Name"</span> class=<span class="str">"form-control"</span> /&gt;
+    &lt;/div&gt;
+
+    &lt;div class=<span class="str">"mb-3"</span>&gt;
+        &lt;label&gt;Category&lt;/label&gt;
+        &lt;<span class="cls">InputText</span> @bind-Value=<span class="str">"newItem.Category"</span> class=<span class="str">"form-control"</span> /&gt;
+    &lt;/div&gt;
+
+    &lt;button type=<span class="str">"submit"</span> class=<span class="str">"btn btn-primary"</span>&gt;Save&lt;/button&gt;
+&lt;/<span class="cls">EditForm</span>&gt;
+
+@code {
+    <span class="kwd">private</span> <span class="cls">MyItem</span> newItem = <span class="kwd">new</span>();
+    <span class="kwd">private string</span>? msg;
+
+    <span class="kwd">private void</span> HandleSubmit()
+    {
+        Service.AddItem(newItem);
+        msg = <span class="str">"Created successfully!"</span>;
+        newItem = <span class="kwd">new</span>(); <span class="cmt">// Clear form</span>
+    }
+}</code></pre>
+        </div>
+
+        <div class="card" id="blazor-view">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-list"></i> Page: View (List)</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Includes logic to show details when an item is clicked (Master/Detail pattern).
+            </div>
+            <pre><code>@page <span class="str">"/view"</span>
+@inject <span class="cls">IService</span> Service
+
+&lt;h3&gt;Gallery&lt;/h3&gt;
+
+<span class="cmt">&lt;!-- Child Component --&gt;</span>
+&lt;<span class="cls">StatsComponent</span> Items=<span class="str">"@items"</span> /&gt;
+
+&lt;div style=<span class="str">"display:flex; gap:10px; flex-wrap:wrap"</span>&gt;
+    @foreach (<span class="kwd">var</span> item <span class="kwd">in</span> items)
+    {
+        &lt;div style=<span class="str">"border:1px solid #555; padding:10px; width:150px; cursor:pointer"</span> 
+             @onclick=<span class="str">"() => selected = item"</span>&gt;
+            &lt;img src=<span class="str">"@item.ImageUrl"</span> width=<span class="str">"100%"</span> /&gt;
+            &lt;div&gt;@item.Name&lt;/div&gt;
+        &lt;/div&gt;
+    }
+&lt;/div&gt;
+
+@if (selected != null)
+{
+    &lt;div style=<span class="str">"margin-top:20px; padding:20px; border-top: 1px solid #ccc"</span>&gt;
+        &lt;h4&gt;Details: @selected.Name&lt;/h4&gt;
+        &lt;p&gt;Price: @selected.Price&lt;/p&gt;
+        &lt;p&gt;Category: @selected.Category&lt;/p&gt;
+    &lt;/div&gt;
+}
+
+@code {
+    <span class="kwd">private</span> <span class="cls">List</span>&lt;<span class="cls">MyItem</span>&gt; items = <span class="kwd">new</span>();
+    <span class="kwd">private</span> <span class="cls">MyItem</span>? selected;
+
+    <span class="kwd">protected override void</span> OnInitialized()
+    {
+        items = Service.GetAll();
+    }
+}</code></pre>
+        </div>
+
+        <div class="card" id="blazor-comp">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-cube"></i> Child Component</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Takes a List as a `[Parameter]`. Usually performs a GroupBy or Count calculation.
+            </div>
+            <pre><code>&lt;h4&gt;Statistics&lt;/h4&gt;
+&lt;ul&gt;
+    @foreach (<span class="kwd">var</span> group <span class="kwd">in</span> Items.GroupBy(x => x.Category))
+    {
+        &lt;li&gt;@group.Key: @group.Count() items&lt;/li&gt;
+    }
+&lt;/ul&gt;
+
+@code {
+    [<span class="cls">Parameter</span>]
+    <span class="kwd">public</span> <span class="cls">List</span>&lt;<span class="cls">MyItem</span>&gt; Items { <span class="kwd">get</span>; <span class="kwd">set</span>; } = <span class="kwd">new</span>();
+}</code></pre>
+        </div>
+
+        <!-- WEB API SECTION -->
+        <h2 class="section-header">2. Web API <span class="badge badge-api">Backend</span></h2>
+
+        <div class="card" id="api-models">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-project-diagram"></i> Models (Parent/Child)</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Simple 1-to-Many relationship model. Used for storing data in the InMemory Service.
+            </div>
+            <pre><code><span class="kwd">public class</span> <span class="cls">Parent</span>
+{
+    <span class="kwd">public int</span> Id { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+    <span class="kwd">public string</span> Name { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+    <span class="kwd">public</span> <span class="cls">List</span>&lt;<span class="cls">Child</span>&gt; Children { <span class="kwd">get</span>; <span class="kwd">set</span>; } = <span class="kwd">new</span>();
+}
+
+<span class="kwd">public class</span> <span class="cls">Child</span>
+{
+    <span class="kwd">public int</span> Id { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+    <span class="kwd">public string</span> Label { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+    <span class="kwd">public double</span> Value { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+}</code></pre>
+        </div>
+
+        <div class="card" id="api-controller">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-gamepad"></i> Controller Skeleton</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Setup DI in constructor. The `[ApiController]` attribute is vital for auto-400 validation.
+            </div>
+            <pre><code>[<span class="cls">ApiController</span>]
+[<span class="cls">Route</span>(<span class="str">"[controller]"</span>)]
+<span class="kwd">public class</span> <span class="cls">MyController</span> : <span class="cls">ControllerBase</span>
+{
+    <span class="kwd">private readonly</span> <span class="cls">IService</span> _service;
+
+    <span class="kwd">public</span> <span class="cls">MyController</span>(<span class="cls">IService</span> service)
+    {
+        _service = service;
+    }
+}</code></pre>
+        </div>
+
+        <div class="card" id="api-create">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-paper-plane"></i> POST: Create</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Returns `CreatedAtAction` (201 Created) containing the location of the new resource.
+            </div>
+            <pre><code>[<span class="cls">HttpPost</span>]
+<span class="kwd">public</span> <span class="cls">ActionResult</span> Create([<span class="cls">FromBody</span>] <span class="cls">Parent</span> item)
+{
+    <span class="kwd">if</span> (string.IsNullOrEmpty(item.Name)) 
+        <span class="kwd">return</span> BadRequest(<span class="str">"Name missing"</span>);
+
+    <span class="kwd">var</span> created = _service.Add(item);
+    <span class="kwd">return</span> CreatedAtAction(nameof(GetById), <span class="kwd">new</span> { id = created.Id }, created);
+}
+
+[<span class="cls">HttpGet</span>(<span class="str">"{id}"</span>)]
+<span class="kwd">public</span> <span class="cls">ActionResult</span> GetById(<span class="kwd">int</span> id)
+{
+    <span class="kwd">return</span> Ok(_service.GetById(id));
+}</code></pre>
+        </div>
+
+        <div class="card" id="api-child">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-code-branch"></i> POST: Add Child</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Example of adding a sub-resource. Handles `NotFound` via Try/Catch (if service throws).
+            </div>
+            <pre><code>[<span class="cls">HttpPost</span>(<span class="str">"{parentId}/children"</span>)]
+<span class="kwd">public</span> <span class="cls">ActionResult</span> AddChild(<span class="kwd">int</span> parentId, [<span class="cls">FromBody</span>] <span class="cls">Child</span> child)
+{
+    <span class="kwd">try</span>
+    {
+        _service.AddChild(parentId, child);
+        <span class="kwd">return</span> Ok();
+    }
+    <span class="kwd">catch</span> (<span class="cls">Exception</span> ex)
+    {
+        <span class="kwd">return</span> NotFound(ex.Message);
+    }
+}</code></pre>
+        </div>
+
+        <div class="card" id="api-filter">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-filter"></i> GET: Query Filters</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Uses `[FromQuery]` for optional parameters. Logic applies filters sequentially.
+            </div>
+            <pre><code>[<span class="cls">HttpGet</span>]
+<span class="kwd">public</span> <span class="cls">ActionResult</span>&lt;<span class="cls">List</span>&lt;<span class="cls">Parent</span>&gt;&gt; GetAll(
+    [<span class="cls">FromQuery</span>] <span class="kwd">string</span>? name, 
+    [<span class="cls">FromQuery</span>] <span class="kwd">int</span>? minVal)
+{
+    <span class="kwd">var</span> list = _service.GetAll();
+
+    <span class="kwd">if</span> (!string.IsNullOrEmpty(name))
+        list = list.Where(x => x.Name.Contains(name)).ToList();
+
+    <span class="kwd">if</span> (minVal.HasValue)
+        list = list.Where(x => x.Value >= minVal.Value).ToList();
+
+    <span class="kwd">return</span> Ok(list);
+}</code></pre>
+        </div>
+
+        <!-- EFC SECTION -->
+        <h2 class="section-header">3. Entity Framework Core <span class="badge badge-efc">Database</span></h2>
+
+        <div class="card" id="efc-setup">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-cogs"></i> Setup & Context</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                <strong>1.</strong> Nuget. <strong>2.</strong> Context. <strong>3.</strong> `dotnet ef migrations add Init` -> `dotnet ef database update`.
+            </div>
+            <pre><code><span class="cmt">// 1. Nuget Commands</span>
+dotnet add package Microsoft.EntityFrameworkCore.Sqlite
+dotnet add package Microsoft.EntityFrameworkCore.Design
+
+<span class="cmt">// 2. Context Class</span>
+<span class="kwd">public class</span> <span class="cls">MyContext</span> : <span class="cls">DbContext</span>
+{
+    <span class="kwd">public</span> <span class="cls">DbSet</span>&lt;<span class="cls">MainEntity</span>&gt; Mains { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+    <span class="kwd">public</span> <span class="cls">DbSet</span>&lt;<span class="cls">SubEntity</span>&gt; Subs { <span class="kwd">get</span>; <span class="kwd">set</span>; }
+
+    <span class="kwd">protected override void</span> OnConfiguring(<span class="cls">DbContextOptionsBuilder</span> opt)
+    {
+        opt.UseSqlite(<span class="str">"Data Source=exam.db"</span>);
+    }
+}</code></pre>
+        </div>
+
+        <div class="card" id="efc-access">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-server"></i> DataAccess: Add Async</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                Inject Context via constructor. Use `SaveChangesAsync()` for async DB operations.
+            </div>
+            <pre><code><span class="kwd">public class</span> <span class="cls">DataAccess</span>
+{
+    <span class="kwd">private readonly</span> <span class="cls">MyContext</span> _ctx;
+    <span class="kwd">public</span> <span class="cls">DataAccess</span>(<span class="cls">MyContext</span> ctx) => _ctx = ctx;
+
+    <span class="kwd">public async</span> <span class="cls">Task</span> CreateAsync(<span class="cls">MainEntity</span> item)
+    {
+        _ctx.Mains.Add(item);
+        <span class="kwd">await</span> _ctx.SaveChangesAsync();
+    }
+}</code></pre>
+        </div>
+
+        <div class="card" id="efc-complex">
+            <div class="card-header">
+                <span class="card-title"><i class="fa-solid fa-sort-amount-down"></i> Complex Ranked Query</span>
+                <button class="copy-btn" onclick="copyToClipboard(this)">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+            <div class="card-desc">
+                SQLite supports limited SQL math. <strong>Solution:</strong> Fetch all to memory (`ToListAsync`), <em>then</em> use `OrderBy` in C#.
+            </div>
+            <pre><code><span class="kwd">public async</span> <span class="cls">Task</span>&lt;<span class="cls">List</span>&lt;<span class="cls">MainEntity</span>&gt;&gt; GetRankedAsync()
+{
+    <span class="cmt">// 1. Fetch from DB with Include</span>
+    <span class="kwd">var</span> data = <span class="kwd">await</span> _ctx.Mains
+                         .Include(m => m.Subs)
+                         .ToListAsync();
+
+    <span class="cmt">// 2. Sort in Memory</span>
+    <span class="kwd">return</span> data
+        .OrderBy(x => x.Level)
+        .ThenByDescending(x => 
+        {
+            <span class="cmt">// Complex math example</span>
+            <span class="kwd">var</span> valid = x.Subs.Where(s => s.Type != <span class="str">"Junk"</span>);
+            <span class="kwd">if</span> (!valid.Any()) <span class="kwd">return</span> 0;
+            <span class="kwd">return</span> valid.Sum(s => s.Value) / valid.Sum(s => s.Weight);
+        })
+        .ToList();
+}</code></pre>
+        </div>
+
+    </div>
+</div>
+
+<div id="toast">
+    <i class="fa-solid fa-circle-check"></i> Copied to clipboard!
+</div>
+
+<script>
+    // --- Theme Logic ---
+    function toggleTheme() {
+        const html = document.documentElement;
+        const icon = document.getElementById('theme-icon');
+        const current = html.getAttribute('data-theme');
+        
+        if (current === 'dark') {
+            html.setAttribute('data-theme', 'light');
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            html.setAttribute('data-theme', 'dark');
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    }
+
+    // --- Navigation Logic ---
+    function scrollToId(id) {
+        document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // --- Clipboard Logic ---
+    function copyToClipboard(button) {
+        // Find parent card
+        const card = button.closest('.card');
+        const code = card.querySelector('code').innerText;
+        
+        navigator.clipboard.writeText(code).then(() => {
+            showToast();
+        });
+    }
+
+    function showToast() {
+        const toast = document.getElementById("toast");
+        toast.classList.add("show");
+        setTimeout(function(){ toast.classList.remove("show"); }, 2000);
+    }
+</script>
+
+</body>
+</html>
