@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEB1 Exam Prep Guide</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .card-hover:hover { transform: translateY(-2px); transition: all 0.2s ease; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Data based on uploaded PDFs
+        const assignments = [
+            {
+                id: 1,
+                title: "Assignment 1: CV / Portfolio",
+                focus: "HTML & CSS",
+                icon: "fa-id-card",
+                color: "bg-blue-100 text-blue-700",
+                details: [
+                    "Personal website describing who you are and where you are from.",
+                    "Must include: Name, age, VIA email link, photo (real or blank profile).",
+                    "Sections: Work/study experience, hometown/country, why VIA (3 reasons).",
+                    "Tech Constraints: No Flexbox/Grid, No Frameworks, No JS.",
+                    "Focus: Semantic HTML, CSS organization, file structure."
+                ]
+            },
+            {
+                id: 2,
+                title: "Assignment 2: VIAPets",
+                focus: "Bootstrap & Responsiveness",
+                icon: "fa-paw",
+                color: "bg-purple-100 text-purple-700",
+                details: [
+                    "Pet store website for 'Mr. Bob'.",
+                    "Pages: History/Vision, Adoption List (dummy data), Kennel Service, Contact.",
+                    "Tech Requirements: Bootstrap 5 Grid, Navbar (collapsible), Carousel.",
+                    "Design: Responsive (mobile/desktop), custom breakpoints.",
+                    "Constraints: No Custom JS allowed (only Bootstrap JS)."
+                ]
+            },
+            {
+                id: 3,
+                title: "Assignment 3: Secret Garden",
+                focus: "JavaScript & jQuery",
+                icon: "fa-leaf",
+                color: "bg-green-100 text-green-700",
+                details: [
+                    "Interactive garden using jQuery.",
+                    "Objects: Net (follows cursor), Blue Butterfly (evades mouse/random move), Apples (click to basket), Watering Can (tilt animation), Waterdrops.",
+                    "Tech Focus: DOM Manipulation, Event Handling, Animations, jQuery Selectors.",
+                    "Requirement: One extra feature per group member."
+                ]
+            }
+        ];
+
+        const questionSets = [
+            {
+                id: 1,
+                focus: "Assignment 1 Focus",
+                practical: "Folder organization/structure (absolute/relative URLs), Navigation bar and linking pages.",
+                theory: [
+                    "Demonstrate the CSS box model and how box-sizing: border-box changes element sizing.",
+                    "Discuss why responsive design is important and how Bootstrap 5's grid system and utility classes help achieve it.",
+                    "Explain what the DOM is and how JavaScript and jQuery interact with it."
+                ]
+            },
+            {
+                id: 2,
+                focus: "Assignment 2 Focus",
+                practical: "Responsive layout using Bootstrap 5 grid, Flexbox utilities, media queries. Bootstrap Navbar & Carousel.",
+                theory: [
+                    "Demonstrate how to implement a table in HTML.",
+                    "Explain how you can use the nth-child() selector to style e.g. an HTML table.",
+                    "Discuss how to use XMLHttpRequest or jQuery AJAX to send and receive data from a server."
+                ]
+            },
+            {
+                id: 3,
+                focus: "Assignment 3 Focus",
+                practical: "DOM manipulation, jQuery selectors and animations.",
+                theory: [
+                    "Explain the structure of an HTML document and why semantic HTML is important.",
+                    "Demonstrate what media queries and breakpoints are in responsive web design.",
+                    "Discuss the pros and cons of dynamic types in JavaScript."
+                ]
+            },
+            {
+                id: 4,
+                focus: "Assignment 1 Focus",
+                practical: "Folder organization/structure (absolute/relative URLs), Navigation bar and linking pages.",
+                theory: [
+                    "Discuss the difference between inline, embedded, and external CSS styles.",
+                    "Explain the different HTML input types and their use cases.",
+                    "Demonstrate JavaScript arrays and show adding, removing, and iterating elements."
+                ]
+            },
+            {
+                id: 5,
+                focus: "Assignment 2 Focus",
+                practical: "Responsive layout using Bootstrap 5 grid, Flexbox utilities, media queries. Bootstrap Navbar & Carousel.",
+                theory: [
+                    "Discuss the difference between block-level and inline elements and how they influence responsive design patterns.",
+                    "Demonstrate how CSS uses selectors to target HTML elements.",
+                    "Explain how event handling works in jQuery."
+                ]
+            },
+            {
+                id: 6,
+                focus: "Assignment 3 Focus",
+                practical: "DOM manipulation, jQuery selectors and animations.",
+                theory: [
+                    "Demonstrate how the default flow layout works and how it differs from Flexbox and Bootstrap grid.",
+                    "Discuss the purpose of using jQuery for simplifying DOM manipulation compared to vanilla JavaScript.",
+                    "Explain what XML is and how it can be used to structure and exchange data."
+                ]
+            },
+            {
+                id: 7,
+                focus: "Assignment 1 Focus",
+                practical: "Folder organization/structure (absolute/relative URLs), Navigation bar and linking pages.",
+                theory: [
+                    "Discuss how CSS pseudo-classes can be combined with selectors to improve interactivity in a responsive design.",
+                    "Demonstrate how to implement a Bootstrap grid layout with gutters.",
+                    "Explain how you can use jQuery to modify class attributes dynamically when reacting to user events."
+                ]
+            },
+            {
+                id: 8,
+                focus: "Assignment 2 Focus",
+                practical: "Responsive layout using Bootstrap 5 grid, Flexbox utilities, media queries. Bootstrap Navbar & Carousel.",
+                theory: [
+                    "Discuss how specificity and the cascade determine what CSS rules are applied.",
+                    "Demonstrate how to implement an HTML form with form controls and submit button.",
+                    "Explain the difference between function declarations and function expressions in JavaScript."
+                ]
+            },
+            {
+                id: 9,
+                focus: "Assignment 3 Focus",
+                practical: "DOM manipulation, jQuery selectors and animations.",
+                theory: [
+                    "Demonstrate how to implement HTML lists.",
+                    "Explain what an HTML form is and describe its basic structure.",
+                    "Discuss how you can use XMLHttpRequest or jQuery AJAX to send and receive data from a webserver."
+                ]
+            }
+        ];
+
+        // --- Components ---
+
+        const Navigation = ({ activeTab, setActiveTab }) => (
+            <nav className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-200">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="flex justify-between h-16">
+                        <div className="flex items-center">
+                            <i className="fas fa-graduation-cap text-indigo-600 text-2xl mr-3"></i>
+                            <span className="font-bold text-xl text-gray-800 tracking-tight">WEB1 Exam Prep</span>
+                        </div>
+                        <div className="flex space-x-1 sm:space-x-4 items-center">
+                            {['Overview', 'Assignments', 'Questions', 'Simulator'].map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                        activeTab === tab 
+                                        ? 'bg-indigo-50 text-indigo-700' 
+                                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        );
+
+        const Overview = () => (
+            <div className="space-y-8 animate-fade-in">
+                <div className="bg-indigo-700 rounded-2xl p-8 text-white shadow-lg">
+                    <h2 className="text-3xl font-bold mb-4">Exam Format: Oral Examination</h2>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <div className="bg-indigo-800 bg-opacity-50 p-4 rounded-lg backdrop-blur-sm">
+                            <div className="text-3xl font-bold mb-1">20</div>
+                            <div className="text-sm opacity-80 uppercase tracking-wider">Minutes Total</div>
+                            <p className="text-xs mt-2 text-indigo-200">15 min Q&A + 5 min grading</p>
+                        </div>
+                        <div className="bg-indigo-800 bg-opacity-50 p-4 rounded-lg backdrop-blur-sm">
+                            <div className="text-3xl font-bold mb-1">1-9</div>
+                            <div className="text-sm opacity-80 uppercase tracking-wider">Random Draw</div>
+                            <p className="text-xs mt-2 text-indigo-200">You pick one set and stick to it.</p>
+                        </div>
+                        <div className="bg-indigo-800 bg-opacity-50 p-4 rounded-lg backdrop-blur-sm">
+                            <div className="text-3xl font-bold mb-1">3</div>
+                            <div className="text-sm opacity-80 uppercase tracking-wider">Projects</div>
+                            <p className="text-xs mt-2 text-indigo-200">Have them open in your IDE.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">The Procedure</h3>
+                        <ol className="list-decimal pl-5 space-y-3 text-gray-600">
+                            <li><strong>Enter & Draw:</strong> You enter the room and draw a number from 1 to 9.</li>
+                            <li><strong>Setup:</strong> You open your assignments. Ideally, they are already open in your IDE.</li>
+                            <li><strong>Part 1: Project Presentation (~7 min):</strong> You present the specific project linked to your drawn number. You explain your code and decisions.</li>
+                            <li><strong>Part 2: Theory (~8 min):</strong> You answer 3 specific theoretical questions from your drawn set.</li>
+                            <li><strong>Live Coding:</strong> Be prepared to write or modify code live during the exam.</li>
+                        </ol>
+                    </div>
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">What to Bring</h3>
+                        <ul className="space-y-3 text-gray-600">
+                            <li className="flex items-start">
+                                <i className="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span><strong>Laptop & Charger:</strong> Essential.</span>
+                            </li>
+                            <li className="flex items-start">
+                                <i className="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span><strong>IDE Ready:</strong> VS Code (or your preference) open with all 3 assignment folders loaded.</span>
+                            </li>
+                            <li className="flex items-start">
+                                <i className="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span><strong>Working Projects:</strong> Ensure your local servers (Live Server) work for Assignment 3.</span>
+                            </li>
+                            <li className="flex items-start">
+                                <i className="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span><strong>Backup Examples:</strong> If your assignment code is weak in an area, prepare small separate code snippets to demonstrate the theory.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const AssignmentCard = ({ assign }) => (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden card-hover h-full flex flex-col">
+                <div className={`p-4 ${assign.color} flex items-center justify-between`}>
+                    <h3 className="font-bold text-lg">{assign.title}</h3>
+                    <i className={`fas ${assign.icon} text-xl`}></i>
+                </div>
+                <div className="p-6 flex-grow">
+                    <div className="mb-4">
+                        <span className="text-xs font-bold uppercase tracking-wide text-gray-400">Core Focus</span>
+                        <p className="font-medium text-gray-800">{assign.focus}</p>
+                    </div>
+                    <ul className="space-y-2">
+                        {assign.details.map((detail, idx) => (
+                            <li key={idx} className="text-sm text-gray-600 flex items-start">
+                                <i className="fas fa-angle-right text-gray-300 mt-1 mr-2 flex-shrink-0"></i>
+                                {detail}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                <div className="bg-gray-50 px-6 py-3 text-xs text-gray-500 border-t border-gray-100">
+                    Typically linked to Sets {assign.id}, {assign.id + 3}, {assign.id + 6}
+                </div>
+            </div>
+        );
+
+        const Assignments = () => (
+            <div className="animate-fade-in">
+                <div className="mb-6">
+                     <h2 className="text-2xl font-bold text-gray-800">The 3 Mandatory Assignments</h2>
+                     <p className="text-gray-500">You must bring these to the exam. Know your code inside out.</p>
+                </div>
+                <div className="grid md:grid-cols-3 gap-6">
+                    {assignments.map(a => <AssignmentCard key={a.id} assign={a} />)}
+                </div>
+            </div>
+        );
+
+        const QuestionSet = ({ set }) => (
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow mb-6 overflow-hidden">
+                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <span className="font-bold text-gray-700 text-lg">Question Set {set.id}</span>
+                    <span className={`text-xs px-2 py-1 rounded-full border ${
+                        set.id % 3 === 1 ? 'bg-blue-50 text-blue-600 border-blue-200' : 
+                        set.id % 3 === 2 ? 'bg-purple-50 text-purple-600 border-purple-200' : 
+                        'bg-green-50 text-green-600 border-green-200'
+                    }`}>
+                        {set.id % 3 === 1 ? 'Assignment 1 Focus' : set.id % 3 === 2 ? 'Assignment 2 Focus' : 'Assignment 3 Focus'}
+                    </span>
+                </div>
+                <div className="p-6">
+                    <div className="mb-6">
+                        <h4 className="flex items-center text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
+                            <i className="fas fa-laptop-code mr-2 text-indigo-500"></i>
+                            Part 1: Practical (7 min)
+                        </h4>
+                        <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+                            <p className="text-gray-800 text-sm font-medium">Present your work or prepared examples:</p>
+                            <p className="text-gray-600 text-sm mt-1">{set.practical}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 className="flex items-center text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">
+                            <i className="fas fa-book-open mr-2 text-indigo-500"></i>
+                            Part 2: Theory (2.5 min each)
+                        </h4>
+                        <ul className="space-y-3">
+                            {set.theory.map((q, idx) => (
+                                <li key={idx} className="flex items-start text-sm text-gray-700 bg-gray-50 p-3 rounded-md border border-gray-100">
+                                    <span className="bg-white text-gray-500 font-bold w-6 h-6 flex items-center justify-center rounded-full text-xs border border-gray-200 mr-3 flex-shrink-0">
+                                        {idx + 2}
+                                    </span>
+                                    <span>{q}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Questions = () => (
+            <div className="animate-fade-in max-w-4xl mx-auto">
+                <div className="mb-6 flex justify-between items-end">
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Exam Question Bank</h2>
+                        <p className="text-gray-500">All 9 possible sets you might draw.</p>
+                    </div>
+                </div>
+                <div className="grid gap-4">
+                    {questionSets.map(set => <QuestionSet key={set.id} set={set} />)}
+                </div>
+            </div>
+        );
+
+        const Simulator = () => {
+            const [drawnSet, setDrawnSet] = useState(null);
+            const [isAnimating, setIsAnimating] = useState(false);
+
+            const handleDraw = () => {
+                setIsAnimating(true);
+                setDrawnSet(null);
+                setTimeout(() => {
+                    const randomId = Math.floor(Math.random() * 9) + 1;
+                    setDrawnSet(questionSets.find(s => s.id === randomId));
+                    setIsAnimating(false);
+                }, 1000);
+            };
+
+            return (
+                <div className="animate-fade-in max-w-2xl mx-auto text-center">
+                    <h2 className="text-3xl font-bold text-gray-800 mb-2">Exam Simulator</h2>
+                    <p className="text-gray-500 mb-8">Test your nerves. Click the button to simulate drawing a random exam set.</p>
+
+                    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 min-h-[400px] flex flex-col justify-center items-center relative overflow-hidden">
+                        
+                        {!drawnSet && !isAnimating && (
+                            <>
+                                <div className="w-32 h-32 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
+                                    <i className="fas fa-dice text-5xl text-indigo-500"></i>
+                                </div>
+                                <button 
+                                    onClick={handleDraw}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-full text-xl shadow-lg transform hover:scale-105 transition-all"
+                                >
+                                    Draw Question Set
+                                </button>
+                            </>
+                        )}
+
+                        {isAnimating && (
+                            <div className="flex flex-col items-center">
+                                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mb-4"></div>
+                                <p className="text-lg font-medium text-gray-600 animate-pulse">Reaching into the hat...</p>
+                            </div>
+                        )}
+
+                        {drawnSet && !isAnimating && (
+                            <div className="w-full text-left animate-fade-in">
+                                <div className="flex justify-between items-center mb-6 border-b pb-4">
+                                    <div>
+                                        <p className="text-xs uppercase tracking-wider text-gray-400 font-bold">You drew</p>
+                                        <h3 className="text-3xl font-bold text-indigo-700">Question Set {drawnSet.id}</h3>
+                                    </div>
+                                    <button onClick={handleDraw} className="text-sm text-gray-500 hover:text-indigo-600 underline">
+                                        Redraw
+                                    </button>
+                                </div>
+                                
+                                <div className="mb-6">
+                                    <div className="bg-indigo-50 p-4 rounded-lg border-l-4 border-indigo-500 mb-4">
+                                        <h4 className="font-bold text-indigo-900 mb-1">Project Focus</h4>
+                                        <p className="text-indigo-800">{drawnSet.focus}</p>
+                                        <p className="text-sm text-indigo-600 mt-1">{drawnSet.practical}</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 className="font-bold text-gray-800 mb-3">Your Theory Questions:</h4>
+                                    <ul className="space-y-3">
+                                        {drawnSet.theory.map((q, idx) => (
+                                            <li key={idx} className="p-3 bg-gray-50 rounded border border-gray-200 text-sm text-gray-700">
+                                                <span className="font-bold mr-2 text-indigo-500">{idx+2}.</span>
+                                                {q}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+                                    <p className="text-sm text-gray-400 italic">"Good luck! You have 20 minutes."</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('Overview');
+
+            return (
+                <div className="min-h-screen pb-12">
+                    <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+                    <main className="max-w-6xl mx-auto px-4 pt-8">
+                        {activeTab === 'Overview' && <Overview />}
+                        {activeTab === 'Assignments' && <Assignments />}
+                        {activeTab === 'Questions' && <Questions />}
+                        {activeTab === 'Simulator' && <Simulator />}
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
