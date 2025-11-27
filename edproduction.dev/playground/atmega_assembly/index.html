@@ -356,7 +356,8 @@
  */
 
 // --- CONSTANTS ---
-const MEM_SIZE = 8192; // 8KB SRAM
+// 0x2200 = 8704 Bytes. Covers 8KB Internal SRAM (0x200 - 0x21FF) + Registers/IO
+const MEM_SIZE = 8704; 
 const IO_OFFSET = 0x20; // Offset for memory-mapped IO
 const VEC_INT0 = 0x0002; // Interrupt Vector for INT0
 
@@ -767,6 +768,9 @@ const cpu = {
         let sp = (this.sram[IO.SPH+IO_OFFSET] << 8) | this.sram[IO.SPL+IO_OFFSET];
         if (sp === 0) { ui.log("Warning: Stack Pointer is 0!", true); }
         
+        // Strict Bounds Check
+        if (sp >= MEM_SIZE) { throw new Error(`Stack Overflow: Accessing 0x${sp.toString(16)} (Size: 0x${MEM_SIZE.toString(16)})`); }
+
         this.sram[sp] = val;
         sp = (sp - 1) & 0xFFFF;
         
@@ -778,6 +782,8 @@ const cpu = {
         let sp = (this.sram[IO.SPH+IO_OFFSET] << 8) | this.sram[IO.SPL+IO_OFFSET];
         sp = (sp + 1) & 0xFFFF;
         
+        if (sp >= MEM_SIZE) { throw new Error(`Stack Underflow/OOB: Accessing 0x${sp.toString(16)}`); }
+
         const val = this.sram[sp];
         
         this.sram[IO.SPH+IO_OFFSET] = (sp >> 8);
@@ -1080,8 +1086,14 @@ const ui = {
     updateStackView(sp) {
         let html = "";
         for(let i=0; i<8; i++) {
-            let addr = sp + 1 + i;
-            if (addr >= MEM_SIZE) continue;
+            // Mask to 16-bit to prevent JS undefined if wrapping
+            let addr = (sp + 1 + i) & 0xFFFF;
+            
+            if (addr >= MEM_SIZE) {
+                html += `[${addr.toString(16)}] <span style="color:#555">Invalid (OOB)</span> <br>`;
+                continue;
+            }
+
             let val = cpu.sram[addr].toString(16).padStart(2,'0');
             html += `[${addr.toString(16)}] ${val} <br>`;
         }
