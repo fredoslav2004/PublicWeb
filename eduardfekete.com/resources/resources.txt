@@ -1,7 +1,8 @@
 Full Structure https://resources.eduardfekete.com/resources.txt
 Software Engineering/
     Algorithms and Data Structures ADS.pdf
-      Distributed Systems PRO3.pdf
+    Distributed Systems PRO3.pdf
+    Computer Architecture and Organization CAO.pdf
     Videos/
         Binary Trees https://www.youtube.com/watch?v=Etpc_-br5rI
         Pointers https://www.youtube.com/watch?v=2ybLD6_2gKM
