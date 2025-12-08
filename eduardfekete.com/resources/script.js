@@ -257,6 +257,9 @@
       const a = e.target.closest("a");
       if (!a) return;
 
+      // Allow opt-out anchors (e.g. site header/home link) to navigate normally
+      if (a.classList.contains("no-preview")) return;
+
       // Folder navigation: anchors created for folders carry dataset.preview="folder"
       if (a.dataset.preview === "folder") {
         e.preventDefault();
