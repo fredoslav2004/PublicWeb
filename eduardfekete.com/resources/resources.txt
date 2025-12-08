@@ -7,6 +7,11 @@ Software Engineering/
             Distributed Systems PRO3.pdf
         Computer Architecture and Organization/
             Computer Architecture and Organization CAO.pdf
+            ATmega2560 Simulator https://edproduction.dev/playground/atmega_assembly
+        SEP/
+            Online UML/Markdown Editor https://edproduction.dev/playground/uml
+            PlantUML https://plantuml.com
+            Custom PUML Theme https://github.com/fredoslav2004/MinimalThemePUML
     By File Type/
         PDFs/
             Algorithms and Data Structures ADS.pdf
@@ -15,5 +20,10 @@ Software Engineering/
         Videos/
             Binary Trees https://www.youtube.com/watch?v=Etpc_-br5rI
             Pointers https://www.youtube.com/watch?v=2ybLD6_2gKM
+        Websites/
+            ATmega2560 Simulator https://edproduction.dev/playground/atmega_assembly
+            Online UML/Markdown Editor https://edproduction.dev/playground/uml
+            PlantUML https://plantuml.com
+            Custom PUML Theme https://github.com/fredoslav2004/MinimalThemePUML
 Other/
     Full Structure https://resources.eduardfekete.com/resources.txt
