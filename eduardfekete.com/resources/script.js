@@ -361,7 +361,7 @@
     });
   }
 
-  function openPreview(url, ext, updateHistory = true) {
+  async function openPreview(url, ext, updateHistory = true) {
     const backdrop = document.getElementById("preview-backdrop");
     const content = document.getElementById("preview-content");
     const downloads = Array.from(document.querySelectorAll(".preview-download"));
@@ -429,6 +429,23 @@
     }
 
     if (ext === "txt" || ext === "md" || ext === "log") {
+      // Try to fetch the text and render it inside the modal so we control styling
+      try {
+        const res = await fetch(url, { cache: "no-cache" });
+        if (res.ok) {
+          const txt = await res.text();
+          const pre = document.createElement("pre");
+          pre.className = "preview-text";
+          pre.textContent = txt;
+          content.appendChild(pre);
+          show();
+          return;
+        }
+      } catch {
+        // fetch may fail due to CORS or network — fall back to iframe below
+      }
+
+      // Fallback: use iframe if fetch failed or is blocked
       const iframe = document.createElement("iframe");
       iframe.title = "Text preview";
       iframe.src = url;

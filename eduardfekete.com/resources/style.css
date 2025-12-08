@@ -185,6 +185,21 @@ a {
   line-height: 1.5;
   white-space: pre-wrap;
   word-wrap: break-word;
+
+  /* Ensure explicit, high-contrast background + text so mobile dark-mode UA renderers don't produce black-on-black */
+  background: #ffffff;
+  color: #000000;
+  border-top: 1px solid #e6e6e6;
+  margin: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+/* Dark mode preview-text override */
+html.dark .preview-text {
+  background: #0b0b0b;
+  color: #efefef;
+  border-top-color: rgba(255,255,255,0.06);
 }
 
 /* tiny animation */
