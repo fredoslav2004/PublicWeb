@@ -176,6 +176,21 @@
         if (isYouTube(node.url)) {
           img.alt = "YouTube";
           img.src = "img/youtube_icon.png";
+        } else if (isWebsitePreviewable(node.url, node.ext)) {
+          // Try to use the site's favicon, fall back to docs icon if it fails.
+          try {
+            const u = new URL(node.url, window.location.href);
+            const fav = u.origin.replace(/\/$/, "") + "/favicon.ico";
+            img.alt = "Website";
+            img.src = fav;
+            img.onerror = () => {
+              img.onerror = null;
+              img.src = "img/docs_icon.png";
+            };
+          } catch {
+            img.alt = "Website";
+            img.src = "img/docs_icon.png";
+          }
         } else {
           img.alt = node.ext ? node.ext.toUpperCase() : "File";
           // use existing icon map fallback
@@ -198,8 +213,8 @@
             return map[ext] || "img/file_icon.png";
           })(node.ext);
         }
-         p.textContent = node.name || node.url;
-       }
+        p.textContent = node.name || node.url;
+      }
 
       tile.append(img, p);
       a.appendChild(tile);
@@ -272,12 +287,13 @@
 
       const isResource =
         a.classList.contains("resource-link") || !!a.closest(".resource");
-      // Decide: previewable OR YouTube => preview, otherwise open in a new tab.
+      // Decide: previewable OR YouTube OR website-like => preview, otherwise open in a new tab.
       const wantsPreview =
         a.dataset.preview === "true" ||
         isResource ||
         PREVIEWABLE.has(ext) ||
-        isYouTube(resolvedUrl);
+        isYouTube(resolvedUrl) ||
+        isWebsitePreviewable(resolvedUrl, ext);
 
       if (!wantsPreview) {
         // Not a previewable resource — open in new tab so current tab remains on the site.
@@ -286,8 +302,8 @@
         return;
       }
 
-      // If it's previewable (or YouTube), prevent default and open the preview.
-      if (PREVIEWABLE.has(ext) || isYouTube(resolvedUrl)) {
+      // If it's previewable (PDF/TXT/MD/LOG), YouTube, or website-like, prevent default and open the preview.
+      if (PREVIEWABLE.has(ext) || isYouTube(resolvedUrl) || isWebsitePreviewable(resolvedUrl, ext)) {
         e.preventDefault();
         openPreview(resolvedUrl, ext, /*updateHistory*/ true);
       }
@@ -358,8 +374,10 @@
     currentPreviewUrl = url;
     content.innerHTML = "";
 
-    // Set or remove download link depending on content type (YouTube => no download)
-    if (isYouTube(url)) {
+    // Set or remove download link depending on content type (YouTube or website-like => no download)
+    const isYT = isYouTube(url);
+    const isWebsite = isWebsitePreviewable(url, ext);
+    if (isYT || isWebsite) {
       for (const d of downloads) {
         d.removeAttribute("href");
         d.removeAttribute("download");
@@ -380,7 +398,6 @@
         d.removeAttribute("tabindex");
       }
     }
-
     if (updateHistory) pushPreviewParam(url);
 
     // Handle YouTube embeds
@@ -415,6 +432,19 @@
       const iframe = document.createElement("iframe");
       iframe.title = "Text preview";
       iframe.src = url;
+      content.appendChild(iframe);
+      show();
+      return;
+    }
+
+    // Treat website-like resources (no ext or html/htm) as embeddable websites
+    if (isWebsitePreviewable(url, ext)) {
+      const iframe = document.createElement("iframe");
+      iframe.title = "Website preview";
+      iframe.src = url;
+      iframe.setAttribute("frameborder", "0");
+      // allow same set of features as YouTube embed where reasonable
+      iframe.setAttribute("allow", "clipboard-write; encrypted-media; picture-in-picture");
       content.appendChild(iframe);
       show();
       return;
@@ -529,6 +559,20 @@
       return "https://www.youtube.com/embed/" + encodeURIComponent(id) + "?rel=0";
     } catch {
       return null;
+    }
+  }
+
+  // New: detect plain website links (no known extension or explicit html) that should be previewed
+  function isWebsitePreviewable(url, ext) {
+    try {
+      const u = new URL(url, window.location.href);
+      if (!/^https?:$/i.test(u.protocol)) return false;
+      // treat explicit html extensions as websites, and treat empty extension (paths ending with / or no dot) as websites
+      const normalizedExt = (ext || "").toLowerCase();
+      if (normalizedExt === "html" || normalizedExt === "htm" || normalizedExt === "") return true;
+      return false;
+    } catch {
+      return false;
     }
   }
 
