@@ -18,6 +18,9 @@ Software Engineering/
             Software Engineering and Project Management SWE_PM.pdf
             Design Pattern https://refactoring.guru/design-patterns/catalog
             Refactoring https://refactoring.guru/refactoring
+            Online UML/Markdown Editor https://edproduction.dev/playground/uml
+            PlantUML https://plantuml.com
+            Custom PUML Theme https://github.com/fredoslav2004/MinimalThemePUML
         Mathematics/
             Mathematics for Software Engineering https://raw.githubusercontent.com/RBrooksDK/MSE_book_v2/master/main.pdf
             
