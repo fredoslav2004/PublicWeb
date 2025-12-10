@@ -89,6 +89,68 @@
         .dark .markdown-body pre { background-color: #0f172a; border-color: #334155; }
         .dark .markdown-body blockquote { border-color: #475569; color: #94a3b8; }
 
+        .zoomable {
+            position: relative;
+            transform-origin: top left;
+            cursor: grab;
+            transition: none; /* Disable transitions for smooth interaction */
+        }
+        .zoomable.dragging {
+            cursor: grabbing;
+        }
+
+        .app-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            grid-template-rows: 56px 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .split-pane {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .app-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: 56px auto 1fr;
+            }
+            .sidebar { display: none; } 
+            .split-pane { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+        }
+
+        /* Markdown Styles */
+        .markdown-body { font-size: 14px; line-height: 1.6; }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { margin-top: 1.5em; margin-bottom: 0.5em; font-weight: 600; }
+        .markdown-body h1 { font-size: 1.5em; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3em; }
+        .markdown-body h2 { font-size: 1.3em; }
+        .markdown-body p { margin-bottom: 1em; }
+        .markdown-body code { padding: 0.2em 0.4em; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+        .markdown-body pre { padding: 1em; border-radius: 8px; overflow-x: auto; margin-bottom: 1em; border: 1px solid #e2e8f0; }
+        .markdown-body pre code { background: none; padding: 0; }
+        .markdown-body blockquote { border-left: 4px solid #e2e8f0; padding-left: 1em; }
+        .markdown-body img { max-width: 100%; border-radius: 4px; }
+
+        /* Dark Mode Overrides */
+        .dark .markdown-body { color: #cbd5e1; }
+        .dark .markdown-body h1, .dark .markdown-body h2, .dark .markdown-body h3 { color: #f1f5f9; border-color: #334155; }
+        .dark .markdown-body code { background-color: #1e293b; color: #e2e8f0; }
+        .dark .markdown-body pre { background-color: #0f172a; border-color: #334155; }
+        .dark .markdown-body blockquote { border-color: #475569; color: #94a3b8; }
+
+        .zoomable {
+            position: relative;
+            transform-origin: top left;
+            cursor: grab;
+            transition: none; /* Disable transitions for smooth interaction */
+        }
+        .zoomable.dragging {
+            cursor: grabbing;
+        }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 overflow-hidden transition-colors duration-200">
@@ -508,6 +570,7 @@
                 lucide.createIcons();
                 this.renderSidebar();
                 this.updatePreview(true);
+                this.resetZoomPan();
             }
 
             handleEditorChange() {
@@ -549,18 +612,23 @@
                         this.showError();
                         // Keep last valid
                         if (this.lastValidPlantUmlSvg) {
-                             this.dom.renderOutput.innerHTML = this.lastValidPlantUmlSvg;
-                             if(this.dom.renderOutput.firstChild) this.dom.renderOutput.firstChild.style.opacity = '0.5';
+                            this.dom.renderOutput.style.overflow = 'auto';
+                            this.dom.renderOutput.innerHTML = `<div class="zoomable">${this.lastValidPlantUmlSvg}</div>`;
+                            this.updateZoom();
+                            if(this.dom.renderOutput.firstChild) this.dom.renderOutput.firstChild.style.opacity = '0.5';
                         } else {
-                             // No history, show the error SVG
-                             this.dom.renderOutput.innerHTML = svgText;
+                            this.dom.renderOutput.style.overflow = 'auto';
+                            this.dom.renderOutput.innerHTML = `<div class="zoomable">${svgText}</div>`;
+                            this.updateZoom();
                         }
                     } else {
                         // Valid
                         this.lastValidPlantUmlSvg = svgText;
-                        this.dom.renderOutput.innerHTML = svgText;
+                        this.dom.renderOutput.style.overflow = 'auto';
+                        this.dom.renderOutput.innerHTML = `<div class="zoomable">${svgText}</div>`;
+                        this.updateZoom();
                         const svg = this.dom.renderOutput.querySelector('svg');
-                        if(svg) {
+                        if (svg) {
                             svg.classList.add('max-w-none', 'bg-white', 'rounded', 'shadow-sm');
                             svg.removeAttribute('height'); 
                             svg.removeAttribute('width');
@@ -571,12 +639,15 @@
                     console.warn("Fetch failed", e);
                     // If fetch fails (Network/CORS), preserve last state if exists
                     if (this.lastValidPlantUmlSvg) {
-                        this.dom.renderOutput.innerHTML = this.lastValidPlantUmlSvg;
+                        this.dom.renderOutput.style.overflow = 'auto';
+                        this.dom.renderOutput.innerHTML = `<div class="zoomable">${this.lastValidPlantUmlSvg}</div>`;
+                        this.updateZoom();
                         if(this.dom.renderOutput.firstChild) this.dom.renderOutput.firstChild.style.opacity = '0.5';
                         this.showError("Network/CORS Error - Preview Paused");
                     } else {
-                        // Fallback to IMG tag only if we have no history
-                        this.dom.renderOutput.innerHTML = `<img src="${url}" class="max-w-none bg-white rounded shadow-sm">`;
+                        this.dom.renderOutput.style.overflow = 'auto';
+                        this.dom.renderOutput.innerHTML = `<div class="zoomable"><img src="${url}" class="max-w-none bg-white rounded shadow-sm"></div>`;
+                        this.updateZoom();
                     }
                 } finally {
                     this.dom.loading.classList.add('opacity-0');
@@ -591,6 +662,7 @@
                     const url = getDiagramUrl(this.settings.serverUrl, fullCode, 'svg');
                     return `![Diagram](${url})`;
                 });
+                this.dom.renderOutput.style.overflow = 'auto';
                 const html = DOMPurify.sanitize(marked.parse(processedMarkdown));
                 this.dom.renderOutput.innerHTML = `<div class="markdown-body w-full max-w-3xl mx-auto p-4 bg-white dark:bg-transparent rounded">${html}</div>`;
                 this.dom.loading.classList.add('opacity-0');
@@ -704,6 +776,67 @@
             }
             hideError() {
                 this.dom.errorToast.classList.add('translate-y-20', 'opacity-0');
+            }
+
+            initZoomPan() {
+                this.dom.renderOutput.addEventListener('wheel', this.handleWheel.bind(this), { passive: false });
+                this.dom.renderOutput.addEventListener('mousedown', this.handleMouseDown.bind(this));
+                document.addEventListener('mousemove', this.handleMouseMove.bind(this));
+                document.addEventListener('mouseup', this.handleMouseUp.bind(this));
+            }
+
+            handleWheel(e) {
+                e.preventDefault();
+                const zoomable = this.dom.renderOutput.querySelector('.zoomable');
+                if (!zoomable) return;
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                this.zoomScale = Math.max(0.1, Math.min(5, this.zoomScale * delta));
+                this.updateZoom();
+            }
+
+            handleMouseDown(e) {
+                const zoomable = this.dom.renderOutput.querySelector('.zoomable');
+                if (!zoomable) return;
+                this.isDragging = true;
+                this.lastMouseX = e.clientX;
+                this.lastMouseY = e.clientY;
+                zoomable.classList.add('dragging');
+            }
+
+            handleMouseMove(e) {
+                if (!this.isDragging) return;
+                const zoomable = this.dom.renderOutput.querySelector('.zoomable');
+                if (!zoomable) return;
+                const deltaX = e.clientX - this.lastMouseX;
+                const deltaY = e.clientY - this.lastMouseY;
+                this.panX += deltaX / this.zoomScale;
+                this.panY += deltaY / this.zoomScale;
+                // Limit panning to reasonable bounds (e.g., within 2000px in any direction)
+                this.panX = Math.max(-2000, Math.min(2000, this.panX));
+                this.panY = Math.max(-2000, Math.min(2000, this.panY));
+                this.lastMouseX = e.clientX;
+                this.lastMouseY = e.clientY;
+                this.updateZoom();
+            }
+
+            handleMouseUp() {
+                this.isDragging = false;
+                const zoomable = this.dom.renderOutput.querySelector('.zoomable');
+                if (zoomable) zoomable.classList.remove('dragging');
+            }
+
+            updateZoom() {
+                const zoomable = this.dom.renderOutput.querySelector('.zoomable');
+                if (zoomable) {
+                    zoomable.style.transform = `scale(${this.zoomScale}) translate(${this.panX}px, ${this.panY}px)`;
+                }
+            }
+
+            resetZoomPan() {
+                this.zoomScale = 1;
+                this.panX = 0;
+                this.panY = 0;
+                this.updateZoom();
             }
         }
         
