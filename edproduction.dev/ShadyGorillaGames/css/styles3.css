@@ -1,0 +1,338 @@
+/* 
+    --color-gray: #0F1119;
+    --color-text-black: #202020;
+    --color-text-white: #FFFFFF;
+    --color-text-white-dark: #ecf3f3;
+    --color-gray-light: #26272d;
+    --effect-basic-light: rgba(1,1,1,1,0.2);
+    --color-text-red: #FF0000;
+    --color-text-red-dark: #d60000;
+*/
+
+
+/* Custom Bootstrap Colors */
+:root {
+    --bs-dark: #0F1119;
+    /* Example custom dark color */
+    --bs-primary: #26272d;
+    /* Example custom primary color */
+    --bs-secondary: #6c757d;
+    /* Example custom secondary color */
+    --bs-success: #28a745;
+    /* Example custom success color */
+    --bs-info: #17a2b8;
+    /* Example custom info color */
+    --bs-warning: #ffc107;
+    /* Example custom warning color */
+    --bs-danger: #dc3545;
+    /* Example custom danger color */
+    --bs-light: #f8f9fa;
+    /* Example custom light color */
+}
+
+/* Override Bootstrap bg-dark class */
+.bg-dark {
+    background-color: var(--bs-dark) !important;
+}
+
+.btn-primary {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+/* Additional custom styles can be added here */
+body {
+    font-family: 'Open Sans', sans-serif;
+    overflow-x: hidden;
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    max-width: 100vw;
+}
+
+img {
+    width: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: bold;
+}
+
+div {
+    scroll-margin-top: 80px;
+}
+
+h2 {
+    font-size: 36px;
+}
+
+h1 {
+    font-size: 56px;
+    text-align: center;
+}
+
+p {
+    font-size: 24px;
+    line-height: 1.5;
+}
+
+footer {
+    min-height: 20vh;
+}
+
+a img {
+    transition: opacity 0.3s ease;
+}
+
+a img:hover {
+    opacity: 0.7;
+}
+
+#social {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1em;
+}
+
+#social a {
+    width: 16%;
+}
+
+#social img {
+    width: 100%;
+}
+
+#vvvLoading {
+    width: 100%;
+    height: 80vh;
+    overflow: hidden;
+    /* Ensure the image is only visible through the div */
+    position: relative;
+    z-index: 1;
+    /* Ensure the div is above other content */
+}
+
+.parallax {
+    width: 120%;
+    height: auto;
+    position: absolute;
+    /* Use absolute positioning within the div */
+    top: calc(-400px);
+    left: -10%;
+}
+
+.carousel-item {
+    height: 30vh;
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+    .carousel-item {
+        height: 40vh;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+    .carousel-item {
+        height: 50vh;
+    }
+}
+
+@media (min-width: 1201px) {
+    .carousel-item {
+        height: 60vh;
+    }
+}
+
+.carousel-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.v-shadow::before {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 50px;
+    width: 50%;
+    background-color: rgba(0, 0, 0, 0.2);
+    z-index: -1;
+    border-radius: 70% / 100%;
+    bottom: 20px;
+}
+
+.maxh-5 {
+    max-height: 5vh;
+}
+
+.maxh-10 {
+    max-height: 10vh;
+}
+
+.maxh-20 {
+    max-height: 20vh;
+}
+
+.maxh-30 {
+    max-height: 30vh;
+}
+
+.maxh-40 {
+    max-height: 40vh;
+}
+
+.maxh-50 {
+    max-height: 50vh;
+}
+
+.maxh-60 {
+    max-height: 60vh;
+}
+
+.maxh-70 {
+    max-height: 70vh;
+}
+
+.maxh-80 {
+    max-height: 80vh;
+}
+
+.maxh-90 {
+    max-height: 90vh;
+}
+
+.maxh-100 {
+    max-height: 100vh;
+}
+
+.maxw-12 {
+    max-width: 12vw;
+}
+
+.maxw-15 {
+    max-width: 15vw;
+}
+
+.maxw-20 {
+    max-width: 20vw;
+}
+
+.maxw-25 {
+    max-width: 25vw;
+}
+
+.maxw-33 {
+    max-width: 33vw;
+}
+
+.maxw-50 {
+    max-width: 50vw;
+}
+
+.maxw-75 {
+    max-width: 75vw;
+}
+
+.maxw-100 {
+    max-width: 100vw;
+}
+
+.w-auto {
+    width: auto;
+}
+
+.h-auto {
+    height: auto;
+}
+
+.card {
+    border: none !important;
+}
+
+.bg-dark.text-white a {
+    color: #fff;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+.bg-dark.text-white a:hover {
+    color: #ddd;
+}
+
+/* Animation classes */
+.anim-left {
+    opacity: 0;
+    /* transform: translateX(-400px); */
+    transition: all 1.2s ease-out;
+}
+
+.anim-left.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.anim-right {
+    opacity: 0;
+    /* transform: translateX(400px); */
+    transition: all 1.2s ease-out;
+}
+
+.anim-right.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.badge-sm {
+    padding: 0.15em 0.25em !important;
+}
+
+.badge-lg {
+    padding: 0.35em 0.85em !important;
+}
+
+/* Custom Bootstrap Colors */
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+.bg-blue {
+    background-color: #007bff !important;
+}
+.bg-green {
+    background-color: #28a745 !important;
+}
+.bg-red {
+    background-color: #dc3545 !important;
+}
+.bg-yellow {
+    background-color: #ffc107 !important;
+}
+.bg-orange {
+    background-color: #fd7e14 !important;
+}
+.bg-pink {
+    background-color: #e83e8c !important;
+}
+.bg-cyan {
+    background-color: #17a2b8 !important;
+}
+
+.mt-6 {
+    margin-top: 6rem !important;
+}
+
+.mt-7 {
+    margin-top: 7rem !important;
+}
+
+.mt-8 {
+    margin-top: 8rem !important;
+}

@@ -1,0 +1,123 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #1a1a1a; /* Dark background */
+    color: #ffffff; /* Light text */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.hero-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Full viewport height */
+}
+
+section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh; /* Full viewport height */
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1.2s ease-out, transform 0.6s ease-out;
+}
+
+.hero-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.hero-content-r {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-direction: row-reverse; /* Reverses the order of the children */
+}
+
+.hero-text
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hero-text h1 {
+    font-size: 4rem;
+    color: #fff;
+}
+.hero-text h2 {
+    font-size: 3rem;
+    color: #fff;
+}
+
+.hero-text p
+{
+    font-size: 1.5rem;
+    color: #fff;
+}
+
+.hero-text .highlight {
+    color: #e3c81b; /* Accent color */
+}
+
+.hero-text a
+{
+    color: #1baee3; /* Accent color */
+}
+
+.hero-text a:hover
+{
+    color: #1b6be3; /* Accent color */
+    text-decoration: none;
+}
+
+.hero-image img {
+    max-width: 500px;
+    width: 100%;
+    height: auto;
+    border-radius: 50%;
+    box-shadow: 0px 0px 60px rgba(255, 251, 202, 0.301);
+    transition: transform .2s;
+}
+.hero-image img:hover {
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    .hero-content-r {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+footer
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 100px;
+}
+
+.hero-image-main img {
+    height: 40vmax;
+    width: auto;    
+}
+
+.is-visible {
+    opacity: 1;
+    transform: none;
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disable Scrolling Example</title>
+    <style>
+        html {
+            overflow-y: scroll;
+        }
+    </style>
+</head>
+<body>
+    <div style="height: 2000px;">
+        <p>Scroll down to see the effect.</p>
+    </div>
+    <button onclick="disableScroll()">Disable Scroll</button>
+    <button onclick="enableScroll()">Enable Scroll</button>
+
+    <script>
+        // JavaScript functions as defined above
+        function disableScroll() {
+            document.body.style.overflow = 'hidden';
+            document.body.style.height = '100%';
+            document.addEventListener('touchmove', preventScroll, { passive: false });
+            document.addEventListener('wheel', preventScroll, { passive: false });
+        }
+
+        function enableScroll() {
+            document.body.style.overflow = '';
+            document.body.style.height = '';
+            document.removeEventListener('touchmove', preventScroll, { passive: false });
+            document.removeEventListener('wheel', preventScroll, { passive: false });
+        }
+
+        function preventScroll(event) {
+            event.preventDefault();
+        }
+    </script>
+</body>
+</html>
