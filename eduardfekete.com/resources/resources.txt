@@ -9,6 +9,9 @@ Software Engineering/
             Computer Architecture and Organization CAO.pdf
             ATmega2560 Simulator https://edproduction.dev/playground/atmega_assembly
             Atmel Datasheet Atmega 2560 https://ww1.microchip.com/downloads/en/devicedoc/atmel-2549-8-bit-avr-microcontroller-atmega640-1280-1281-2560-2561_datasheet.pdf
+            Latches & Flip Flops https://www.youtube.com/watch?v=LTtuYeSmJ2g
+            Sequential circuits https://www.youtube.com/watch?v=fLN1YOmuAr8
+            Multiplexers https://www.youtube.com/watch?v=aQlF-9i3fAA
         Projects/
             Software Engineering and Project Management SWE_PM.pdf
             Online UML/Markdown Editor https://edproduction.dev/playground/uml
