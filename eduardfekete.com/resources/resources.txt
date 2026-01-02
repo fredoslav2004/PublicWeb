@@ -15,7 +15,7 @@ Software Engineering/
             ATmega2560 Clock Cycles CAO_ClockCycles.pdf
             Exam Cheat Sheet CAO_ExamCheatSheet.pdf
             Presentation Slides CAO_Visual.pdf
-            Slide Summary CAO_Slides.pdf
+            Slide Summary CAO2.pdf
         Projects/
             Software Engineering and Project Management SWE_PM.pdf
             Online UML/Markdown Editor https://edproduction.dev/playground/uml
