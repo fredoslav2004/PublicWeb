@@ -12,6 +12,10 @@ Software Engineering/
             Latches & Flip Flops https://www.youtube.com/watch?v=LTtuYeSmJ2g
             Sequential circuits https://www.youtube.com/watch?v=fLN1YOmuAr8
             Multiplexers https://www.youtube.com/watch?v=aQlF-9i3fAA
+            ATmega2560 Clock Cycles CAO_ClockCycles.pdf
+            Exam Cheat Sheet CAO_ExamCheatSheet.pdf
+            Presentation Slides CAO_Visual.pdf
+            Slide Summary CAO_Slides.pdf
         Projects/
             Software Engineering and Project Management SWE_PM.pdf
             Online UML/Markdown Editor https://edproduction.dev/playground/uml
