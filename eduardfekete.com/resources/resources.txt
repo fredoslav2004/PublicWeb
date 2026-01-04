@@ -18,6 +18,7 @@ Software Engineering/
             Slide Summary CAO2.pdf
 	        m2560def.inc m2560def.pdf
             CAO Library caolibrary.pdf
+            Flip Flops and Latches https://www.cs.ucr.edu/~ehwang/courses/cs120b/flipflops.pdf
         Projects/
             Software Engineering and Project Management SWE_PM.pdf
             Online UML/Markdown Editor https://edproduction.dev/playground/uml
