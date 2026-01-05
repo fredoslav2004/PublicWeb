@@ -35,8 +35,8 @@ Software Engineering/
             Custom PUML Theme https://github.com/fredoslav2004/MinimalThemePUML
         Mathematics/
             Mathematics for Software Engineering https://raw.githubusercontent.com/RBrooksDK/MSE_book_v2/master/main.pdf
-	DNP/
-	    DNP Slide Notes DNP.pdf
+	    DNP/
+	        DNP Slide Notes DNP.pdf
             Zipped Stuff Solutions https://drive.google.com/file/d/1sxuoaSKJC5KhAy0s2EfuD7X7mogCrlEC/view?usp=sharing
             
     By File Type/
