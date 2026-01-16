@@ -1,0 +1,573 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>UML Design - Full Course Export</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"><link rel="stylesheet" href="../../assets/_courseId_.DyhIZQIQ.css">
+<link rel="stylesheet" href="../../assets/katex_min.CThiMMFw.css">
+<style>@page{size:A4;margin:0!important}:root{--primary: #58cc02}body{font-family:Plus Jakarta Sans,sans-serif;background-color:#f8fafc;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}#export-root{background-color:#fff;color:#0f172a;transition:none!important}#pdf-content{background-color:#fff!important;color:#0f172a!important;position:relative!important;z-index:1!important;width:100%!important;padding:20mm!important}.quiz-container,.Quiz,[id*=exercise],[id*=quiz],[id*=knowledge-check],.content-article h2:empty,.content-article h3:empty,.content-article h3:has(+.quiz-container),.content-article h2:has(+.quiz-container),.content-article p:has(+.quiz-container),.content-article h3:has(+.Quiz),.content-article h2:has(+.Quiz),.content-article p:has(+.Quiz),.content-article h3:has(+*+.quiz-container),.content-article h2:has(+*+.quiz-container),.content-article p:has(+*+.quiz-container),.content-article h3:has(+*+.Quiz),.content-article h2:has(+*+.Quiz),.content-article p:has(+*+.Quiz),.content-article *:has(>.quiz-container),.content-article *:has(>.Quiz),[data-quiz-header]{display:none!important}[data-quiz-header]{display:none!important}#pdf-content *{max-width:100%;overflow-wrap:break-word}.page-break-after{page-break-after:always;-moz-column-break-after:page;break-after:page}.page-break-before{page-break-before:always;-moz-column-break-before:page;break-before:page}.avoid-break{page-break-inside:avoid;-moz-column-break-inside:avoid;break-inside:avoid}.content-article{font-size:1.1rem;line-height:1.7}.content-article h1{font-size:2.25rem;font-weight:900;text-transform:uppercase;margin-top:2.5rem;margin-bottom:1.5rem;color:#0f172a;letter-spacing:-.025em}.content-article h2{font-size:1.5rem;font-weight:900;text-transform:uppercase;margin-top:2rem;margin-bottom:1rem;color:#0f172a;border-bottom:2px solid #f1f5f9;padding-bottom:.5rem}.content-article h3{font-size:1.25rem;font-weight:800;text-transform:uppercase;margin-top:1.5rem;margin-bottom:.75rem;color:#1e293b}.content-article p{margin-bottom:1.25rem;color:#334155}.content-article ul{list-style-type:disc;margin-left:1.5rem;margin-bottom:1.25rem}.content-article ol{list-style-type:decimal;margin-left:1.5rem;margin-bottom:1.25rem}.content-article li{margin-bottom:.5rem;padding-left:.5rem}.content-article strong{font-weight:900;color:#0f172a}.content-article :not(pre)>code{font-family:monospace;background-color:#f1f5f9;padding:.2rem .4rem;border-radius:.25rem;color:var(--primary);font-weight:700}.content-article pre{padding:1.5rem;border-radius:1rem;margin-bottom:2rem;overflow-x:auto;font-size:.9rem;border:1px solid #e2e8f0}.content-article pre code{background-color:transparent!important;padding:0!important;color:inherit!important;font-weight:400!important}.content-article blockquote{border-left:4px solid var(--primary);padding-left:1.5rem;font-style:italic;color:#475569;margin-bottom:2rem}.content-article img{border-radius:1.5rem;max-width:100%;height:auto!important;margin:2rem auto;display:block;box-shadow:0 10px 15px -3px #0000001a}.katex-display{margin:1.5em 0!important;overflow-x:visible!important;overflow-y:hidden!important}.no-print{display:flex}@media print{body *{visibility:hidden}#export-root,#export-root *{visibility:visible}#export-root{position:absolute;left:0;top:0;width:100%!important;margin:0!important;padding:0!important;box-shadow:none!important}#pdf-content{padding:20mm!important}.no-print{display:none!important}}
+</style><script type="module">const t=document.getElementById("print-btn");t&&t.addEventListener("click",()=>{const e=document.createElement("div");e.innerHTML='<div class="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm no-print"><div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md text-center"><h3 class="text-xl font-bold mb-4">Print optimization</h3><p class="mb-6 text-slate-600">For a clean PDF, please ensure <b>"Headers and Footers"</b> is UNCHECKED in your browser print settings.</p><button id="close-note" class="bg-primary text-white font-bold px-6 py-2 rounded-lg">OK, SAVE AS PDF</button></div></div>',document.body.appendChild(e),document.getElementById("close-note")?.addEventListener("click",()=>{e.remove(),window.focus(),window.print()})});
+</script></head> <body> <!-- Floating UI Controls --> <div id="controls" class="fixed top-6 right-6 z-[100] flex gap-4 no-print"> <div class="bg-white/90 backdrop-blur-xl p-2 rounded-2xl shadow-2xl border border-slate-200 flex gap-2"> <a href="../../courses/uml.html" class="px-5 py-3 text-sm font-black text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2 hover:bg-slate-50 rounded-xl"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+BACK
+</a> <button id="print-btn" class="bg-[#58cc02] hover:bg-[#46a302] text-white font-black px-10 py-3 rounded-xl shadow-lg shadow-green-500/20 hover:scale-105 active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center gap-2"> <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-4"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+SAVE AS PDF
+</button> </div> </div> <!-- The Export Content --> <div class="max-w-[210mm] mx-auto my-12 shadow-2xl transition-all" id="export-root"> <div id="pdf-content" class="bg-white p-[25mm]"> <!-- Cover Page --> <div class="h-[247mm] flex flex-col justify-center items-center text-center page-break-after"> <div class="w-32 h-32 bg-green-50 text-[#58cc02] rounded-[3rem] flex items-center justify-center mb-16 shadow-inner"> <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5z"></path><path d="M4 21V4a2 2 0 0 1 2-2h10l4 4v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"></path><path d="M9 9h1"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg> </div> <h1 class="text-7xl font-black uppercase tracking-tighter mb-8 text-slate-900 leading-[0.9]">UML Design</h1> <p class="text-2xl text-slate-400 max-w-2xl mx-auto mb-20 font-medium leading-relaxed tracking-tight italic">Learn to model software systems using Unified Modeling Language.</p> <div class="h-3 w-40 bg-[#58cc02] rounded-full mb-20 shadow-lg shadow-green-500/20"></div> <div class="mt-auto pt-20"> <div class="inline-block px-6 py-2 bg-slate-100 rounded-full font-black text-slate-400 uppercase tracking-[0.3em] text-[10px] mb-4">Official Documentation</div> <p class="text-slate-900 font-extrabold text-lg">January 2026</p> </div> </div> <!-- Table of Contents --> <div class="min-h-[247mm] page-break-after py-12"> <h2 class="text-5xl font-black uppercase mb-16 tracking-tighter text-slate-900 border-b-8 border-slate-900 pb-6">Contents</h2> <div class="space-y-12"> <div> <h3 class="font-black text-[#58cc02] uppercase tracking-[0.25em] text-xs mb-6 bg-green-50 inline-block px-4 py-1 rounded-md">Overview</h3> <ul class="space-y-6"> <li class="flex items-baseline gap-4 group"> <span class="font-bold text-slate-800 text-xl tracking-tight">Introduction</span> <div class="flex-1 border-b-2 border-dotted border-slate-100"></div> </li><li class="flex items-baseline gap-4 group"> <span class="font-bold text-slate-800 text-xl tracking-tight">Modeling with PlantUML</span> <div class="flex-1 border-b-2 border-dotted border-slate-100"></div> </li> </ul> </div><div> <h3 class="font-black text-[#58cc02] uppercase tracking-[0.25em] text-xs mb-6 bg-green-50 inline-block px-4 py-1 rounded-md">Structural Modeling</h3> <ul class="space-y-6"> <li class="flex items-baseline gap-4 group"> <span class="font-bold text-slate-800 text-xl tracking-tight">Class Diagrams</span> <div class="flex-1 border-b-2 border-dotted border-slate-100"></div> </li> </ul> </div><div> <h3 class="font-black text-[#58cc02] uppercase tracking-[0.25em] text-xs mb-6 bg-green-50 inline-block px-4 py-1 rounded-md">Behavioral Modeling</h3> <ul class="space-y-6"> <li class="flex items-baseline gap-4 group"> <span class="font-bold text-slate-800 text-xl tracking-tight">Sequence Diagrams</span> <div class="flex-1 border-b-2 border-dotted border-slate-100"></div> </li> </ul> </div><div> <h3 class="font-black text-[#58cc02] uppercase tracking-[0.25em] text-xs mb-6 bg-green-50 inline-block px-4 py-1 rounded-md">Requirements Modeling</h3> <ul class="space-y-6"> <li class="flex items-baseline gap-4 group"> <span class="font-bold text-slate-800 text-xl tracking-tight">Use Case Diagrams</span> <div class="flex-1 border-b-2 border-dotted border-slate-100"></div> </li> </ul> </div><div> <h3 class="font-black text-[#58cc02] uppercase tracking-[0.25em] text-xs mb-6 bg-green-50 inline-block px-4 py-1 rounded-md">Behavioral Modeling</h3> <ul class="space-y-6"> <li class="flex items-baseline gap-4 group"> <span class="font-bold text-slate-800 text-xl tracking-tight">Activity Diagrams</span> <div class="flex-1 border-b-2 border-dotted border-slate-100"></div> </li><li class="flex items-baseline gap-4 group"> <span class="font-bold text-slate-800 text-xl tracking-tight">State Machine Diagrams</span> <div class="flex-1 border-b-2 border-dotted border-slate-100"></div> </li> </ul> </div><div> <h3 class="font-black text-[#58cc02] uppercase tracking-[0.25em] text-xs mb-6 bg-green-50 inline-block px-4 py-1 rounded-md">System Architecture</h3> <ul class="space-y-6"> <li class="flex items-baseline gap-4 group"> <span class="font-bold text-slate-800 text-xl tracking-tight">Component &amp; Deployment Diagrams</span> <div class="flex-1 border-b-2 border-dotted border-slate-100"></div> </li> </ul> </div><div> <h3 class="font-black text-[#58cc02] uppercase tracking-[0.25em] text-xs mb-6 bg-green-50 inline-block px-4 py-1 rounded-md">Summary</h3> <ul class="space-y-6"> <li class="flex items-baseline gap-4 group"> <span class="font-bold text-slate-800 text-xl tracking-tight">UML Design Decisions</span> <div class="flex-1 border-b-2 border-dotted border-slate-100"></div> </li> </ul> </div> </div> </div> <!-- Content --> <div class="module-group"> <div class="page-break-before h-64 flex items-end pb-12 border-b-[12px] border-slate-900 mb-20"> <h2 class="text-6xl font-black uppercase tracking-tighter text-slate-900 leading-none">Overview</h2> </div> <div class="lesson-container mb-32 last:mb-0"> <header class="mb-16"> <div class="flex items-center gap-3 mb-6"> <div class="h-px w-8 bg-[#58cc02]"></div> <div class="text-[10px] font-black text-[#58cc02] uppercase tracking-[0.4em]">Section Detail</div> </div> <h3 class="text-5xl font-black uppercase tracking-tighter text-slate-900 mb-8 leading-[0.95]">Introduction</h3> <div class="h-2 w-24 bg-[#58cc02] rounded-full shadow-lg shadow-green-500/10"></div> </header> <div class="content-article"> <h1 id="introduction-to-uml">Introduction to UML</h1>
+<p>Unified Modeling Language (UML) is a standardized modeling language consisting of an integrated set of diagrams, developed to help system and software developers for specifying, visualizing, constructing, and documenting the artifacts of software systems.</p>
+<h3 id="why-uml">Why UML?</h3>
+<ul>
+<li><strong>Visualize</strong>: Communicate structure and behavior.</li>
+<li><strong>Specifying</strong>: Detailed design work.</li>
+<li><strong>Documenting</strong>: Maintaining a record of decisions.</li>
+</ul>
+<h3 id="what-we-will-cover">What we will cover</h3>
+<p>In this course, we will dive deep into:</p>
+<ul>
+<li><strong>Structural Modeling</strong>: Class, Component, and Deployment Diagrams.</li>
+<li><strong>Behavioral Modeling</strong>: Use Case, Sequence, Activity, and State Machine Diagrams.</li>
+<li><strong>Design Decisions</strong>: How to choose between attributes and entities, and how to map models to code.</li>
+</ul>
+<p>By the end of this course, you’ll be able to architect complex systems with clarity and precision.</p> </div> </div><div class="lesson-container mb-32 last:mb-0"> <header class="mb-16"> <div class="flex items-center gap-3 mb-6"> <div class="h-px w-8 bg-[#58cc02]"></div> <div class="text-[10px] font-black text-[#58cc02] uppercase tracking-[0.4em]">Section Detail</div> </div> <h3 class="text-5xl font-black uppercase tracking-tighter text-slate-900 mb-8 leading-[0.95]">Modeling with PlantUML</h3> <div class="h-2 w-24 bg-[#58cc02] rounded-full shadow-lg shadow-green-500/10"></div> </header> <div class="content-article"> <h1 id="modeling-with-plantuml">Modeling with PlantUML</h1>
+<p>Instead of using drag-and-drop tools that can be tedious to update, we use <strong>PlantUML</strong>. PlantUML is an open-source tool that allows users to create UML diagrams from a plain text language.</p>
+<h3 id="why-text-based-modeling">Why Text-Based Modeling?</h3>
+<ul>
+<li><strong>Version Control</strong>: Since it’s text, you can track changes using Git.</li>
+<li><strong>Speed</strong>: Quickly iterate on designs without fighting with mouse alignments.</li>
+<li><strong>Consistency</strong>: The tool handles the layout automatically.</li>
+</ul>
+<h3 id="basic-syntax-structure">Basic Syntax Structure</h3>
+<p>Most diagrams start with a keyword defining the type (though often omitted in the specific component syntax we use here) and use simple arrows to define relationships.</p>
+<h4 id="common-symbols">Common Symbols</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">Symbol</th><th style="text-align:left">Meaning</th></tr></thead><tbody><tr><td style="text-align:left"><code>-&gt;</code></td><td style="text-align:left">Solid line/arrow</td></tr><tr><td style="text-align:left"><code>--&gt;</code></td><td style="text-align:left">Dashed line/arrow</td></tr><tr><td style="text-align:left"><code>:</code></td><td style="text-align:left">Adds text to a line/relationship</td></tr><tr><td style="text-align:left"><code>as</code></td><td style="text-align:left">Alias for a long name</td></tr><tr><td style="text-align:left"><code>[ ]</code></td><td style="text-align:left">Represents a component or node</td></tr><tr><td style="text-align:left"><code>( )</code></td><td style="text-align:left">Represents a use case</td></tr></tbody></table>
+<h3 id="tips-for-efficient-modeling">Tips for Efficient Modeling</h3>
+<ol>
+<li><strong>Focus on Semantics</strong>: Let PlantUML handle the layout. Don’t spend too much time trying to force specific positioning unless necessary.</li>
+<li><strong>Use Aliases</strong>: For long component names, use <code>as</code> to keep your code clean.
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span>participant &quot;Very Long Service Name&quot; as Service</span></span>
+<span class="line"><span>User -&gt; Service: Request</span></span>
+<span class="line"><span></span></span></code></pre>
+</li>
+<li><strong>Colors and Styling</strong>: You can add skinparams or inline colors, but keep it simple for technical documentation.
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span>node &quot;Server&quot; #LightBlue</span></span>
+<span class="line"><span></span></span></code></pre>
+</li>
+</ol>
+<h3 id="live-preview">Live Preview</h3>
+<p>In most modern IDEs (like VS Code), you can install the <strong>PlantUML extension</strong> to see a live preview of your diagrams as you type.</p> </div> </div> </div><div class="module-group"> <div class="page-break-before h-64 flex items-end pb-12 border-b-[12px] border-slate-900 mb-20"> <h2 class="text-6xl font-black uppercase tracking-tighter text-slate-900 leading-none">Structural Modeling</h2> </div> <div class="lesson-container mb-32 last:mb-0"> <header class="mb-16"> <div class="flex items-center gap-3 mb-6"> <div class="h-px w-8 bg-[#58cc02]"></div> <div class="text-[10px] font-black text-[#58cc02] uppercase tracking-[0.4em]">Section Detail</div> </div> <h3 class="text-5xl font-black uppercase tracking-tighter text-slate-900 mb-8 leading-[0.95]">Class Diagrams</h3> <div class="h-2 w-24 bg-[#58cc02] rounded-full shadow-lg shadow-green-500/10"></div> </header> <div class="content-article"> <h1 id="class-diagrams">Class Diagrams</h1>
+<p>Class diagrams are the foundational structural diagrams in UML. They represent the static view of a system, detailing classes, their internal structure, and how they relate to one another.</p>
+<h3 id="1-anatomy-of-a-class">1. Anatomy of a Class</h3>
+<p>A class is represented as a box with three compartments:</p>
+<ol>
+<li><strong>Top</strong>: Class Name (Bold, centered, Italics if Abstract).</li>
+<li><strong>Middle</strong>: Attributes (Fields/Variables).</li>
+<li><strong>Bottom</strong>: Operations (Methods/Functions).</li>
+</ol>
+<h4 id="visibility-modifiers">Visibility Modifiers</h4>
+<ul>
+<li><code>+</code> <strong>Public</strong>: Accessible from anywhere.</li>
+<li><code>-</code> <strong>Private</strong>: Accessible only within the class.</li>
+<li><code>#</code> <strong>Protected</strong>: Accessible within class and subclasses.</li>
+<li><code>~</code> <strong>Package/Internal</strong>: Accessible within same package.</li>
+</ul>
+<h3 id="2-relationships-and-arrows">2. Relationships and Arrows</h3>
+<p>Understanding relationships is the core of UML. The arrow style defines the semantics.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">Relationship</th><th style="text-align:left">Notation</th><th style="text-align:left">Meaning</th><th style="text-align:left">Property</th></tr></thead><tbody><tr><td style="text-align:left"><strong>Generalization</strong></td><td style="text-align:left">Solid line + Hollow Triangle</td><td style="text-align:left"><code>Dog</code> is an <code>Animal</code>.</td><td style="text-align:left">Inheritance</td></tr><tr><td style="text-align:left"><strong>Realization</strong></td><td style="text-align:left">Dashed line + Hollow Triangle</td><td style="text-align:left"><code>ArrayList</code> implements <code>List</code>.</td><td style="text-align:left">Interface implementation</td></tr><tr><td style="text-align:left"><strong>Association</strong></td><td style="text-align:left">Solid line (opt. arrow)</td><td style="text-align:left"><code>Teacher</code> has <code>Students</code>.</td><td style="text-align:left">General link</td></tr><tr><td style="text-align:left"><strong>Aggregation</strong></td><td style="text-align:left">Hollow Diamond</td><td style="text-align:left"><code>Car</code> has <code>Wheels</code>.</td><td style="text-align:left">”Part-of” (Weak: Parts can exist alone)</td></tr><tr><td style="text-align:left"><strong>Composition</strong></td><td style="text-align:left">Filled Diamond</td><td style="text-align:left"><code>Building</code> has <code>Rooms</code>.</td><td style="text-align:left">”Part-of” (Strong: Parts die with parent)</td></tr><tr><td style="text-align:left"><strong>Dependency</strong></td><td style="text-align:left">Dashed Arrow</td><td style="text-align:left"><code>A</code> uses <code>B</code>.</td><td style="text-align:left">Temporary usage (parameter/local)</td></tr></tbody></table>
+<h4 id="multiplicity">Multiplicity</h4>
+<p>Multiplicity defines how many instances of one class link to one instance of another:</p>
+<ul>
+<li><code>1</code>: Exactly one.</li>
+<li><code>0..1</code>: Zero or one.</li>
+<li><code>*</code> or <code>0..*</code>: Zero or more.</li>
+<li><code>1..*</code>: One or more.</li>
+</ul>
+<h3 id="3-decisions-attribute-vs-entity">3. Decisions: Attribute vs. Entity?</h3>
+<p>A common dilemma: Should something be an attribute of a class or its own entity (class)?</p>
+<ul>
+<li><strong>Attribute</strong>: If the data is a simple value (string, number, date) that doesn’t have its own identity or lifecycle. E.g., <code>String address</code>.</li>
+<li><strong>Entity</strong>: If the data has its own properties, needs to be shared among multiple objects, or has a complex lifecycle. E.g., <code>Address</code> as a class if you need to track <code>Street</code>, <code>City</code>, and <code>Zip</code> separately or validate them.</li>
+</ul>
+<h3 id="4-comprehensive-example">4. Comprehensive Example</h3>
+<p><strong>PlantUML Code:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span>interface Playable {</span></span>
+<span class="line"><span>  +play()</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>abstract class Instrument {</span></span>
+<span class="line"><span>  -String brand</span></span>
+<span class="line"><span>  #float price</span></span>
+<span class="line"><span>  {abstract} +tune()</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>class Guitar extends Instrument implements Playable {</span></span>
+<span class="line"><span>  -int stringCount</span></span>
+<span class="line"><span>  +play()</span></span>
+<span class="line"><span>  +tune()</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>class Case {</span></span>
+<span class="line"><span>  -String material</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Guitar &quot;1&quot; *-- &quot;1&quot; Case : has &gt;</span></span>
+<span class="line"><span>Guitar &quot;1&quot; o-- &quot;0..*&quot; String : uses &gt;</span></span>
+<span class="line"><span></span></span></code></pre>
+<div class="my-12 flex flex-col items-center bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-[2.5rem] overflow-hidden shadow-xl p-8 transition-colors"> <div class="text-[10px] font-black text-light-muted dark:text-dark-muted uppercase tracking-[0.2em] mb-6 w-full text-center opacity-60">System Diagram</div> <div class="w-full flex justify-center overflow-x-auto dark:invert dark:hue-rotate-180 dark:brightness-110"> <?plantuml 1.2026.1beta5?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" data-diagram-type="CLASS" height="467.5px" preserveAspectRatio="none" style="width:272px;height:467px;" version="1.1" viewBox="0 0 272 467" width="272.7083px" zoomAndPan="magnify"><defs/><g><!--class Playable--><g class="entity" data-qualified-name="Playable" data-source-line="6" id="ent0002"><rect fill="transparent" height="75.5534" style="stroke:#000000;stroke-width:1.1458;" width="71.9861" x="41.949" y="36.6323"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" font-style="italic" lengthAdjust="spacing" textLength="58.1085" x="48.8877" y="58.562">Playable</text><line style="stroke:#000000;stroke-width:1.1458;" x1="43.0948" x2="112.7892" y1="70.9715" y2="70.9715"/><line style="stroke:#000000;stroke-width:1.1458;" x1="43.0948" x2="112.7892" y1="80.1382" y2="80.1382"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" lengthAdjust="spacing" textLength="51.3611" x="52.2615" y="100.922">+play()</text></g><!--class Instrument--><g class="entity" data-qualified-name="Instrument" data-source-line="10" id="ent0003"><rect fill="#FFFFFF" height="121.3151" style="stroke:#000000;stroke-width:1.1458;" width="111.2421" x="154.0917" y="13.75"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" font-style="italic" lengthAdjust="spacing" textLength="75.6519" x="171.8868" y="35.6797">Instrument</text><line style="stroke:#000000;stroke-width:1.1458;" x1="155.2375" x2="264.1879" y1="48.0892" y2="48.0892"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" lengthAdjust="spacing" textLength="90.6171" x="164.4042" y="68.8731">-String brand</text><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" lengthAdjust="spacing" textLength="81.0028" x="164.4042" y="91.7539">#float price</text><line style="stroke:#000000;stroke-width:1.1458;" x1="155.2375" x2="264.1879" y1="103.0176" y2="103.0176"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" font-style="italic" lengthAdjust="spacing" textLength="53.5297" x="164.4042" y="123.8015">+tune()</text></g><!--class Guitar--><g class="entity" data-qualified-name="Guitar" data-source-line="16" id="ent0004"><rect fill="#FFFFFF" height="121.3151" style="stroke:#000000;stroke-width:1.1458;" width="128.1879" x="79.1542" y="203.8208"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" lengthAdjust="spacing" textLength="42.6599" x="121.9181" y="225.7506">Guitar</text><line style="stroke:#000000;stroke-width:1.1458;" x1="80.3" x2="206.1962" y1="238.16" y2="238.16"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" lengthAdjust="spacing" textLength="107.5629" x="89.4667" y="258.9439">-int stringCount</text><line style="stroke:#000000;stroke-width:1.1458;" x1="80.3" x2="206.1962" y1="270.2076" y2="270.2076"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" lengthAdjust="spacing" textLength="51.3611" x="89.4667" y="290.9914">+play()</text><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" lengthAdjust="spacing" textLength="53.5297" x="89.4667" y="313.8723">+tune()</text></g><!--class Case--><g class="entity" data-qualified-name="Case" data-source-line="22" id="ent0007"><rect fill="#FFFFFF" height="66.3867" style="stroke:#000000;stroke-width:1.1458;" width="128.3826" x="13.75" y="393.8802"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" lengthAdjust="spacing" textLength="33.6499" x="61.1163" y="415.8099">Case</text><line style="stroke:#000000;stroke-width:1.1458;" x1="14.8958" x2="140.9867" y1="428.2194" y2="428.2194"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" lengthAdjust="spacing" textLength="107.7576" x="24.0625" y="449.0033">-String material</text></g><!--class String--><g class="entity" data-qualified-name="String" data-source-line="27" id="ent0009"><rect fill="#FFFFFF" height="43.5059" style="stroke:#000000;stroke-width:1.1458;" width="54.7852" x="182.325" y="405.3271"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="13.75" lengthAdjust="spacing" textLength="41.0352" x="189.2" y="427.2568">String</text><line style="stroke:#000000;stroke-width:1.1458;" x1="183.4708" x2="235.9643" y1="439.6663" y2="439.6663"/></g><!--reverse link Instrument to Guitar--><g class="link" data-entity-1="ent0003" data-entity-2="ent0004" data-link-type="extension" data-source-line="17" id="lnk5"><path d="M180.7208,156.2229 C180.7208,177.925 180.7208,181.7062 180.7208,203.4083" fill="none" id="Instrument-backto-Guitar" style="stroke:#000000;stroke-width:1.1458;"/><polygon fill="none" points="180.7208,135.5979,173.8458,156.2229,187.5958,156.2229,180.7208,135.5979" style="stroke:#000000;stroke-width:1.1458;"/></g><!--reverse link Playable to Guitar--><g class="link" data-entity-1="ent0002" data-entity-2="ent0004" data-link-type="extension" data-source-line="17" id="lnk6"><path d="M96.5479,133.0427 C96.5479,159.0417 96.5479,173.4562 96.5479,203.3396" fill="none" id="Playable-backto-Guitar" style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:8.0208,8.0208;"/><polygon fill="none" points="96.5479,112.4177,89.6729,133.0427,103.4229,133.0427,96.5479,112.4177" style="stroke:#000000;stroke-width:1.1458;"/></g><!--reverse link Guitar to Case--><g class="link" data-entity-1="ent0004" data-entity-2="ent0007" data-link-type="composition" data-source-line="26" id="lnk8"><path codeLine="26" d="M110.6417,339.2354 C110.6417,362.301 110.6417,373.9542 110.6417,393.5823" fill="none" id="Guitar-backto-Case" style="stroke:#000000;stroke-width:1.1458;"/><polygon fill="#000000" points="110.6417,325.4854,106.0583,332.3604,110.6417,339.2354,115.225,332.3604,110.6417,325.4854" style="stroke:#000000;stroke-width:1.1458;"/><polygon fill="#000000" points="116.3708,352.1563,119.7384,341.7921,113.0033,341.7921,116.3708,352.1563" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="26.3295" x="130.1208" y="351.5839">has</text><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="9.4772" x="93.105" y="351.6604">1</text><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="9.4772" x="102.9269" y="377.8367">1</text></g><!--reverse link Guitar to String--><g class="link" data-entity-1="ent0004" data-entity-2="ent0009" data-link-type="aggregation" data-source-line="27" id="lnk10"><path codeLine="27" d="M194.8375,339.2354 C194.8375,366.9875 194.8375,384.3698 194.8375,404.7656" fill="none" id="Guitar-backto-String" style="stroke:#000000;stroke-width:1.1458;"/><polygon fill="none" points="194.8375,325.4854,190.2542,332.3604,194.8375,339.2354,199.4208,332.3604,194.8375,325.4854" style="stroke:#000000;stroke-width:1.1458;"/><polygon fill="#000000" points="200.5667,357.748,203.9342,347.3838,197.1991,347.3838,200.5667,357.748" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="34.1266" x="214.3167" y="357.1756">uses</text><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="9.4772" x="187.5622" y="351.6604">1</text><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="26.395" x="156.9806" y="389.1857">0..*</text></g><?plantuml-src PP5DJWCn38NtEOKf6sWrau9OTS6c2uH4fKh00JmPJoTgVaPnGa5LxuwdBQY8LHpvvNlFpfKDnfMMeCzvu8NM2NVrnkQ-D8KfcHWoXLoRw7MNg8tiyED-Fd_GAnkiH_VMawVr--f59-fOzuGjQuysQ7yIL7bKr4FnJYdWhGq39lJGeDbkKYoXNKON4-I4WQKbRfSoxh6DEnisqA5ZKifAeDIX8LWx_CB64UpLR93wvbOTbCA61MKo68VCy1paMhnGHLQzvZIY6l5grNNd8cOOaZMazZ_l3Z3B9T09Tc8y5Pin0NtAAje_IEi7HsF5bsagoGXyj5hAWFattZ_o4fakSdcKsIowKN0sdTnDO5fLn_EeNa2F38-N_JZsvtKzdS0Pj03vF55z0m00?></g></svg> </div> </div>
+<h3 id="mapping-to-code-java">Mapping to Code (Java)</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="java"><code><span class="line"><span style="color:#F97583">public</span><span style="color:#F97583"> interface</span><span style="color:#B392F0"> Playable</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    void</span><span style="color:#B392F0"> play</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">public</span><span style="color:#F97583"> abstract</span><span style="color:#F97583"> class</span><span style="color:#B392F0"> Instrument</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    private</span><span style="color:#E1E4E8"> String brand;</span></span>
+<span class="line"><span style="color:#F97583">    protected</span><span style="color:#F97583"> float</span><span style="color:#E1E4E8"> price;</span></span>
+<span class="line"><span style="color:#F97583">    public</span><span style="color:#F97583"> abstract</span><span style="color:#F97583"> void</span><span style="color:#B392F0"> tune</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">public</span><span style="color:#F97583"> class</span><span style="color:#B392F0"> Guitar</span><span style="color:#F97583"> extends</span><span style="color:#B392F0"> Instrument</span><span style="color:#F97583"> implements</span><span style="color:#B392F0"> Playable</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    private</span><span style="color:#F97583"> int</span><span style="color:#E1E4E8"> stringCount;</span></span>
+<span class="line"><span style="color:#F97583">    private</span><span style="color:#E1E4E8"> Case storageCase </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> Case</span><span style="color:#E1E4E8">(); </span><span style="color:#6A737D">// Composition</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    public</span><span style="color:#F97583"> void</span><span style="color:#B392F0"> play</span><span style="color:#E1E4E8">() { </span><span style="color:#6A737D">/* ... */</span><span style="color:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#F97583">    public</span><span style="color:#F97583"> void</span><span style="color:#B392F0"> tune</span><span style="color:#E1E4E8">() { </span><span style="color:#6A737D">/* ... */</span><span style="color:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre> </div> </div> </div><div class="module-group"> <div class="page-break-before h-64 flex items-end pb-12 border-b-[12px] border-slate-900 mb-20"> <h2 class="text-6xl font-black uppercase tracking-tighter text-slate-900 leading-none">Behavioral Modeling</h2> </div> <div class="lesson-container mb-32 last:mb-0"> <header class="mb-16"> <div class="flex items-center gap-3 mb-6"> <div class="h-px w-8 bg-[#58cc02]"></div> <div class="text-[10px] font-black text-[#58cc02] uppercase tracking-[0.4em]">Section Detail</div> </div> <h3 class="text-5xl font-black uppercase tracking-tighter text-slate-900 mb-8 leading-[0.95]">Sequence Diagrams</h3> <div class="h-2 w-24 bg-[#58cc02] rounded-full shadow-lg shadow-green-500/10"></div> </header> <div class="content-article"> <h1 id="sequence-diagrams">Sequence Diagrams</h1>
+<p>Sequence diagrams are interaction diagrams that show how objects operate with one another and in what order. They are time-centric, showing the chronological sequence of messages.</p>
+<h3 id="1-key-components">1. Key Components</h3>
+<ul>
+<li><strong>Lifelines</strong>: Represented by vertical dashed lines. They represent the existence of an object over time.</li>
+<li><strong>Activations/Execution Bars</strong>: Thin rectangles on the lifeline showing when an object is actively processing a request.</li>
+<li><strong>Actors</strong>: Stick figures representing external entities (users, other systems).</li>
+</ul>
+<h3 id="2-message-types">2. Message Types</h3>
+<p>The arrow heads matter significantly:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">Symbol</th><th style="text-align:left">Message Type</th><th style="text-align:left">Description</th></tr></thead><tbody><tr><td style="text-align:left"><code>-&gt;</code></td><td style="text-align:left"><strong>Synchronous</strong></td><td style="text-align:left">Caller waits for a response before continuing. (Full arrowhead)</td></tr><tr><td style="text-align:left"><code>-&gt;&gt;</code></td><td style="text-align:left"><strong>Asynchronous</strong></td><td style="text-align:left">Caller continues without waiting for response. (Open arrowhead)</td></tr><tr><td style="text-align:left"><code>--&gt;</code></td><td style="text-align:left"><strong>Return</strong></td><td style="text-align:left">Response sent back to the caller. (Dashed line)</td></tr><tr><td style="text-align:left"><code>-&gt;</code> (to self)</td><td style="text-align:left"><strong>Self-Message</strong></td><td style="text-align:left">A method call within the same object.</td></tr></tbody></table>
+<h3 id="3-combined-fragments-logic-control">3. Combined Fragments (Logic Control)</h3>
+<p>Sequence diagrams use “fragments” to handle logic:</p>
+<ul>
+<li><strong><code>alt</code> (Alternative)</strong>: If/else logic. Only one branch executes.</li>
+<li><strong><code>opt</code> (Optional)</strong>: If then. Executes only if condition is true.</li>
+<li><strong><code>loop</code> (Iteration)</strong>: Repeats a sequence of messages.</li>
+<li><strong><code>par</code> (Parallel)</strong>: Messages that happen concurrently.</li>
+</ul>
+<h3 id="4-detailed-example">4. Detailed Example</h3>
+<p><strong>PlantUML Code:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span>actor User</span></span>
+<span class="line"><span>participant &quot;Web UI&quot; as UI</span></span>
+<span class="line"><span>participant &quot;Auth Service&quot; as Auth</span></span>
+<span class="line"><span>database DB</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>User -&gt; UI: Enter Credentials</span></span>
+<span class="line"><span>UI -&gt; Auth: login(user, pass)</span></span>
+<span class="line"><span>activate Auth</span></span>
+<span class="line"><span>  Auth -&gt; DB: findUser(user)</span></span>
+<span class="line"><span>  activate DB</span></span>
+<span class="line"><span>    DB --&gt; Auth: userPayload</span></span>
+<span class="line"><span>  deactivate DB</span></span>
+<span class="line"><span>  </span></span>
+<span class="line"><span>  alt #LightGreen credentials valid</span></span>
+<span class="line"><span>    Auth --&gt; UI: token</span></span>
+<span class="line"><span>    UI --&gt; User: Dashboard</span></span>
+<span class="line"><span>  else #Pink invalid</span></span>
+<span class="line"><span>    Auth --&gt; UI: error 401</span></span>
+<span class="line"><span>    UI --&gt; User: Show error message</span></span>
+<span class="line"><span>  end</span></span>
+<span class="line"><span>deactivate Auth</span></span>
+<span class="line"><span></span></span></code></pre>
+<div class="my-12 flex flex-col items-center bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-[2.5rem] overflow-hidden shadow-xl p-8 transition-colors"> <div class="text-[10px] font-black text-light-muted dark:text-dark-muted uppercase tracking-[0.2em] mb-6 w-full text-center opacity-60">System Diagram</div> <div class="w-full flex justify-center overflow-x-auto dark:invert dark:hue-rotate-180 dark:brightness-110"> <?plantuml 1.2026.1beta5?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" data-diagram-type="SEQUENCE" height="529.375px" preserveAspectRatio="none" style="width:584px;height:529px;" version="1.1" viewBox="0 0 584 529" width="584.375px" zoomAndPan="magnify"><defs/><g><g><title>Auth Service</title><rect fill="transparent" height="326.7863" style="stroke:#000000;stroke-width:1.1458;" width="11.4583" x="392.7489" y="183.7899"/></g><g><title>DB</title><rect fill="#FFFFFF" height="40.2563" style="stroke:#000000;stroke-width:1.1458;" width="11.4583" x="539.1968" y="224.0462"/></g><rect fill="#90EE90" height="221.0653" style="stroke:#000000;stroke-width:1.1458;" width="463.0151" x="17.1875" y="281.4901"/><rect fill="#FFC0CB" height="107.019" style="stroke:none;stroke-width:1.1458;" width="463.0151" x="17.1875" y="395.5363"/><g class="participant-lifeline" data-entity-uid="part1" data-qualified-name="User" id="part1-lifeline"><g><title>User</title><rect fill="#000000" fill-opacity="0.00000" height="421.049" width="9.1667" x="47.9135" y="100.9855"/><line style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:5.7292,5.7292;" x1="51.5625" x2="51.5625" y1="100.9855" y2="522.0345"/></g></g><g class="participant-lifeline" data-entity-uid="part2" data-qualified-name="UI" id="part2-lifeline"><g><title>Web UI</title><rect fill="#000000" fill-opacity="0.00000" height="421.049" width="9.1667" x="235.5454" y="100.9855"/><line style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:5.7292,5.7292;" x1="239.7933" x2="239.7933" y1="100.9855" y2="522.0345"/></g></g><g class="participant-lifeline" data-entity-uid="part3" data-qualified-name="Auth" id="part3-lifeline"><g><title>Auth Service</title><rect fill="#000000" fill-opacity="0.00000" height="421.049" width="9.1667" x="393.8948" y="100.9855"/><line style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:5.7292,5.7292;" x1="398.1077" x2="398.1077" y1="100.9855" y2="522.0345"/></g></g><g class="participant-lifeline" data-entity-uid="part4" data-qualified-name="DB" id="part4-lifeline"><g><title>DB</title><rect fill="#000000" fill-opacity="0.00000" height="421.049" width="9.1667" x="540.3427" y="100.9855"/><line style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:5.7292,5.7292;" x1="544.926" x2="544.926" y1="100.9855" y2="522.0345"/></g></g><g class="participant participant-head" data-entity-uid="part1" data-qualified-name="User" id="part1-head"><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="33.952" x="32.0833" y="94.035">User</text><ellipse cx="52.4968" cy="16.6146" fill="#FFFFFF" rx="9.1667" ry="9.1667" style="stroke:#000000;stroke-width:1.7188;"/><path d="M52.4968,25.7813 L52.4968,56.7187 M37.601,34.9479 L67.3927,34.9479 M52.4968,56.7187 L37.601,73.9063 M52.4968,56.7187 L67.3927,73.9063" fill="none" style="stroke:#000000;stroke-width:1.7188;"/></g><g class="participant participant-head" data-entity-uid="part2" data-qualified-name="UI" id="part2-head"><rect fill="#FFFFFF" height="40.2563" style="stroke:#000000;stroke-width:1.7188;" width="76.2958" x="201.9808" y="59.5833"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="53.3792" x="213.4392" y="84.8683">Web UI</text></g><g class="participant participant-head" data-entity-uid="part3" data-qualified-name="Auth" id="part3-head"><rect fill="#FFFFFF" height="40.2563" style="stroke:#000000;stroke-width:1.7188;" width="117.6158" x="339.6702" y="59.5833"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="94.6991" x="351.1285" y="84.8683">Auth Service</text></g><g class="participant participant-head" data-entity-uid="part4" data-qualified-name="DB" id="part4-head"><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="21.6891" x="530.6439" y="94.035">DB</text><path d="M524.301,35.5208 C524.301,24.0625 544.926,24.0625 544.926,24.0625 C544.926,24.0625 565.551,24.0625 565.551,35.5208 L565.551,65.3125 C565.551,76.7708 544.926,76.7708 544.926,76.7708 C544.926,76.7708 524.301,76.7708 524.301,65.3125 L524.301,35.5208" fill="#FFFFFF" style="stroke:#000000;stroke-width:1.1458;"/><path d="M524.301,35.5208 C524.301,46.9792 544.926,46.9792 544.926,46.9792 C544.926,46.9792 565.551,46.9792 565.551,35.5208" fill="none" style="stroke:#000000;stroke-width:1.1458;"/></g><g><title>Auth Service</title><rect fill="#FFFFFF" height="326.7863" style="stroke:#000000;stroke-width:1.1458;" width="11.4583" x="392.7489" y="183.7899"/></g><g><title>DB</title><rect fill="#FFFFFF" height="40.2563" style="stroke:#000000;stroke-width:1.1458;" width="11.4583" x="539.1968" y="224.0462"/></g><g class="message" data-entity-1="part1" data-entity-2="part2" id="msg1"><polygon fill="#000000" points="226.3787,138.9502,237.8371,143.5335,226.3787,148.1169,230.9621,143.5335" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="52.4968" x2="233.2537" y1="143.5335" y2="143.5335"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="129.473" x="81.5763" y="134.2913">Enter Credentials</text></g><g class="message" data-entity-1="part2" data-entity-2="part3" id="msg2"><polygon fill="#000000" points="378.9989,179.2065,390.4573,183.7899,378.9989,188.3732,383.5823,183.7899" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="240.1287" x2="385.8739" y1="183.7899" y2="183.7899"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="123.9744" x="254.4516" y="174.5477">login(user, pass)</text></g><g class="message" data-entity-1="part3" data-entity-2="part4" id="msg3"><polygon fill="#000000" points="525.4468,219.4629,536.9052,224.0462,525.4468,228.6296,530.0302,224.0462" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="404.2073" x2="532.3218" y1="224.0462" y2="224.0462"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="106.3437" x="418.5302" y="214.804">findUser(user)</text></g><g class="message" data-entity-1="part4" data-entity-2="part3" id="msg4"><polygon fill="#000000" points="416.8114,259.7192,405.3531,264.3026,416.8114,268.8859,412.2281,264.3026" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:2.2917,2.2917;" x1="409.9364" x2="543.7802" y1="264.3026" y2="264.3026"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="91.2515" x="428.9409" y="255.0604">userPayload</text></g><path d="M17.1875,281.4901 L97.9033,281.4901 L97.9033,296.5381 L86.445,307.9964 L17.1875,307.9964 L17.1875,281.4901" fill="#FFFFFF" style="stroke:#000000;stroke-width:1.1458;"/><rect fill="none" height="221.0653" style="stroke:#000000;stroke-width:1.1458;" width="463.0151" x="17.1875" y="281.4901"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" font-weight="bold" lengthAdjust="spacing" textLength="22.2783" x="37.8125" y="299.9001">alt</text><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" font-weight="bold" lengthAdjust="spacing" textLength="153.3369" x="118.5283" y="301.0459">[credentials valid]</text><g class="message" data-entity-1="part3" data-entity-2="part2" id="msg5"><polygon fill="#000000" points="252.7329,341.5299,241.2746,346.1133,252.7329,350.6966,248.1496,346.1133" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:2.2917,2.2917;" x1="245.8579" x2="391.6031" y1="346.1133" y2="346.1133"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="42.1855" x="295.3461" y="336.8711">token</text></g><g class="message" data-entity-1="part2" data-entity-2="part1" id="msg6"><polygon fill="#000000" points="65.101,381.7863,53.6427,386.3696,65.101,390.953,60.5177,386.3696" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:2.2917,2.2917;" x1="58.226" x2="238.9829" y1="386.3696" y2="386.3696"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="81.0761" x="105.7747" y="377.1274">Dashboard</text></g><line style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:2.2917,2.2917;" x1="17.1875" x2="480.2026" y1="396.6821" y2="396.6821"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" font-weight="bold" lengthAdjust="spacing" textLength="69.9624" x="26.3542" y="413.9463">[invalid]</text><g class="message" data-entity-1="part3" data-entity-2="part2" id="msg7"><polygon fill="#000000" points="252.7329,448.549,241.2746,453.1323,252.7329,457.7157,248.1496,453.1323" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:2.2917,2.2917;" x1="245.8579" x2="391.6031" y1="453.1323" y2="453.1323"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="69.8169" x="281.5304" y="443.8901">error 401</text></g><g class="message" data-entity-1="part2" data-entity-2="part1" id="msg8"><polygon fill="#000000" points="65.101,488.8053,53.6427,493.3887,65.101,497.972,60.5177,493.3887" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:2.2917,2.2917;" x1="58.226" x2="238.9829" y1="493.3887" y2="493.3887"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="153.2569" x="69.6843" y="484.1465">Show error message</text></g><?plantuml-src RP11ImD138NlyokYNXHijugdFGZMYWWA1IsUiplfJkXiPfcPRV7Vcsb5gtYPWUJBUoyvOMdzQ0bSpaEggohYRjfnTcCp9efja4oIfstegtKa6vB7xVLiTbEzi72F_irHJylLotCLQPqgHsXJrIDBrH-0IIx4T1XxRmoa3Sk04NjeiDrqCOnYxuCF4N94ITfIjsCiERHXnzB16dqYOx3DIgyqcr4YSyi3IeRJTsfWzNGAcFJxtReRiuDNYbjkQG-KWh6OiS54i9WRK_HWSgkZDJpeoX7kTLlDmkfgLa-bLwPgyA5ZEI-tkOG1KxeeYNYBcGwoUpEb5_CQrYosAE_n8r0TGH-OVAiMO8aVFg0rbev1Wpx3sJDtBZz68e7s9nXiqRDLhOFfL_uSDYHQBAbBIQLhM61oJS1e3UaPuMp9iW6MVmKeHZtnpUpghyYh2xklRayfOKU6v5VWelC9?></g></svg> </div> </div>
+<style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event("astro:load"));})();;(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute("component-url")}`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();</script><astro-island uid="jOOi9" prefix="r0" component-url="../../assets/Quiz.Cl2YWlYz.js" component-export="default" renderer-url="../../assets/client.BuOr9PT5.js" props="{&quot;question&quot;:[0,&quot;In a sequence diagram, what does a dashed arrow (--&gt;) usually represent?&quot;],&quot;options&quot;:[1,[[0,{&quot;id&quot;:[0,&quot;1&quot;],&quot;text&quot;:[0,&quot;An asynchronous message&quot;],&quot;isCorrect&quot;:[0,false]}],[0,{&quot;id&quot;:[0,&quot;2&quot;],&quot;text&quot;:[0,&quot;A return message/response&quot;],&quot;isCorrect&quot;:[0,true]}],[0,{&quot;id&quot;:[0,&quot;3&quot;],&quot;text&quot;:[0,&quot;A class dependency&quot;],&quot;isCorrect&quot;:[0,false]}],[0,{&quot;id&quot;:[0,&quot;4&quot;],&quot;text&quot;:[0,&quot;A parallel process&quot;],&quot;isCorrect&quot;:[0,false]}]]]}" ssr="" client="load" opts="{&quot;name&quot;:&quot;Quiz&quot;,&quot;value&quot;:true}" await-children=""><div class="quiz-container my-16 p-8 md:p-12 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-[2.5rem] shadow-xl relative overflow-hidden transition-colors duration-300"><div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent opacity-50"></div><div class="flex items-center gap-3 mb-8"><div class="px-3 py-1 rounded-full bg-light-accent/5 dark:bg-dark-accent/5 border border-light-border dark:border-dark-border text-[10px] font-black uppercase tracking-widest text-light-muted dark:text-dark-muted">Check Knowledge</div></div><h3 class="text-3xl font-black text-light-text dark:text-dark-text mb-10 tracking-tight leading-tight">In a sequence diagram, what does a dashed arrow (--&gt;) usually represent?</h3><div class="flex flex-col gap-4"><button class="
+              w-full p-6 rounded-2xl border-2 text-left transition-all flex items-center gap-5 group
+              border-light-border dark:border-dark-border bg-transparent hover:border-light-text dark:hover:border-dark-text
+              
+              
+            "><div class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all border-light-border dark:border-dark-border bg-transparent"></div><span class="font-bold transition-colors text-light-muted dark:text-dark-muted">An asynchronous message</span></button><button class="
+              w-full p-6 rounded-2xl border-2 text-left transition-all flex items-center gap-5 group
+              border-light-border dark:border-dark-border bg-transparent hover:border-light-text dark:hover:border-dark-text
+              
+              
+            "><div class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all border-light-border dark:border-dark-border bg-transparent"></div><span class="font-bold transition-colors text-light-muted dark:text-dark-muted">A return message/response</span></button><button class="
+              w-full p-6 rounded-2xl border-2 text-left transition-all flex items-center gap-5 group
+              border-light-border dark:border-dark-border bg-transparent hover:border-light-text dark:hover:border-dark-text
+              
+              
+            "><div class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all border-light-border dark:border-dark-border bg-transparent"></div><span class="font-bold transition-colors text-light-muted dark:text-dark-muted">A class dependency</span></button><button class="
+              w-full p-6 rounded-2xl border-2 text-left transition-all flex items-center gap-5 group
+              border-light-border dark:border-dark-border bg-transparent hover:border-light-text dark:hover:border-dark-text
+              
+              
+            "><div class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all border-light-border dark:border-dark-border bg-transparent"></div><span class="font-bold transition-colors text-light-muted dark:text-dark-muted">A parallel process</span></button></div><div class="mt-12"><button disabled="" class="
+                px-12 py-4 rounded-2xl font-black transition-all uppercase tracking-widest text-sm
+                bg-light-border dark:bg-dark-border text-light-muted dark:text-dark-muted cursor-not-allowed
+            ">Submit Prediction</button></div></div><!--astro:end--></astro-island> </div> </div> </div><div class="module-group"> <div class="page-break-before h-64 flex items-end pb-12 border-b-[12px] border-slate-900 mb-20"> <h2 class="text-6xl font-black uppercase tracking-tighter text-slate-900 leading-none">Requirements Modeling</h2> </div> <div class="lesson-container mb-32 last:mb-0"> <header class="mb-16"> <div class="flex items-center gap-3 mb-6"> <div class="h-px w-8 bg-[#58cc02]"></div> <div class="text-[10px] font-black text-[#58cc02] uppercase tracking-[0.4em]">Section Detail</div> </div> <h3 class="text-5xl font-black uppercase tracking-tighter text-slate-900 mb-8 leading-[0.95]">Use Case Diagrams</h3> <div class="h-2 w-24 bg-[#58cc02] rounded-full shadow-lg shadow-green-500/10"></div> </header> <div class="content-article"> <h1 id="use-case-diagrams">Use Case Diagrams</h1>
+<p>Use Case diagrams describe the high-level functional requirements of a system. They show <em>what</em> a system does, not <em>how</em> it does it.</p>
+<h3 id="1-key-elements">1. Key Elements</h3>
+<ul>
+<li><strong>Actors</strong>: External entities that interact with the system (stick figures). Can be humans or other systems.</li>
+<li><strong>Use Cases</strong>: Specific tasks or functions the system performs (ovals).</li>
+<li><strong>System Boundary</strong>: A box defining the scope of the system.</li>
+<li><strong>Associations</strong>: Lines connecting actors to use cases.</li>
+</ul>
+<h3 id="2-advanced-relationships">2. Advanced Relationships</h3>
+<p>Use cases can relate to each other:</p>
+<ul>
+<li><strong><code>&lt;&lt;include&gt;&gt;</code></strong>: One use case <em>must</em> include another to complete its task.
+<ul>
+<li><em>Example</em>: “Withdraw Cash” <code>&lt;&lt;include&gt;&gt;</code> “Authenticate User”.</li>
+</ul>
+</li>
+<li><strong><code>&lt;&lt;extend&gt;&gt;</code></strong>: One use case <em>optionally</em> adds behavior to another under specific conditions.
+<ul>
+<li><em>Example</em>: “Calculate Tax” <code>&lt;&lt;extend&gt;&gt;</code> “Place Order” (only if tax applies).</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-decisions-actor-or-use-case">3. Decisions: Actor or Use Case?</h3>
+<ul>
+<li><strong>Actor</strong>: Is it outside the system boundary? Does it initiate or receive something?</li>
+<li><strong>Use Case</strong>: Is it a goal the actor wants to achieve?</li>
+</ul>
+<h3 id="4-example">4. Example</h3>
+<p><strong>PlantUML Code:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span>left to right direction</span></span>
+<span class="line"><span>actor &quot;Customer&quot; as c</span></span>
+<span class="line"><span>actor &quot;Bank Clerk&quot; as b</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>rectangle &quot;ATM System&quot; {</span></span>
+<span class="line"><span>  c -- (Withdraw Cash)</span></span>
+<span class="line"><span>  c -- (Check Balance)</span></span>
+<span class="line"><span>  (Withdraw Cash) ..&gt; (Authenticate) : &lt;&lt;include&gt;&gt;</span></span>
+<span class="line"><span>  (Check Balance) ..&gt; (Authenticate) : &lt;&lt;include&gt;&gt;</span></span>
+<span class="line"><span>  (Withdraw Cash) &lt;.. (Print Receipt) : &lt;&lt;extend&gt;&gt;</span></span>
+<span class="line"><span>  b -- (Maintenance)</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<div class="my-12 flex flex-col items-center bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-[2.5rem] overflow-hidden shadow-xl p-8 transition-colors"> <div class="text-[10px] font-black text-light-muted dark:text-dark-muted uppercase tracking-[0.2em] mb-6 w-full text-center opacity-60">System Diagram</div> <div class="w-full flex justify-center overflow-x-auto dark:invert dark:hue-rotate-180 dark:brightness-110"> <?plantuml 1.2026.1beta5?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" data-diagram-type="DESCRIPTION" height="278.4375px" preserveAspectRatio="none" style="width:535px;height:278px;" version="1.1" viewBox="0 0 535 278" width="535.1042px" zoomAndPan="magnify"><defs/><g><!--cluster ATM System--><g class="cluster" data-qualified-name="ATM System" data-source-line="10" id="ent0004"><rect fill="transparent" height="250.9375" style="stroke:#000000;stroke-width:1.1458;" width="381.2531" x="147.0563" y="13.75"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" font-weight="bold" lengthAdjust="spacing" textLength="103.7472" x="285.8092" y="33.3058">ATM System</text></g><!--entity Withdraw Cash--><g class="entity" data-qualified-name="ATM System.Withdraw Cash" data-source-line="11" id="ent0005"><ellipse cx="239.4758" cy="77.9125" fill="#FFFFFF" rx="74.0862" ry="17.7678" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="112.5043" x="183.2236" y="82.572">Withdraw Cash</text></g><!--entity Check Balance--><g class="entity" data-qualified-name="ATM System.Check Balance" data-source-line="12" id="ent0007"><ellipse cx="239.4737" cy="153.5369" fill="#FFFFFF" rx="72.5258" ry="17.7557" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="109.9659" x="184.4907" y="158.1964">Check Balance</text></g><!--entity Authenticate--><g class="entity" data-qualified-name="ATM System.Authenticate" data-source-line="13" id="ent0009"><ellipse cx="446.1489" cy="153.5392" fill="#FFFFFF" rx="63.8301" ry="17.6777" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="95.8192" x="398.2393" y="158.1986">Authenticate</text></g><!--entity Print Receipt--><g class="entity" data-qualified-name="ATM System.Print Receipt" data-source-line="15" id="ent0012"><ellipse cx="446.1528" cy="77.9126" fill="#FFFFFF" rx="63.6736" ry="17.6761" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="95.5646" x="398.3705" y="82.572">Print Receipt</text></g><!--entity Maintenance--><g class="entity" data-qualified-name="ATM System.Maintenance" data-source-line="16" id="ent0014"><ellipse cx="239.4847" cy="229.1649" fill="#FFFFFF" rx="63.8972" ry="17.6784" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="95.9283" x="191.5205" y="233.8243">Maintenance</text></g><!--entity c--><g class="entity" data-qualified-name="c" data-source-line="7" id="ent0002"><ellipse cx="52.9068" cy="49.1906" fill="#FFFFFF" rx="9.1667" ry="9.1667" style="stroke:#000000;stroke-width:1.7188;"/><path d="M52.9068,58.3573 L52.9068,89.2948 M38.011,67.524 L67.8027,67.524 M52.9068,89.2948 L38.011,106.4823 M52.9068,89.2948 L67.8027,106.4823" fill="none" style="stroke:#000000;stroke-width:1.7188;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="72.3553" x="16.7292" y="126.611">Customer</text></g><!--entity b--><g class="entity" data-qualified-name="b" data-source-line="8" id="ent0003"><ellipse cx="52.9058" cy="192.4198" fill="#FFFFFF" rx="9.1667" ry="9.1667" style="stroke:#000000;stroke-width:1.7188;"/><path d="M52.9058,201.5865 L52.9058,232.524 M38.01,210.7531 L67.8017,210.7531 M52.9058,232.524 L38.01,249.7115 M52.9058,232.524 L67.8017,249.7115" fill="none" style="stroke:#000000;stroke-width:1.7188;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="80.6033" x="12.6042" y="269.8402">Bank Clerk</text></g><!--link c to Withdraw Cash--><g class="link" data-entity-1="ent0002" data-entity-2="ent0005" data-link-type="association" data-source-line="11" id="lnk6"><path d="M92.9271,77.9167 C113.9187,77.9167 140.3073,77.9167 164.8969,77.9167" fill="none" id="c-Withdraw Cash" style="stroke:#000000;stroke-width:1.1458;"/></g><!--link c to Check Balance--><g class="link" data-entity-1="ent0002" data-entity-2="ent0007" data-link-type="association" data-source-line="12" id="lnk8"><path d="M53.9344,133.9823 C53.9344,144.9938 53.9344,153.5417 53.9344,153.5417 C53.9344,153.5417 114.6979,153.5417 166.6844,153.5417" fill="none" id="c-Check Balance" style="stroke:#000000;stroke-width:1.1458;"/></g><!--link Withdraw Cash to Authenticate--><g class="link" data-entity-1="ent0005" data-entity-2="ent0009" data-link-type="dependency" data-source-line="13" id="lnk10"><path d="M310.0052,83.8062 C330.951,83.8062 348.4135,83.8062 348.4135,83.8062 C348.4135,83.8062 348.4135,147.6521 348.4135,147.6521 C348.4135,147.6521 358.6115,147.6521 378.4917,147.6521" fill="none" id="Withdraw Cash-to-Authenticate" style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:8.0208,8.0208;"/><polygon fill="#000000" points="385.3667,147.6521,375.0542,143.0688,379.6375,147.6521,375.0542,152.2354,385.3667,147.6521" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="72.1953" x="352.9969" y="113.6402">&#171;include&#187;</text></g><!--link Check Balance to Authenticate--><g class="link" data-entity-1="ent0007" data-entity-2="ent0009" data-link-type="dependency" data-source-line="14" id="lnk11"><path d="M308.5844,159.4312 C333.4604,159.4312 354.4521,159.4312 378.5604,159.4312" fill="none" id="Check Balance-to-Authenticate" style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:8.0208,8.0208;"/><polygon fill="#000000" points="385.4354,159.4312,375.1229,154.8479,379.7062,159.4312,375.1229,164.0146,385.4354,159.4312" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="72.1953" x="351.5875" y="177.8412">&#171;include&#187;</text></g><!--reverse link Withdraw Cash to Print Receipt--><g class="link" data-entity-1="ent0005" data-entity-2="ent0012" data-link-type="dependency" data-source-line="15" id="lnk13"><path d="M316.9031,72.0271 C341.4583,72.0271 361.8885,72.0271 385.5729,72.0271" fill="none" id="Withdraw Cash-backto-Print Receipt" style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:8.0208,8.0208;"/><polygon fill="#000000" points="310.0281,72.0271,320.3406,76.6104,315.7573,72.0271,320.3406,67.4438,310.0281,72.0271" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="70.1079" x="273.3156" y="64.0829">&#171;extend&#187;</text></g><!--link b to Maintenance--><g class="link" data-entity-1="ent0003" data-entity-2="ent0014" data-link-type="association" data-source-line="16" id="lnk15"><path d="M97.1208,229.1667 C120.3927,229.1667 149.3708,229.1667 175.0948,229.1667" fill="none" id="b-Maintenance" style="stroke:#000000;stroke-width:1.1458;"/></g><?plantuml-src ZL4zJyCm4DtzAuvCxT2uGanLLQdDIgKAYfWlzYMsue_8lb0Guh_ZjY2XJgpltiVTkpiRb9iqWM4UyqhAXAUwjsocTigKL0nCWMiLlUmIwPWTljqlbmzoRuFrw8w6F1rUzeyoKPUb8THPUhH1-YjXmMT6FKxU2G5vi674X1vQL4EVuXHq4rrCm0b3BgEIzfUM3Ufuig673bqc8Hnr31mXsTumQ9j8iOr1eEBYKZLJvkWfLO0Pr2-wmp10uoWD5xmLuYp3q3k2QdlSm_D7Pl8LV0e5YmNCNai3kbG13MOp_m4RGsg07JeCYkRYXWHrlO7PTYht1hOAcUQmWlNwf-3DHjmO_4Dmax2kQvWTaWqCJwJ8ZdnLq7jvaYw2zhBdljHVWEkMNzy0?></g></svg> </div> </div> </div> </div> </div><div class="module-group"> <div class="page-break-before h-64 flex items-end pb-12 border-b-[12px] border-slate-900 mb-20"> <h2 class="text-6xl font-black uppercase tracking-tighter text-slate-900 leading-none">Behavioral Modeling</h2> </div> <div class="lesson-container mb-32 last:mb-0"> <header class="mb-16"> <div class="flex items-center gap-3 mb-6"> <div class="h-px w-8 bg-[#58cc02]"></div> <div class="text-[10px] font-black text-[#58cc02] uppercase tracking-[0.4em]">Section Detail</div> </div> <h3 class="text-5xl font-black uppercase tracking-tighter text-slate-900 mb-8 leading-[0.95]">Activity Diagrams</h3> <div class="h-2 w-24 bg-[#58cc02] rounded-full shadow-lg shadow-green-500/10"></div> </header> <div class="content-article"> <h1 id="activity-diagrams">Activity Diagrams</h1>
+<p>Activity diagrams are essentially advanced flowcharts. They model the flow of control from one activity to another, supporting parallel behavior and complex logic.</p>
+<h3 id="1-basic-symbols">1. Basic Symbols</h3>
+<ul>
+<li><strong>Start Node</strong>: A solid black circle.</li>
+<li><strong>End Node</strong>: A bullseye (circle with a dot).</li>
+<li><strong>Activity/Action</strong>: Rounded rectangle.</li>
+<li><strong>Control Flow</strong>: Solid arrow.</li>
+</ul>
+<h3 id="2-control-nodes">2. Control Nodes</h3>
+<ul>
+<li><strong>Decision Diamond</strong>: One input, multiple outputs with [guards].</li>
+<li><strong>Merge Diamond</strong>: Multiple inputs, one output (ends a decision).</li>
+<li><strong>Fork (Split)</strong>: A thick horizontal or vertical bar. One input splits into multiple parallel paths.</li>
+<li><strong>Join</strong>: A thick bar where parallel paths merge back into one.</li>
+</ul>
+<h3 id="3-swimlanes-partitions">3. Swimlanes (Partitions)</h3>
+<p>Swimlanes group activities based on who performs them (e.g., “User”, “System”, “Database”).</p>
+<h3 id="4-example-order-processing">4. Example: Order Processing</h3>
+<p><strong>PlantUML Code:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span>|Customer|</span></span>
+<span class="line"><span>start</span></span>
+<span class="line"><span>:Place Order;</span></span>
+<span class="line"><span>|Order System|</span></span>
+<span class="line"><span>:Validate Order;</span></span>
+<span class="line"><span>if (Order Valid?) then (yes)</span></span>
+<span class="line"><span>  fork</span></span>
+<span class="line"><span>    :Process Payment;</span></span>
+<span class="line"><span>  fork again</span></span>
+<span class="line"><span>    :Prepare Shipping;</span></span>
+<span class="line"><span>  end fork</span></span>
+<span class="line"><span>  :Ship Goods;</span></span>
+<span class="line"><span>  stop</span></span>
+<span class="line"><span>else (no)</span></span>
+<span class="line"><span>  :Notify Error;</span></span>
+<span class="line"><span>  stop</span></span>
+<span class="line"><span>endif</span></span>
+<span class="line"><span></span></span></code></pre>
+<div class="my-12 flex flex-col items-center bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-[2.5rem] overflow-hidden shadow-xl p-8 transition-colors"> <div class="text-[10px] font-black text-light-muted dark:text-dark-muted uppercase tracking-[0.2em] mb-6 w-full text-center opacity-60">System Diagram</div> <div class="w-full flex justify-center overflow-x-auto dark:invert dark:hue-rotate-180 dark:brightness-110"> <?plantuml 1.2026.1beta5?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" data-diagram-type="ACTIVITY" height="506.4583px" preserveAspectRatio="none" style="width:685px;height:506px;" version="1.1" viewBox="0 0 685 506" width="685.2083px" zoomAndPan="magnify"><defs/><g><rect fill="transparent" height="24.2147" style="stroke:#FFFFFF;stroke-width:1.1458;" width="659.9639" x="11.4583" y="6.875"/><ellipse cx="76.6947" cy="48.2772" fill="#FFFFFF" rx="11.4583" ry="11.4583" style="stroke:#000000;stroke-width:1.1458;"/><rect fill="#FFFFFF" height="47.1313" style="stroke:#000000;stroke-width:1.1458;" width="116.7228" x="18.3333" y="82.6522"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="86.9312" x="33.2292" y="111.3747">Place Order</text><line style="stroke:#000000;stroke-width:1.1458;" x1="11.4583" x2="11.4583" y1="6.875" y2="499.1984"/><rect fill="#FFFFFF" height="47.1313" style="stroke:#000000;stroke-width:1.1458;" width="138.3029" x="399.9504" y="152.7002"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="108.5112" x="414.8462" y="181.4227">Validate Order</text><polygon fill="#FFFFFF" points="419.5221,222.7482,518.6815,222.7482,532.4315,236.4982,518.6815,250.2482,419.5221,250.2482,405.7721,236.4982,419.5221,222.7482" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="92.2843" x="422.9596" y="241.655">Order Valid?</text><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="25.7404" x="376.5942" y="229.5477">yes</text><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="18.5543" x="535.869" y="229.5477">no</text><rect fill="#000000" height="6.875" rx="2.8646" ry="2.8646" style="stroke:#000000;stroke-width:1.1458;" width="377.0295" x="146.5145" y="261.7065"/><rect fill="#FFFFFF" height="47.1313" style="stroke:#000000;stroke-width:1.1458;" width="157.5045" x="160.2645" y="291.4982"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="127.7129" x="175.1603" y="320.2207">Process Payment</text><rect fill="#FFFFFF" height="47.1313" style="stroke:#000000;stroke-width:1.1458;" width="157.65" x="349.8523" y="291.4982"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="127.8583" x="364.7482" y="320.2207">Prepare Shipping</text><rect fill="#000000" height="6.875" rx="2.8646" ry="2.8646" style="stroke:#000000;stroke-width:1.1458;" width="377.0295" x="146.5145" y="361.5462"/><rect fill="#FFFFFF" height="47.1313" style="stroke:#000000;stroke-width:1.1458;" width="114.0026" x="276.8821" y="397.0671"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="84.2109" x="291.778" y="425.7895">Ship Goods</text><ellipse cx="333.8834" cy="479.7192" fill="none" rx="12.6042" ry="12.6042" style="stroke:#000000;stroke-width:1.1458;"/><ellipse cx="333.8834" cy="479.7192" fill="#FFFFFF" rx="6.875" ry="6.875" style="stroke:#000000;stroke-width:1.1458;"/><rect fill="#FFFFFF" height="47.1313" style="stroke:#000000;stroke-width:1.1458;" width="115.7191" x="546.4607" y="261.7065"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="85.9274" x="561.3565" y="290.429">Notify Error</text><ellipse cx="604.3202" cy="361.5462" fill="none" rx="12.6042" ry="12.6042" style="stroke:#000000;stroke-width:1.1458;"/><ellipse cx="604.3202" cy="361.5462" fill="#FFFFFF" rx="6.875" ry="6.875" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="139.6395" x2="139.6395" y1="6.875" y2="499.1984"/><line style="stroke:#000000;stroke-width:1.1458;" x1="666.7631" x2="666.7631" y1="6.875" y2="499.1984"/><line style="stroke:#000000;stroke-width:1.1458;" x1="76.6947" x2="76.6947" y1="59.7355" y2="82.6522"/><polygon fill="#000000" points="72.1114,71.1938,76.6947,82.6522,81.2781,71.1938,76.6947,75.7772" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="239.0167" x2="239.0167" y1="268.5815" y2="291.4982"/><polygon fill="#000000" points="234.4334,280.0399,239.0167,291.4982,243.6001,280.0399,239.0167,284.6232" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="428.6773" x2="428.6773" y1="268.5815" y2="291.4982"/><polygon fill="#000000" points="424.094,280.0399,428.6773,291.4982,433.2607,280.0399,428.6773,284.6232" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="239.0167" x2="239.0167" y1="338.6296" y2="361.5462"/><polygon fill="#000000" points="234.4334,350.0879,239.0167,361.5462,243.6001,350.0879,239.0167,354.6712" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="428.6773" x2="428.6773" y1="338.6296" y2="361.5462"/><polygon fill="#000000" points="424.094,350.0879,428.6773,361.5462,433.2607,350.0879,428.6773,354.6712" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="333.8834" x2="333.8834" y1="368.4212" y2="397.0671"/><polygon fill="#000000" points="329.3001,385.6087,333.8834,397.0671,338.4667,385.6087,333.8834,390.1921" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="333.8834" x2="333.8834" y1="444.1984" y2="467.1151"/><polygon fill="#000000" points="329.3001,455.6567,333.8834,467.1151,338.4667,455.6567,333.8834,460.2401" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="604.3202" x2="604.3202" y1="308.8379" y2="348.9421"/><polygon fill="#000000" points="599.7369,337.4837,604.3202,348.9421,608.9036,337.4837,604.3202,342.0671" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="405.7721" x2="333.8834" y1="236.4982" y2="236.4982"/><line style="stroke:#000000;stroke-width:1.1458;" x1="333.8834" x2="333.8834" y1="236.4982" y2="261.7065"/><polygon fill="#000000" points="329.3001,250.2482,333.8834,261.7065,338.4667,250.2482,333.8834,254.8315" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="532.4315" x2="604.3202" y1="236.4982" y2="236.4982"/><line style="stroke:#000000;stroke-width:1.1458;" x1="604.3202" x2="604.3202" y1="236.4982" y2="261.7065"/><polygon fill="#000000" points="599.7369,250.2482,604.3202,261.7065,608.9036,250.2482,604.3202,254.8315" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="469.1018" x2="469.1018" y1="199.8315" y2="222.7482"/><polygon fill="#000000" points="464.5185,211.2899,469.1018,222.7482,473.6852,211.2899,469.1018,215.8732" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="76.6947" x2="76.6947" y1="129.7835" y2="135.5127"/><line style="stroke:#000000;stroke-width:1.1458;" x1="76.6947" x2="469.1018" y1="135.5127" y2="135.5127"/><line style="stroke:#000000;stroke-width:1.1458;" x1="469.1018" x2="469.1018" y1="135.5127" y2="152.7002"/><polygon fill="#000000" points="464.5185,141.2419,469.1018,152.7002,473.6852,141.2419,469.1018,145.8252" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="72.3553" x="39.3712" y="24.1391">Customer</text><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="102.8743" x="351.7641" y="24.1391">Order System</text><?plantuml-src JO-nJiCm441tVyMnjGDrXPYIWQ52B1GY5TYlyIMnQlkYEuUgKZuUDnM8wII_PzsxEv_QC3c28UTHAsi5pvlUvs4wJahISigKygRbQ3iXnnhm-s6xVRHxdtp4y35GfEPp_sg5EhK3eLCRqISRRy9zlXgRSOh16D2JJoCAHZXYU-g5f-Hs75WW2oOjg6pxh-c0Ziy-zT1XK39ctasQEPBCHZDADbKJi2Lu5qTIctcPSBXefZYRwWk3TvZ_kEzWTLCMyhI6qfTWTI5TcuxbP02gHhWbLMZm4ajFlG30lfnrmtGDXSFWnx6arOQIW-LpTNs35sQdTUdZqL2fXbNYjQdUEFlk0iyYBByqET_z0000?></g></svg> </div> </div>
+<h3 id="decisions-activity-vs-state">Decisions: Activity vs. State?</h3>
+<ul>
+<li><strong>Activity</strong>: Focuses on the <strong>flow of work</strong> (what happens). Use when describing a process/algorithm.</li>
+<li><strong>State</strong>: Focuses on the <strong>lifecycle of an object</strong> (what it is). Use when an object’s behavior changes based on its current condition.</li>
+</ul> </div> </div><div class="lesson-container mb-32 last:mb-0"> <header class="mb-16"> <div class="flex items-center gap-3 mb-6"> <div class="h-px w-8 bg-[#58cc02]"></div> <div class="text-[10px] font-black text-[#58cc02] uppercase tracking-[0.4em]">Section Detail</div> </div> <h3 class="text-5xl font-black uppercase tracking-tighter text-slate-900 mb-8 leading-[0.95]">State Machine Diagrams</h3> <div class="h-2 w-24 bg-[#58cc02] rounded-full shadow-lg shadow-green-500/10"></div> </header> <div class="content-article"> <h1 id="state-machine-diagrams">State Machine Diagrams</h1>
+<p>While Activity Diagrams show the flow of a process, State Machine Diagrams (or Statecharts) show the lifecycle of a <strong>single object</strong> as it transitions between states in response to events.</p>
+<h3 id="1-key-components">1. Key Components</h3>
+<ul>
+<li><strong>State</strong>: A rounded rectangle representing a stable condition of an object (e.g., <code>Idle</code>, <code>Pending</code>, <code>Processing</code>).</li>
+<li><strong>Transition</strong>: An arrow from one state to another.</li>
+<li><strong>Event (Trigger)</strong>: The occurrence that causes a transition (e.g., <code>buttonClicked</code>, <code>timeout</code>).</li>
+<li><strong>Guard</strong>: A boolean condition <code>[condition]</code> that must be true for the transition to occur.</li>
+<li><strong>Action</strong>: An operation <code> / action()</code> performed during the transition.</li>
+</ul>
+<h3 id="2-transition-syntax">2. Transition Syntax</h3>
+<p><code>Event [Guard] / Action</code></p>
+<h3 id="3-example-document-lifecycle">3. Example: Document Lifecycle</h3>
+<p><strong>PlantUML Code:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span>[*] --&gt; Draft</span></span>
+<span class="line"><span>Draft --&gt; Submitted : submit()</span></span>
+<span class="line"><span>Submitted --&gt; Published : approve() [isUserAdmin]</span></span>
+<span class="line"><span>Submitted --&gt; Draft : reject()</span></span>
+<span class="line"><span>Published --&gt; Archived : archive()</span></span>
+<span class="line"><span>Archived --&gt; [*]</span></span>
+<span class="line"><span></span></span></code></pre>
+<div class="my-12 flex flex-col items-center bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-[2.5rem] overflow-hidden shadow-xl p-8 transition-colors"> <div class="text-[10px] font-black text-light-muted dark:text-dark-muted uppercase tracking-[0.2em] mb-6 w-full text-center opacity-60">System Diagram</div> <div class="w-full flex justify-center overflow-x-auto dark:invert dark:hue-rotate-180 dark:brightness-110"> <?plantuml 1.2026.1beta5?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" data-diagram-type="STATE" height="607px" preserveAspectRatio="none" style="width:232px;height:607px;" version="1.1" viewBox="0 0 232 607" width="232px" zoomAndPan="magnify"><defs/><g><ellipse cx="63.73" cy="16" fill="#222222" rx="10" ry="10" style="stroke:#222222;stroke-width:1;"/><g><rect fill="#F1F1F1" height="50" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="55.5332" x="35.96" y="87"/><line style="stroke:#181818;stroke-width:0.5;" x1="35.96" x2="91.4932" y1="113.2969" y2="113.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="35.5332" x="45.96" y="104.9951">Draft</text></g><g><rect fill="#F1F1F1" height="50" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="92.6523" x="17.4" y="214"/><line style="stroke:#181818;stroke-width:0.5;" x1="17.4" x2="110.0523" y1="240.2969" y2="240.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="72.6523" x="27.4" y="231.9951">Submitted</text></g><g><rect fill="#F1F1F1" height="50" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="87.6484" x="19.91" y="341"/><line style="stroke:#181818;stroke-width:0.5;" x1="19.91" x2="107.5584" y1="367.2969" y2="367.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="67.6484" x="29.91" y="358.9951">Published</text></g><g><rect fill="#F1F1F1" height="50" rx="12.5" ry="12.5" style="stroke:#181818;stroke-width:0.5;" width="81.5781" x="22.94" y="468"/><line style="stroke:#181818;stroke-width:0.5;" x1="22.94" x2="104.5181" y1="494.2969" y2="494.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="61.5781" x="32.94" y="485.9951">Archived</text></g><ellipse cx="63.73" cy="590" fill="none" rx="11" ry="11" style="stroke:#222222;stroke-width:1;"/><ellipse cx="63.73" cy="590" fill="#222222" rx="6" ry="6" style="stroke:#222222;stroke-width:1;"/><!--link *start* to Draft--><g class="link" data-entity-1="ent0002" data-entity-2="ent0003" data-link-type="dependency" data-source-line="4" id="lnk4"><path d="M63.73,26.36 C63.73,40.29 63.73,60.95 63.73,80.65" fill="none" id="*start*-to-Draft" style="stroke:#181818;stroke-width:1;"/><polygon fill="#181818" points="63.73,86.65,67.73,77.65,63.73,81.65,59.73,77.65,63.73,86.65" style="stroke:#181818;stroke-width:1;"/></g><!--link Draft to Submitted--><g class="link" data-entity-1="ent0003" data-entity-2="ent0005" data-link-type="dependency" data-source-line="5" id="lnk6"><path d="M35.57,135.11 C26.49,143.94 17.54,154.9 12.73,167 C6,183.92 12.4785,196.4073 25.8385,209.3373" fill="none" id="Draft-to-Submitted" style="stroke:#181818;stroke-width:1;"/><polygon fill="#181818" points="30.15,213.51,26.4646,204.3767,26.5571,210.0328,20.901,210.1253,30.15,213.51" style="stroke:#181818;stroke-width:1;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="54.7803" x="13.73" y="180.0669">submit()</text></g><!--link Submitted to Draft--><g class="link" data-entity-1="ent0005" data-entity-2="ent0003" data-link-type="dependency" data-source-line="7" id="lnk9"><path d="M68.67,213.64 C70.31,204.4 71.92,193.76 72.73,184 C74.02,168.4 72.9504,156.8501 70.4204,143.1601" fill="none" id="Submitted-to-Draft" style="stroke:#181818;stroke-width:1;"/><polygon fill="#181818" points="69.33,137.26,67.0322,146.8371,70.2386,142.1767,74.899,145.3832,69.33,137.26" style="stroke:#181818;stroke-width:1;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="47.3408" x="73.73" y="180.0669">reject()</text></g><!--link Submitted to Published--><g class="link" data-entity-1="ent0005" data-entity-2="ent0007" data-link-type="dependency" data-source-line="6" id="lnk8"><path d="M63.73,264.4 C63.73,286.42 63.73,312.66 63.73,334.66" fill="none" id="Submitted-to-Published" style="stroke:#181818;stroke-width:1;"/><polygon fill="#181818" points="63.73,340.66,67.73,331.66,63.73,335.66,59.73,331.66,63.73,340.66" style="stroke:#181818;stroke-width:1;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="159.5547" x="64.73" y="307.0669">approve() [isUserAdmin]</text></g><!--link Published to Archived--><g class="link" data-entity-1="ent0007" data-entity-2="ent0010" data-link-type="dependency" data-source-line="8" id="lnk11"><path d="M63.73,391.4 C63.73,413.42 63.73,439.66 63.73,461.66" fill="none" id="Published-to-Archived" style="stroke:#181818;stroke-width:1;"/><polygon fill="#181818" points="63.73,467.66,67.73,458.66,63.73,462.66,59.73,458.66,63.73,467.66" style="stroke:#181818;stroke-width:1;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="58.1445" x="64.73" y="434.0669">archive()</text></g><!--link Archived to *end*--><g class="link" data-entity-1="ent0010" data-entity-2="ent0012" data-link-type="dependency" data-source-line="9" id="lnk13"><path d="M63.73,518.46 C63.73,538.04 63.73,558.49 63.73,572.8" fill="none" id="Archived-to-*end*" style="stroke:#181818;stroke-width:1;"/><polygon fill="#181818" points="63.73,578.8,67.73,569.8,63.73,573.8,59.73,569.8,63.73,578.8" style="stroke:#181818;stroke-width:1;"/></g><?plantuml-src NOv12eD034NtSueijU05N0ZI7g1GkX8NqOawLMSa6UtrwuoWq4tu-V_b4ncDNP1nXWRRiMUtMdrtasFmZ5RsYAnN82Sc0shtDRQ73YSXfQfR3LbMm8EnyohEkB_MPZRUauOS9EeaLPSPaEVQJ4Q6YE2oiDieIQ4oyXRYKi_6rdyNHtqEJ1zgG-5L4UAIsy5iHzyXT-Gq0x5_-mC0?></g></svg> </div> </div>
+<h3 id="4-implementation-tip">4. Implementation Tip</h3>
+<p>State machines are often implemented in code using the <strong>State Design Pattern</strong>, where each state is a class, or a simple <code>switch-case</code> if the logic is simple.</p> </div> </div> </div><div class="module-group"> <div class="page-break-before h-64 flex items-end pb-12 border-b-[12px] border-slate-900 mb-20"> <h2 class="text-6xl font-black uppercase tracking-tighter text-slate-900 leading-none">System Architecture</h2> </div> <div class="lesson-container mb-32 last:mb-0"> <header class="mb-16"> <div class="flex items-center gap-3 mb-6"> <div class="h-px w-8 bg-[#58cc02]"></div> <div class="text-[10px] font-black text-[#58cc02] uppercase tracking-[0.4em]">Section Detail</div> </div> <h3 class="text-5xl font-black uppercase tracking-tighter text-slate-900 mb-8 leading-[0.95]">Component &amp; Deployment Diagrams</h3> <div class="h-2 w-24 bg-[#58cc02] rounded-full shadow-lg shadow-green-500/10"></div> </header> <div class="content-article"> <h1 id="architectural-diagrams">Architectural Diagrams</h1>
+<p>These diagrams shift focus from code structure to the physical and logical organization of the system.</p>
+<h2 id="1-component-diagrams">1. Component Diagrams</h2>
+<p>A <strong>Component</strong> is a modular part of a system that encapsulates its contents and whose manifestation is replaceable.</p>
+<h3 id="symbols">Symbols</h3>
+<ul>
+<li><strong>Component</strong>: A box with two small rectangles on the left or a stereotype <code>&lt;&lt;component&gt;&gt;</code>.</li>
+<li><strong>Provided Interface</strong>: “Lollipop” symbol (circle on a line). The services the component offers.</li>
+<li><strong>Required Interface</strong>: “Socket” symbol (half-circle). The services the component needs.</li>
+</ul>
+<p><strong>PlantUML Code:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span>package &quot;Order System&quot; {</span></span>
+<span class="line"><span>  [Order Logic] --() IOrder</span></span>
+<span class="line"><span>  [Payment Service] --() IPayment</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span>[Web UI] ..&gt; IOrder : use</span></span>
+<span class="line"><span>[Order Logic] ..&gt; IPayment : use</span></span>
+<span class="line"><span></span></span></code></pre>
+<div class="my-12 flex flex-col items-center bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-[2.5rem] overflow-hidden shadow-xl p-8 transition-colors"> <div class="text-[10px] font-black text-light-muted dark:text-dark-muted uppercase tracking-[0.2em] mb-6 w-full text-center opacity-60">System Diagram</div> <div class="w-full flex justify-center overflow-x-auto dark:invert dark:hue-rotate-180 dark:brightness-110"> <?plantuml 1.2026.1beta5?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" data-diagram-type="DESCRIPTION" height="289.8958px" preserveAspectRatio="none" style="width:543px;height:289px;" version="1.1" viewBox="0 0 543 289" width="543.125px" zoomAndPan="magnify"><defs/><g><!--cluster Order System--><g class="cluster" data-qualified-name="Order System" data-source-line="6" id="ent0002"><rect fill="transparent" height="269.4198" style="stroke:#000000;stroke-width:1.1458;" width="395.3125" x="141.2698" y="13.75"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" font-weight="bold" lengthAdjust="spacing" textLength="115.3554" x="281.2483" y="33.3058">Order System</text></g><!--entity Order Logic--><g class="entity" data-qualified-name="Order System.Order Logic" data-source-line="7" id="ent0003"><rect fill="#FFFFFF" height="58.5897" style="stroke:#000000;stroke-width:1.1458;" width="139.2322" x="159.8896" y="59.5833"/><rect fill="#FFFFFF" height="11.4583" style="stroke:#000000;stroke-width:1.1458;" width="17.1875" x="276.2051" y="65.3125"/><rect fill="#FFFFFF" height="2.2917" style="stroke:#000000;stroke-width:1.1458;" width="4.5833" x="273.9134" y="67.6042"/><rect fill="#FFFFFF" height="2.2917" style="stroke:#000000;stroke-width:1.1458;" width="4.5833" x="273.9134" y="72.1875"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="86.5238" x="180.5146" y="99.7641">Order Logic</text></g><!--entity IOrder--><g class="entity" data-qualified-name="Order System.IOrder" data-source-line="7" id="ent0004"><ellipse cx="212.3115" cy="225.8781" fill="#FFFFFF" rx="9.1667" ry="9.1667" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="46.9859" x="188.8185" y="262.6214">IOrder</text></g><!--entity Payment Service--><g class="entity" data-qualified-name="Order System.Payment Service" data-source-line="8" id="ent0006"><rect fill="#FFFFFF" height="58.5897" style="stroke:#000000;stroke-width:1.1458;" width="178.3774" x="339.6937" y="59.5833"/><rect fill="#FFFFFF" height="11.4583" style="stroke:#000000;stroke-width:1.1458;" width="17.1875" x="495.1545" y="65.3125"/><rect fill="#FFFFFF" height="2.2917" style="stroke:#000000;stroke-width:1.1458;" width="4.5833" x="492.8628" y="67.6042"/><rect fill="#FFFFFF" height="2.2917" style="stroke:#000000;stroke-width:1.1458;" width="4.5833" x="492.8628" y="72.1875"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="125.669" x="360.3187" y="99.7641">Payment Service</text></g><!--entity IPayment--><g class="entity" data-qualified-name="Order System.IPayment" data-source-line="8" id="ent0007"><ellipse cx="381.8948" cy="225.8781" fill="#FFFFFF" rx="9.1667" ry="9.1667" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="70.2752" x="346.7572" y="262.6214">IPayment</text></g><!--entity Web UI--><g class="entity" data-qualified-name="Web UI" data-source-line="10" id="ent0009"><rect fill="#FFFFFF" height="58.5897" style="stroke:#000000;stroke-width:1.1458;" width="106.0875" x="13.75" y="59.5833"/><rect fill="#FFFFFF" height="11.4583" style="stroke:#000000;stroke-width:1.1458;" width="17.1875" x="96.9208" y="65.3125"/><rect fill="#FFFFFF" height="2.2917" style="stroke:#000000;stroke-width:1.1458;" width="4.5833" x="94.6292" y="67.6042"/><rect fill="#FFFFFF" height="2.2917" style="stroke:#000000;stroke-width:1.1458;" width="4.5833" x="94.6292" y="72.1875"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="53.3792" x="34.375" y="99.7641">Web UI</text></g><!--link Order Logic to IOrder--><g class="link" data-entity-1="ent0003" data-entity-2="ent0004" data-link-type="association" data-source-line="7" id="lnk5"><path d="M212.3115,118.6052 C212.3115,149.2906 212.3115,195.4677 212.3115,215.7375" fill="none" id="Order Logic-IOrder" style="stroke:#000000;stroke-width:1.1458;"/></g><!--link Payment Service to IPayment--><g class="link" data-entity-1="ent0006" data-entity-2="ent0007" data-link-type="association" data-source-line="8" id="lnk8"><path d="M384.2781,118.6052 C384.2781,149.2906 384.2781,195.4677 384.2781,215.7375" fill="none" id="Payment Service-IPayment" style="stroke:#000000;stroke-width:1.1458;"/></g><!--link Web UI to IOrder--><g class="link" data-entity-1="ent0009" data-entity-2="ent0004" data-link-type="dependency" data-source-line="10" id="lnk10"><path d="M66.7906,118.6052 C66.7906,158.8927 66.7906,225.8781 66.7906,225.8781 C66.7906,225.8781 162.5594,225.8781 195.4333,225.8781" fill="none" id="Web UI-to-IOrder" style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:8.0208,8.0208;"/><polygon fill="#000000" points="202.3083,225.8781,191.9958,221.2948,196.5792,225.8781,191.9958,230.4615,202.3083,225.8781" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="26.3659" x="49.9813" y="217.9339">use</text></g><!--link Order Logic to IPayment--><g class="link" data-entity-1="ent0003" data-entity-2="ent0007" data-link-type="dependency" data-source-line="11" id="lnk11"><path d="M273.476,118.6052 C273.476,158.8927 273.476,225.8781 273.476,225.8781 C273.476,225.8781 338.1813,225.8781 365.0167,225.8781" fill="none" id="Order Logic-to-IPayment" style="stroke:#000000;stroke-width:1.1458;stroke-dasharray:8.0208,8.0208;"/><polygon fill="#000000" points="371.8917,225.8781,361.5792,221.2948,366.1625,225.8781,361.5792,230.4615,371.8917,225.8781" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="26.3659" x="278.0594" y="213.4996">use</text></g><?plantuml-src NP0zRy8m48Pt_ueh4nqI8zI9eKid952HAEeGCLpiIspXZ-XiWr3L_zuqW5HrVP_dVK-w9nkKAvh0v3oabPICbxgtsPIs968LGwQGQnMzx9XqJ0xFoyNYHMvji1xTXo5FkyDs8vcw90sXJjAZ3TBVX2h_6lLGl1C2qic60HazjAXEFSSIz5jqaI4pXZIYyTfVBHdKyM933nswH48COmzxWjaxQsBONrCcFuClqTo2JUojEa9LpPzXFKMYsU7LZxkm9pvRHGzwZyMtQ3wfXSFw27NzUc_12iO7_5kTy6Dj4du0?></g></svg> </div> </div>
+<hr/>
+<h2 id="2-deployment-diagrams">2. Deployment Diagrams</h2>
+<p>These diagrams show the <strong>physical hardware</strong> and software mapping.</p>
+<h3 id="symbols-1">Symbols</h3>
+<ul>
+<li><strong>Node</strong>: A 3D cube representing a physical or virtual machine (e.g., “Web Server”, “Database”).</li>
+<li><strong>Artifact</strong>: A physical file (JAR, DLL, script) deployed on a node.</li>
+<li><strong>Communication Path</strong>: A line representing the protocol (e.g., SSH, HTTP).</li>
+</ul>
+<h3 id="example">Example</h3>
+<p><strong>PlantUML Code:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span>node &quot;Application Server&quot; {</span></span>
+<span class="line"><span>  artifact &quot;OrderService.jar&quot;</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span>node &quot;Database Server&quot; {</span></span>
+<span class="line"><span>  database &quot;PostgreSQL&quot;</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span>&quot;Application Server&quot; -- &quot;Database Server&quot; : JDBC / TCP:5432</span></span>
+<span class="line"><span></span></span></code></pre>
+<div class="my-12 flex flex-col items-center bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-[2.5rem] overflow-hidden shadow-xl p-8 transition-colors"> <div class="text-[10px] font-black text-light-muted dark:text-dark-muted uppercase tracking-[0.2em] mb-6 w-full text-center opacity-60">System Diagram</div> <div class="w-full flex justify-center overflow-x-auto dark:invert dark:hue-rotate-180 dark:brightness-110"> <?plantuml 1.2026.1beta5?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" data-diagram-type="DESCRIPTION" height="362.0833px" preserveAspectRatio="none" style="width:307px;height:362px;" version="1.1" viewBox="0 0 307 362" width="307.0833px" zoomAndPan="magnify"><defs/><g><!--cluster Application Server--><g class="cluster" data-qualified-name="Application Server" data-source-line="6" id="ent0002"><polygon fill="#FFFFFF" points="24.0625,24.0625,35.5208,12.6042,272.7083,12.6042,272.7083,139.9521,261.25,151.4104,24.0625,151.4104,24.0625,24.0625" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="261.25" x2="272.7083" y1="24.0625" y2="12.6042"/><line style="stroke:#000000;stroke-width:1.1458;" x1="24.0625" x2="261.25" y1="24.0625" y2="24.0625"/><line style="stroke:#000000;stroke-width:1.1458;" x1="261.25" x2="261.25" y1="24.0625" y2="151.4104"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" font-weight="bold" lengthAdjust="spacing" textLength="155.5334" x="66.0354" y="44.7641">Application Server</text></g><!--cluster Database Server--><g class="cluster" data-qualified-name="Database Server" data-source-line="9" id="ent0004"><polygon fill="#FFFFFF" points="53.8542,208.7021,65.3125,197.2437,287.6042,197.2437,287.6042,331.4552,276.1458,342.9135,53.8542,342.9135,53.8542,208.7021" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="276.1458" x2="287.6042" y1="208.7021" y2="197.2437"/><line style="stroke:#000000;stroke-width:1.1458;" x1="53.8542" x2="276.1458" y1="208.7021" y2="208.7021"/><line style="stroke:#000000;stroke-width:1.1458;" x1="276.1458" x2="276.1458" y1="208.7021" y2="342.9135"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" font-weight="bold" lengthAdjust="spacing" textLength="139.7939" x="96.2489" y="229.4037">Database Server</text></g><!--entity OrderService.jar--><g class="entity" data-qualified-name="Application Server.OrderService.jar" data-source-line="7" id="ent0003"><rect fill="transparent" height="50.5688" style="stroke:#000000;stroke-width:1.1458;" width="163.0205" x="55.9854" y="73.3333"/><polygon fill="#FFFFFF" points="199.5268,79.0625,199.5268,95.1042,213.2768,95.1042,213.2768,85.9375,206.4018,79.0625,199.5268,79.0625" style="stroke:#000000;stroke-width:1.1458;"/><line style="stroke:#000000;stroke-width:1.1458;" x1="206.4018" x2="206.4018" y1="79.0625" y2="85.9375"/><line style="stroke:#000000;stroke-width:1.1458;" x1="213.2768" x2="206.4018" y1="85.9375" y2="85.9375"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="121.7705" x="70.8813" y="105.4933">OrderService.jar</text></g><!--entity PostgreSQL--><g class="entity" data-qualified-name="Database Server.PostgreSQL" data-source-line="10" id="ent0005"><path d="M96.8344,269.4313 C96.8344,257.9729 154.6903,257.9729 154.6903,257.9729 C154.6903,257.9729 212.5462,257.9729 212.5462,269.4313 L212.5462,303.9584 C212.5462,315.4168 154.6903,315.4168 154.6903,315.4168 C154.6903,315.4168 96.8344,315.4168 96.8344,303.9584 L96.8344,269.4313" fill="#FFFFFF" style="stroke:#000000;stroke-width:1.1458;"/><path d="M96.8344,269.4313 C96.8344,280.8896 154.6903,280.8896 154.6903,280.8896 C154.6903,280.8896 212.5462,280.8896 212.5462,269.4313" fill="none" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="85.9202" x="111.7302" y="302.7371">PostgreSQL</text></g><!--link Application Server to Database Server--><g class="link" data-entity-1="ent0002" data-entity-2="ent0004" data-link-type="association" data-source-line="12" id="lnk6"><path d="M261.25,151.4231 C261.25,152.0399 261.25,152.6596 261.25,153.2821 C261.25,155.7721 261.25,158.3071 261.25,160.8779 C261.25,171.1615 261.25,182.0196 261.25,192.8738 C261.25,194.2306 261.25,195.5873 261.25,196.9429" fill="none" id="Application Server-Database Server" style="stroke:#000000;stroke-width:1.1458;"/><text fill="#000000" font-family="'Helvetica, Arial, sans-serif'" font-size="14.8958" lengthAdjust="spacing" textLength="122.3815" x="135.2083" y="184.7391">JDBC / TCP:5432</text></g><?plantuml-src ROwxJiD044Nx_Oh1lRrH24qwS2gK2AE43nZlZkqb-x1cnqc1-7Ti0LAAj7FFkNSUN3H-iWI3o9YtMZDUgzx9CBLJ9ZOf2aMfJ0gwOx8fUxoiLwkDFhZe0lhJG86QZyDUCtLP3uGswu0kwl0BbB8GrJW5hnJaiuiZCWPeqPnxJbEqTVA9GHXZdgDvxHRB0zfqTR673dqcfMAQdosUnz4xW-9IX2FnXRY0BuKihaCZKBon9Lu2PwZwH2xKzv-vGy4MCzrezlzKD2bBptHyto_2tPMolDEnXTVTImqQJdMpVTeyhdy0?></g></svg> </div> </div>
+<h3 id="decisions-component-or-node">Decisions: Component or Node?</h3>
+<ul>
+<li><strong>Component</strong>: Logical unit of code/functionality.</li>
+<li><strong>Node</strong>: Physical or virtual environment where components “live”.</li>
+</ul> </div> </div> </div><div class="module-group"> <div class="page-break-before h-64 flex items-end pb-12 border-b-[12px] border-slate-900 mb-20"> <h2 class="text-6xl font-black uppercase tracking-tighter text-slate-900 leading-none">Summary</h2> </div> <div class="lesson-container mb-32 last:mb-0"> <header class="mb-16"> <div class="flex items-center gap-3 mb-6"> <div class="h-px w-8 bg-[#58cc02]"></div> <div class="text-[10px] font-black text-[#58cc02] uppercase tracking-[0.4em]">Section Detail</div> </div> <h3 class="text-5xl font-black uppercase tracking-tighter text-slate-900 mb-8 leading-[0.95]">UML Design Decisions</h3> <div class="h-2 w-24 bg-[#58cc02] rounded-full shadow-lg shadow-green-500/10"></div> </header> <div class="content-article"> <h1 id="designing-with-uml-best-practices">Designing with UML: Best Practices</h1>
+<p>Modeling is not just about drawing; it’s about making architectural decisions. Here is how to navigate common design challenges.</p>
+<h3 id="1-the-attribute-vs-entity-decision">1. The “Attribute vs. Entity” Decision</h3>
+<p>When modeling a piece of data (e.g., <code>Address</code>), ask:</p>
+<ul>
+<li><strong>Does it have its own identity?</strong> If yes -&gt; <strong>Entity (Class)</strong>.</li>
+<li><strong>Does it need its own validation or logic?</strong> If yes -&gt; <strong>Entity</strong>.</li>
+<li><strong>Is it a primitive value?</strong> If yes -&gt; <strong>Attribute</strong>.</li>
+<li><strong>Can it change independently of its container?</strong> If yes -&gt; <strong>Entity</strong>.</li>
+</ul>
+<h3 id="2-choosing-the-right-diagram">2. Choosing the Right Diagram</h3>
+<p>Don’t use every diagram for every feature. Pick based on what you need to communicate:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">Goal</th><th style="text-align:left">Diagram Type</th></tr></thead><tbody><tr><td style="text-align:left">High-level requirements</td><td style="text-align:left"><strong>Use Case</strong></td></tr><tr><td style="text-align:left">Logic/Workflows</td><td style="text-align:left"><strong>Activity</strong></td></tr><tr><td style="text-align:left">Static structure/Database</td><td style="text-align:left"><strong>Class</strong></td></tr><tr><td style="text-align:left">Time-sensitive interaction</td><td style="text-align:left"><strong>Sequence</strong></td></tr><tr><td style="text-align:left">Complex object lifecycle</td><td style="text-align:left"><strong>State Machine</strong></td></tr><tr><td style="text-align:left">System deployment/Network</td><td style="text-align:left"><strong>Deployment</strong></td></tr></tbody></table>
+<h3 id="3-granularity-how-much-detail">3. Granularity: How much detail?</h3>
+<ul>
+<li><strong>Analysis Level</strong>: Focus on concepts and domain. Ignore technical details like <code>ID</code> fields or getters/setters.</li>
+<li><strong>Design Level</strong>: High detail. Include types, visibility, and specific design patterns (e.g., Singleton, Factory).</li>
+</ul>
+<h3 id="4-mapping-uml-to-implementation">4. Mapping UML to Implementation</h3>
+<ul>
+<li><strong>Generalization</strong> maps to <code>extends</code>.</li>
+<li><strong>Realization</strong> maps to <code>implements</code>.</li>
+<li><strong>Composition</strong> is usually implemented as a field initialized in the constructor.</li>
+<li><strong>Aggregation</strong> is usually a field passed in via a setter or constructor parameter.</li>
+<li><strong>State Machines</strong> map well to the <strong>State Pattern</strong>.</li>
+<li><strong>Activity Flows</strong> map to method logic or <strong>Chain of Responsibility</strong>.</li>
+</ul>
+<h3 id="5-the-power-of-code-plantuml">5. The Power of Code (PlantUML)</h3>
+<p>Always prefer text-based modeling over graphical tools for:</p>
+<ul>
+<li><strong>Maintainability</strong>: Changing a relationship is a text edit, not a mouse struggle.</li>
+<li><strong>Consistency</strong>: High-quality diagrams every time.</li>
+<li><strong>Collaboration</strong>: Easy to review design changes in pull requests.</li>
+</ul>
+<h3 id="summary-checklist">Summary Checklist</h3>
+<ol>
+<li>Identify the <strong>Actors</strong> and their <strong>Goals</strong>.</li>
+<li>Define the <strong>Domain Model</strong> (Classes and their core relationships).</li>
+<li>Visualize <strong>Critical Paths</strong> (Sequence diagrams for complex interactions).</li>
+<li>Map to <strong>Physical Architecture</strong> (Deployment).</li>
+<li>Iterate! UML is meant to be a living document during the design phase.</li>
+</ol> </div> </div> </div> </div> </div> <!-- Background Decoration for Screen View --> <div class="fixed inset-0 -z-10 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px] opacity-40 no-print"></div> <script>
+      // Ultimate Brute Force Quiz Header Removal
+      function zapQuizHeaders() {
+        // 1. Target by common IDs generated by MDX
+        const idsToHide = ['exercise', 'quiz', 'knowledge-check', 'practice', 'check-your-knowledge'];
+        idsToHide.forEach(id => {
+          document.querySelectorAll(`[id*="${id}" i]`).forEach(el => {
+            el.style.setProperty('display', 'none', 'important');
+          });
+        });
+
+        // 2. Target by Text Content for Headings
+        const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        headings.forEach(h => {
+          const text = h.textContent.toLowerCase().trim();
+          if (text === 'exercise' || text === 'quiz' || text === 'knowledge check' || text === 'practice') {
+            h.style.setProperty('display', 'none', 'important');
+          }
+        });
+
+        // 3. Lookback from Quiz Container
+        const quizzes = document.querySelectorAll('.quiz-container, .Quiz');
+        quizzes.forEach(quiz => {
+          quiz.style.setProperty('display', 'none', 'important');
+          let prev = quiz.previousElementSibling;
+          let count = 0;
+          while (prev && count < 3) {
+            const tag = prev.tagName;
+            const text = prev.textContent.toLowerCase();
+            if (tag.startsWith('H') || (tag === 'P' && text.length < 50)) {
+               prev.style.setProperty('display', 'none', 'important');
+            }
+            prev = prev.previousElementSibling;
+            count++;
+          }
+        });
+      }
+
+      // Run multiple times to handle hydration/React rendering
+      zapQuizHeaders();
+      window.addEventListener('DOMContentLoaded', zapQuizHeaders);
+      window.addEventListener('load', zapQuizHeaders);
+      setInterval(zapQuizHeaders, 500);
+    </script>  </body> </html>
