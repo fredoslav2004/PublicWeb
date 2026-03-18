@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Philosophy of Science & Engineering Flashcards</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // --- Inline SVG Icons (replaces lucide-react dependency) ---
+        const BookOpen = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+        );
+        const CheckCircle2 = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="m9 12 2 2 4-4"></path>
+            </svg>
+        );
+        const XCircle = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="m15 9-6 6"></path>
+                <path d="m9 9 6 6"></path>
+            </svg>
+        );
+        const ChevronLeft = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="m15 18-6-6 6-6"></path>
+            </svg>
+        );
+        const ChevronRight = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="m9 18 6-6-6-6"></path>
+            </svg>
+        );
+        const RefreshCw = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+            </svg>
+        );
+
+        // --- Data ---
+        const flashcards = [
+          {
+            id: 1,
+            question: "Explain the concepts of ontology and epistemology.",
+            options: [
+              "Epistemology deals with knowledge (how we know); Ontology deals with being (how we are).",
+              "Epistemology deals with ethics; Ontology deals with logic and reasoning.",
+              "Epistemology is the study of engineering history; Ontology is the study of the scientific method.",
+              "Epistemology deals with being (how we are); Ontology deals with knowledge (how we know)."
+            ],
+            correctAnswer: 0,
+            explanation: "Epistemology is the branch of philosophy that deals with knowledge, or how we know things. In an engineering context, it relates to the tension between theoretical knowledge (learned in universities) and practical knowledge (applied in the field). Ontology is the branch of philosophy dealing with being or how we are, which includes our actions and the ways we do things. For engineers, this addresses their fundamental role and whether they act more as scientists or managers."
+          },
+          {
+            id: 2,
+            question: "What is the origin (etymology) of the word “engineer”, and how did its meaning develop?",
+            options: [
+              "From the Greek 'mechanikos', meaning machine operator.",
+              "From the Latin 'ingeniator' (to contrive/cleverness), evolving from military machine builders to modern complex system problem solvers.",
+              "From the English 'engine', referring strictly to those who operated steam engines in the 1700s.",
+              "From the French 'ingénu', meaning naive or straightforward builder."
+            ],
+            correctAnswer: 1,
+            explanation: "The word originates from the Latin term ingeniator, which derives from ingeniare ('to contrive, devise') and ingenium ('cleverness' or 'innate talent'). During the Middle Ages, the Old French term engigneor specifically referred to a designer and builder of military war machines and siege engines. In the 1700s, the English term 'civil engineer' emerged to distinguish those working on civilian public infrastructure from military engineers. In the modern era, the term has broadened to mean a professional problem solver who designs and builds complex systems."
+          },
+          {
+            id: 3,
+            question: "What is the origin of the terms “science” and “scientist”?",
+            options: [
+              "Science comes from Greek 'logos'; scientist was coined in ancient Greece.",
+              "Science comes from Latin 'scientia' (knowledge). 'Scientist' was coined in 1833 by William Whewell; before that, they were 'natural philosophers'.",
+              "Science comes from Latin 'scire'; scientist was coined by Isaac Newton in 1687.",
+              "Both terms were invented during the Scientific Revolution in the 1500s."
+            ],
+            correctAnswer: 1,
+            explanation: "The term 'science' comes from the Latin scientia ('knowledge') and scire ('to know'), tracing back to a Proto-Indo-European root skei- meaning 'to cut/split, distinguish'. It entered English in the 14th century meaning general knowledge, but eventually narrowed to mean an organized, systematic inquiry about nature. The term 'scientist' was coined surprisingly late, in 1833, by William Whewell. Prior to this, researchers like Isaac Newton were known as 'natural philosophers'."
+          },
+          {
+            id: 4,
+            question: "What was the Scientific Revolution (c. 1543–1687)?",
+            options: [
+              "The invention of the steam engine and the beginning of the Industrial Revolution.",
+              "A political movement in Europe that separated church and state.",
+              "A shift away from scholastic authority toward observation, experiment, and mathematical description of nature.",
+              "The period where engineering was officially recognized as an academic discipline."
+            ],
+            correctAnswer: 2,
+            explanation: "The Scientific Revolution was a period marking a major shift away from scholastic authority, classical philosophy, and Catholic Christianity toward observation, experiment, and the mathematical description of nature. It began around 1543 with Nicolaus Copernicus's argument for a heliocentric (sun-centered) cosmos and culminated in 1687 with Isaac Newton's Principia, which provided a mathematical model for physics."
+          },
+          {
+            id: 5,
+            question: "What is the difference between homo faber and homo sapiens in the philosophy of engineering?",
+            options: [
+              "Homo sapiens means 'man the maker' (engineers); homo faber means 'the wise man' (scientists).",
+              "Homo sapiens are beings with intellectual capacity (understanding the existing world); Homo faber are beings who make things and create their own environments.",
+              "Both terms mean exactly the same thing in modern engineering contexts.",
+              "Homo faber refers exclusively to tool-using animals, while homo sapiens refers to modern humans."
+            ],
+            correctAnswer: 1,
+            explanation: "Homo sapiens means 'beings with intellectual capacity' or 'the wise man,' characterizing a species focused on understanding the world that already exists. In contrast, Homo faber means 'man the maker' or beings who make things and create their own environments. While scientists are often aligned with homo sapiens as thinkers, engineers are seen primarily as homo faber, agents of transformation who create the world that never was."
+          },
+          {
+            id: 6,
+            question: "Reflecting on Heidegger's carpenter example, how does the interplay between theory and practice influence problem-solving?",
+            options: [
+              "Theory always precedes practice; a carpenter must calculate physics before hammering.",
+              "Practice precedes theory; practitioners rely on practical intelligence until a 'breakdown' occurs, requiring theoretical knowledge to solve unforeseen challenges.",
+              "Theoretical knowledge is irrelevant to practical engineering tasks.",
+              "The example proves that engineers should act only as managers, not as hands-on builders."
+            ],
+            correctAnswer: 1,
+            explanation: "Heidegger's carpenter example illustrates that everyday practice often precedes theoretical analysis. A carpenter naturally hammers a nail without deliberate rationality until a 'breakdown' occurs, such as a hammer breaking. At that point, the carpenter must resort to 'mentality' and theoretical concepts to solve the problem. For engineering, this shows that while practitioners rely on practical intelligence, a solid foundation of theoretical knowledge is essential when unforeseen challenges intrude."
+          },
+          {
+            id: 7,
+            question: "What activity unites the varied fields of engineering (e.g., aerospace, biomedical, business)?",
+            options: [
+              "The exclusive use of deductive logic and mathematical proofs.",
+              "The ultimate goal of discovering universal laws of nature.",
+              "The strict adherence to government regulations and legal frameworks.",
+              "The application of scientific principles to invent, design, build, and test complex systems to solve problems."
+            ],
+            correctAnswer: 3,
+            explanation: "What unites all engineering fields is the application of scientific principles and training to invent, design, analyze, build, and test complex products, systems, and structures. Regardless of the specific discipline, engineering is ultimately unified by the characteristic activities of creating, making, innovating, and problem-solving, all while navigating practical limitations like regulations, safety, and costs."
+          },
+          {
+            id: 8,
+            question: "What is the primary difference between a scientist and an engineer?",
+            options: [
+              "Scientists focus on safety and cost; engineers focus on discovering truth.",
+              "Scientists aim to discover and understand the world that exists; engineers aim to create and innovate the world that never was.",
+              "Scientists use inductive reasoning; engineers use exclusively deductive reasoning.",
+              "There is no difference; the terms are interchangeable in modern practice."
+            ],
+            correctAnswer: 1,
+            explanation: "The primary difference lies in their goals: scientists aim to discover, explain, and understand the world that already exists, while engineers aim to create and innovate the world that never was. Scientists are engaged in research to find 'truth' and uncover the laws of nature, driven by necessity. Engineers engage in creative design to produce useful change and transformation, driven by contingency, context, and a paramount focus on safety and dependability."
+          },
+          {
+            id: 9,
+            question: "What is the problem of demarcation?",
+            options: [
+              "The challenge of defining what constitutes genuine science versus what does not.",
+              "The geographical boundary dispute between different engineering disciplines.",
+              "The difficulty of separating personal ethics from professional duties.",
+              "The issue of deciding when an inductive argument becomes logically certain."
+            ],
+            correctAnswer: 0,
+            explanation: "The problem of demarcation is the philosophical challenge of defining what constitutes genuine science versus what does not. Logical Positivists argued that 'verifiability' was the strict criterion. In contrast, Karl Popper argued that 'falsifiability' should be the criterion, meaning a theory must be capable of being proven wrong through observation and experiments to be considered scientific."
+          },
+          {
+            id: 10,
+            question: "What is a hypothesis?",
+            options: [
+              "A universally proven law of nature.",
+              "A tentative trial solution or conjecture put forward to address a problem.",
+              "An observation that conclusively refutes a scientific theory.",
+              "A purely mathematical equation with no real-world application."
+            ],
+            correctAnswer: 1,
+            explanation: "A hypothesis is a proposed tentative trial solution or conjecture put forward to address a problem. Under the positivist method, it is a statement that can either be verified or falsified directly through observation. In Popper's Hypothetico-Deductive method, it is a bold conjecture that scientists actively try to refute or falsify."
+          },
+          {
+            id: 11,
+            question: "What is empiricism?",
+            options: [
+              "The view that knowledge is purely derived from innate ideas and rational thought.",
+              "The view that the only source of knowledge is our senses and experience.",
+              "The belief that scientific theories cannot be verified.",
+              "The practice of building empirical models without mathematical backing."
+            ],
+            correctAnswer: 1,
+            explanation: "Empiricism is the epistemological view that the only source of knowledge is our senses and experience. In this view, concepts do not exist independently of our sensory perception of them; for example, we only know an 'apple' through our sensory experience of it. It serves as a foundation for positivism, where knowledge is derived through objective sense experience."
+          },
+          {
+            id: 12,
+            question: "What is the problem of induction?",
+            options: [
+              "Generalizing from past observations to universal theories is not strictly logical and cannot guarantee future events.",
+              "It is impossible to induce a magnetic field without an electrical current.",
+              "Deductive logic is fundamentally flawed because premises cannot be proven.",
+              "Scientists cannot agree on how to verify experimental data."
+            ],
+            correctAnswer: 0,
+            explanation: "Articulated by David Hume, the problem of induction points out that inductive reasoning (generalizing from past specific observations to universal theories) is not strictly logical. It argues that just because past events occurred a certain way does not logically guarantee that future events will follow the same pattern. Proving induction requires assuming the 'Uniformity of Nature,' but proving nature is uniform itself requires inductive reasoning, creating a flawed, circular argument."
+          },
+          {
+            id: 13,
+            question: "What characterizes deductive arguments?",
+            options: [
+              "They infer general properties based on a limited number of past observations.",
+              "They are never absolutely certain, only probable.",
+              "They move from general premises to specific conclusions and are structurally 'truth-preserving'.",
+              "They rely heavily on sensory experience to validate conclusions."
+            ],
+            correctAnswer: 2,
+            explanation: "Deductive arguments move from general premises to specific conclusions and are structurally 'truth-preserving'. This means that if the premises are true and the argument is valid, the conclusion must logically and necessarily be true. For example, if all cats eat mice, and Garfield is a cat, Garfield must eat mice."
+          },
+          {
+            id: 14,
+            question: "What characterizes inductive arguments?",
+            options: [
+              "They move from general premises to guaranteed specific conclusions.",
+              "They are logically foolproof and 'truth-preserving'.",
+              "They rely entirely on innate rational ideas without observation.",
+              "They infer general properties or future occurrences based on past observations, meaning conclusions are only probable, never certain."
+            ],
+            correctAnswer: 3,
+            explanation: "Inductive arguments infer general properties or future occurrences based on a limited number of past observations. Because they draw conclusions about objects or events not yet examined, inductive conclusions are never absolutely certain; they are only true with a certain degree of probability."
+          },
+          {
+            id: 15,
+            question: "What does it mean that science is cumulative?",
+            options: [
+              "Science is a collection of random, disconnected facts.",
+              "Knowledge steadily builds and progresses over time, with one advance naturally paving the way for the next.",
+              "Scientific theories are constantly destroyed and replaced from scratch.",
+              "Science relies on accumulating funding to progress."
+            ],
+            correctAnswer: 1,
+            explanation: "To say science is cumulative, as viewed by Logical Positivists and general technological advancement, means that knowledge steadily builds and progresses over time, with one advance naturally paving the way for the next."
+          },
+          {
+            id: 16,
+            question: "What role does verification play in positivism?",
+            options: [
+              "It is an optional step used only when theories are contested.",
+              "It is the absolute criterion for meaning and scientific validity; hypotheses must be verifiable by observation.",
+              "Positivists reject verification in favor of falsification.",
+              "Verification is considered logically flawed and is avoided."
+            ],
+            correctAnswer: 1,
+            explanation: "In positivism, verification is the absolute criterion for meaning and scientific validity. Positivists argue that it must be possible, at least in principle, to verify a hypothesis directly by means of observation. If a sentence or theory cannot be verified through sense experience, it is considered to have no scientific meaning."
+          },
+          {
+            id: 17,
+            question: "How does science progress according to Popper?",
+            options: [
+              "Through the steady, inductive accumulation of verified facts.",
+              "By securing funding from government agencies.",
+              "Through a continuous cycle of problem-solving, bold conjectures, and critical error elimination (refutation).",
+              "By relying strictly on deductive proofs without observation."
+            ],
+            correctAnswer: 2,
+            explanation: "According to Popper, science progresses through a continuous cycle of problem-solving and 'error elimination' rather than through inductive accumulation. The cycle begins with an old problem, followed by a creative, tentative trial solution (a conjecture), the deduction of testable propositions, and finally, critical testing aimed at refuting or falsifying the hypothesis, which inevitably leads to new problems."
+          },
+          {
+            id: 18,
+            question: "What is falsification?",
+            options: [
+              "The unethical practice of altering scientific data.",
+              "The concept that a single contradictory observation can prove a universal theory false, making it a criterion for scientific validity.",
+              "The process of proving a theory absolutely true through repeated induction.",
+              "The rejection of all philosophical reasoning in science."
+            ],
+            correctAnswer: 1,
+            explanation: "Falsification is a concept introduced by Karl Popper stating that while no number of observations can conclusively verify a theory, a single contradictory observation can prove it false. Therefore, for a theory to be scientific, it must make definite predictions that can be subjected to critical testing and potentially refuted."
+          },
+          {
+            id: 19,
+            question: "What is Popper’s main argument against verificationism?",
+            options: [
+              "It requires too much funding to verify theories.",
+              "Scientists are biased and cannot be trusted to verify their own work.",
+              "Logical asymmetry: no amount of confirmations can verify a universal theory, but one failed test can falsify it; it relies on flawed induction.",
+              "Verificationism is too strict and rejects useful engineering heuristics."
+            ],
+            correctAnswer: 2,
+            explanation: "Popper's main argument is based on logical asymmetry: no amount of confirming instances can verify a universal theory, but even a single failed test can falsify it. He argued that verificationism is logically erroneous because it relies on the flawed process of induction, and focusing merely on verifying theories does not promote the self-critical growth of knowledge."
+          },
+          {
+            id: 20,
+            question: "What is, according to Popper, a pseudo-science?",
+            options: [
+              "A discipline that has not yet been commercialized.",
+              "A theory consisting of flexible claims that cannot be falsified by observation or experiment.",
+              "Any field of study outside of physics and chemistry.",
+              "Science that is conducted outside of academic institutions."
+            ],
+            correctAnswer: 1,
+            explanation: "A pseudo-science consists of theories that cannot be falsified by observation or experiment. Popper specifically identified fields like psychoanalysis and Marxism as pseudo-sciences because they are sufficiently flexible to 'explain away' disconfirming instances and accommodate any contradictory facts, meaning they take no actual risks in their predictions."
+          },
+          {
+            id: 21,
+            question: "What are the steps in the Hypothetico-Deductive Method?",
+            options: [
+              "1) Observe everything, 2) Categorize data, 3) Induce a law, 4) Verify the law.",
+              "1) Propose hypothesis, 2) Deduce consequences, 3) Attempt to falsify through testing, 4) If not rejected, test further.",
+              "1) Identify paradigm, 2) Solve puzzles, 3) Encounter anomaly, 4) Revolution.",
+              "1) Define problem, 2) Build prototype, 3) Test prototype, 4) Manufacture."
+            ],
+            correctAnswer: 1,
+            explanation: "The method involves four steps: 1) A hypothesis is put forward; 2) Consequences and results are deduced from this hypothesis; 3) Through observation and experiments, these findings are sought to be falsified, thus testing the hypothesis; 4) If the hypothesis is not rejected, the scientist tries again to test it further."
+          },
+          {
+            id: 22,
+            question: "What are the 4 components of a moral problem?",
+            options: [
+              "Legal Issues, Financial Issues, Public Issues, Personal Issues.",
+              "Factual Issues, Conceptual Issues, Application Issues, and Moral Issues.",
+              "Verification, Falsification, Induction, Deduction.",
+              "Virtue, Utilitarianism, Deontology, Contractarianism."
+            ],
+            correctAnswer: 1,
+            explanation: "The four components of a moral problem are Factual Issues, Conceptual Issues, Application Issues, and Moral Issues."
+          },
+          {
+            id: 23,
+            question: "What is the creative middle-way approach to ethical issues?",
+            options: [
+              "Choosing the cheapest option available in a dilemma.",
+              "Ignoring the moral issue until a legal mandate is issued.",
+              "A strategy requiring creativity to satisfy as many conflicting obligations as possible without forcing a binary choice.",
+              "Flipping a coin to decide between two equally bad ethical choices."
+            ],
+            correctAnswer: 2,
+            explanation: "The creative middle-way approach is a strategy used to resolve moral problems that feature competing or conflicting moral demands. It requires creativity to devise a course of action that satisfies as many of the conflicting obligations—such as protecting the public, honoring an employer, and protecting oneself—as satisfactorily as possible without forcing a binary choice."
+          },
+          {
+            id: 24,
+            question: "Define the moral judgments: Permissible, Impermissible, Obligatory, Supererogatory.",
+            options: [
+              "Permissible (allowed), Impermissible (forbidden), Obligatory (required), Supererogatory (above and beyond duty).",
+              "Permissible (required), Impermissible (allowed), Obligatory (forbidden), Supererogatory (illegal).",
+              "Permissible (neutral), Impermissible (neutral), Obligatory (neutral), Supererogatory (neutral).",
+              "Permissible (legal), Impermissible (illegal), Obligatory (ethical), Supererogatory (unethical)."
+            ],
+            correctAnswer: 0,
+            explanation: "Permissible means an action is allowed, but not required; it is neutral. Impermissible means one is morally required not to do an action. Obligatory means it is an action one is morally required to do. Supererogatory refers to an action that goes 'above and beyond the call of duty'; it is praiseworthy to perform, but not strictly required."
+          },
+          {
+            id: 25,
+            question: "What are the three levels of moral judgments?",
+            options: [
+              "1) Local, 2) National, 3) International.",
+              "1) Particular Actions, 2) General Practices/Classes of Actions, 3) Very General Moral Principles/Criteria.",
+              "1) Personal, 2) Corporate, 3) Societal.",
+              "1) Utilitarian, 2) Deontological, 3) Virtue-based."
+            ],
+            correctAnswer: 1,
+            explanation: "The three levels are: 1) Particular Actions, which evaluate the acceptability of a specific individual act; 2) General Practices or Classes of Actions, which evaluate broader types of actions or rules; and 3) Very General Moral Principles or Criteria, which are broad statements that provide the foundational criteria for determining whether any action is right or wrong."
+          },
+          {
+            id: 26,
+            question: "What is the main principle of utilitarianism?",
+            options: [
+              "Act only according to rules that you wish to become universal law.",
+              "We should maximize overall well-being and choose the action that brings the greatest good to the affected population.",
+              "Individuals should focus entirely on developing good character traits.",
+              "Moral value is determined solely by following religious decrees."
+            ],
+            correctAnswer: 1,
+            explanation: "The fundamental principle of utilitarianism is that we should maximize overall well-being. In a moral dilemma, one must choose the course of action that brings the greatest amount of good or utility to the affected population (the 'audience')."
+          },
+          {
+            id: 27,
+            question: "What is a cost-benefit analysis in an ethical context?",
+            options: [
+              "A purely financial document required for tax purposes.",
+              "A utilitarian tool where harms and benefits are converted into a single measure to choose the action producing the greatest benefit relative to cost.",
+              "A deontological framework prioritizing duties over consequences.",
+              "A method of evaluating employee performance in engineering firms."
+            ],
+            correctAnswer: 1,
+            explanation: "In an ethical context, cost-benefit analysis (CBA) is a utilitarian tool holding that the course of action producing the greatest benefit relative to cost should be chosen. To execute this, negative utilities (harms) and positive utilities (benefits) are converted into a single measure, usually monetary terms, to weigh conflicting considerations."
+          },
+          {
+            id: 28,
+            question: "What does it mean that a moral agent has autonomy?",
+            options: [
+              "The agent is a fully automated robot.",
+              "The agent operates entirely independent of government laws.",
+              "The agent has the capacity to formulate goals or purposes of their own, unlike inanimate objects.",
+              "The agent always makes the morally correct decision."
+            ],
+            correctAnswer: 2,
+            explanation: "Autonomy means that a moral agent—typically a normal adult human—has the capacity to formulate goals or purposes of their own. This distinguishes moral agents from inanimate objects, which can only fulfill purposes imposed upon them from the outside."
+          },
+          {
+            id: 29,
+            question: "What is the golden rule?",
+            options: [
+              "He who has the gold makes the rules.",
+              "Always maximize profit while minimizing legal liability.",
+              "Treat others as you would like to be treated; a test of 'reversibility'.",
+              "Never break a promise, regardless of the consequences."
+            ],
+            correctAnswer: 2,
+            explanation: "The golden rule is a core ethical principle requiring individuals to treat others as they would like to be treated, or conversely, not to treat others in ways they would not want to be treated. It functions as a test of 'reversibility,' ensuring we respect the moral agency of others by placing ourselves in the recipient's position."
+          },
+          {
+            id: 30,
+            question: "What is the distinction between negative rights and positive rights?",
+            options: [
+              "Negative rights are bad for society; positive rights are good.",
+              "Negative rights require others to practice noninterference; positive rights require active support or provision from others.",
+              "Negative rights apply only to criminals; positive rights apply to law-abiding citizens.",
+              "Negative rights are theoretical; positive rights are legally binding."
+            ],
+            correctAnswer: 1,
+            explanation: "Negative rights serve as protective barriers that require others to practice noninterference (e.g., the right to life means others have a duty not to kill you). Positive rights, however, require active support or provision from others or society (e.g., the right to food means others have a duty to provide minimal sustenance)."
+          },
+          {
+            id: 31,
+            question: "What is virtue ethics?",
+            options: [
+              "An ethical tradition focused on character traits and habits rather than strict rules.",
+              "An ethical system based entirely on calculating maximum utility.",
+              "The belief that ethics are socially constructed and subjective.",
+              "A set of strict, unbreakable duties and obligations."
+            ],
+            correctAnswer: 0,
+            explanation: "Virtue ethics is an ethical tradition focused on character traits rather than strict rules. Its fundamental principle is to 'Act in the way the good or virtuous person would act in the circumstances'. It dictates that virtues must be deeply entrenched habits that incline a person to consistently do the right thing."
+          },
+          {
+            id: 32,
+            question: "In virtue ethics, what does it mean to find the middle position (or “mean”) between vices?",
+            options: [
+              "To physically stand in the center of a conflict.",
+              "To compromise on your moral principles.",
+              "To locate a virtuous middle ground between two extreme behavioral vices (e.g., courage is between cowardice and foolhardiness).",
+              "To find the mathematical average of a population's moral beliefs."
+            ],
+            correctAnswer: 2,
+            explanation: "Finding the mean involves locating a virtuous middle ground between two extreme behavioral vices. For example, the virtue of courage occupies the middle position between the vice of cowardice (a deficiency) and the vice of foolhardiness (an excess)."
+          },
+          {
+            id: 33,
+            question: "What is the core idea of social constructivism?",
+            options: [
+              "All physical reality is a matrix-like simulation.",
+              "Meanings and realities are not merely objective facts of nature, but are collectively generated by social contexts, language, and culture.",
+              "Technology develops independently of human influence based on fixed scientific laws.",
+              "Society should be constructed strictly according to utilitarian principles."
+            ],
+            correctAnswer: 1,
+            explanation: "The core idea is that meanings and realities are not merely objective facts of nature, but are collectively generated and shaped by social contexts, language, and culture. In the context of technology, social constructivism argues that the emergence and usage of technologies are significantly shaped by social forces like political power, gender, and organizational dynamics, rather than technology acting as an independent, deterministic force."
+          },
+          {
+            id: 34,
+            question: "What is a paradigm according to Kuhn?",
+            options: [
+              "A specific type of laboratory equipment.",
+              "A mathematically proven universal law.",
+              "The shared commitments of a scientific community, encompassing fundamental theories, methods, and specific examples.",
+              "A sudden flash of insight experienced by a scientist."
+            ],
+            correctAnswer: 2,
+            explanation: "A paradigm, or 'disciplinary matrix,' constitutes the shared commitments of a scientific community. It encompasses fundamental theories, shared methods, accepted equipment, a common educational foundation, and specific examples used to tackle problems during periods of normal science."
+          },
+          {
+            id: 35,
+            question: "What is normal science in Kuhn’s terminology?",
+            options: [
+              "Periods where scientists are actively overthrowing old theories.",
+              "Work conducted securely within the bounds of a ruling paradigm, focusing on puzzle-solving without questioning fundamental theories.",
+              "Science conducted by average, non-expert citizens.",
+              "The process of verifying hypotheses through strict positivist observation."
+            ],
+            correctAnswer: 1,
+            explanation: "Normal science refers to the periods where scientific work is conducted securely within the bounds of a ruling paradigm. During this time, scientists do not test or question the fundamental theories; instead, they solve puzzles and apply established knowledge to new phenomena, often trying to force nature to fit the paradigm."
+          },
+          {
+            id: 36,
+            question: "Why do the sciences enter a crisis according to Kuhn?",
+            options: [
+              "Due to a lack of university funding.",
+              "Because scientists get bored of normal science.",
+              "When the number and magnitude of anomalies become too large to be accommodated by the existing paradigm.",
+              "When the government censors scientific publications."
+            ],
+            correctAnswer: 2,
+            explanation: "A crisis occurs when the number and magnitude of anomalies—unexpected discoveries or mismatches between theory and observation—become too large to be ignored or accommodated by the existing paradigm. This insecurity prompts scientists to debate fundamentals and seek new interpretations."
+          },
+          {
+            id: 37,
+            question: "How do different paradigms relate to one another according to Kuhn?",
+            options: [
+              "They build upon each other in a cumulative, linear progression.",
+              "They are incommensurable; they cannot be objectively compared because they lack a common neutral framework.",
+              "They can be easily translated and merged into a single grand theory.",
+              "Older paradigms are always proven mathematically inferior to newer ones."
+            ],
+            correctAnswer: 1,
+            explanation: "Kuhn argued that different paradigms are incommensurable, meaning they cannot be objectively compared or ranked because they do not share a common framework. Scientists operating under different paradigms literally 'see' a different world and do not speak the exact same scientific language, even when using the same terminology."
+          },
+          {
+            id: 38,
+            question: "In Kuhn’s terminology, what is an “anomaly”?",
+            options: [
+              "A scientist who refuses to follow the rules.",
+              "An unexpected discovery or a mismatch between ruling theory and actual observation that cannot be easily explained by the paradigm.",
+              "A mathematical error in a research paper.",
+              "A new piece of technology that automates research."
+            ],
+            correctAnswer: 1,
+            explanation: "An anomaly is defined as an unexpected discovery or a mismatch between the ruling theory and actual observation that cannot be easily explained by the existing paradigm."
+          },
+          {
+            id: 39,
+            question: "According to Kuhn, what is the primary activity of “normal science”?",
+            options: [
+              "Falsifying fundamental theories.",
+              "Debating philosophical methodologies.",
+              "Solving puzzles and applying established theories to new problems without questioning the foundational theories.",
+              "Publishing revolutionary manifestos."
+            ],
+            correctAnswer: 2,
+            explanation: "The primary activity is solving puzzles and applying established theories to new problems without questioning the foundational theories themselves. It focuses on preserving the paradigm and training convergent thinkers."
+          },
+          {
+            id: 40,
+            question: "What best describes a “scientific revolution” in Kuhn’s theory?",
+            options: [
+              "A slow, cumulative addition of new facts to an existing textbook.",
+              "A non-linear, disruptive shift where an old paradigm in crisis is overthrown and replaced by a completely new paradigm.",
+              "The invention of a new scientific instrument like the microscope.",
+              "The global standardization of scientific units (like the metric system)."
+            ],
+            correctAnswer: 1,
+            explanation: "A scientific revolution is a non-linear, disruptive shift where an old paradigm in crisis is overthrown and replaced by a completely new paradigm. Kuhn likened it to a political revolution; it brings a new order, a new set of fundamental theories, and drastically alters how the scientific community perceives the world."
+          },
+          {
+            id: 41,
+            question: "In Kuhn’s work, what does “incommensurability” between paradigms mean?",
+            options: [
+              "Paradigms represent completely different worldviews lacking a neutral, objective framework for comparison.",
+              "The mathematical formulas in one paradigm are too long to write down in another.",
+              "Scientists from different eras cannot legally share patents.",
+              "All paradigms are ultimately saying the exact same thing."
+            ],
+            correctAnswer: 0,
+            explanation: "Incommensurability means that paradigms represent entirely different worldviews that lack a neutral, objective common framework for comparison. Because scientists from different paradigms interpret concepts (like mass or gravity) completely differently, they cannot communicate perfectly or objectively prove one paradigm is inherently 'more true' than another."
+          },
+          {
+            id: 42,
+            question: "What does “theory-ladenness of data” mean in the context of Kuhn’s view of science?",
+            options: [
+              "Data must be heavily weighed and quantified to be considered valid.",
+              "There is no pure, objective data; all observations are inherently guided by and interpreted through the lens of prior theories.",
+              "Theories are heavy burdens that slow down practical engineering.",
+              "Data collected by machines is superior to data collected by humans."
+            ],
+            correctAnswer: 1,
+            explanation: "It means that there is no such thing as pure, objective, or neutral data; all observations are inherently guided by and interpreted through the lens of prior theories and paradigms. Consequently, a scientist's underlying worldview dictates how they perceive facts."
+          }
+        ];
+
+        // --- Main App Component ---
+        function App() {
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [isFlipped, setIsFlipped] = useState(false);
+            const [selectedOption, setSelectedOption] = useState(null);
+            const [showResult, setShowResult] = useState(false);
+
+            const card = flashcards[currentIndex];
+
+            const handleOptionSelect = (index) => {
+                if (showResult) return; 
+                setSelectedOption(index);
+                setShowResult(true);
+                setIsFlipped(true);
+            };
+
+            const handleNext = () => {
+                if (currentIndex < flashcards.length - 1) {
+                    setCurrentIndex(currentIndex + 1);
+                    resetCardState();
+                }
+            };
+
+            const handlePrev = () => {
+                if (currentIndex > 0) {
+                    setCurrentIndex(currentIndex - 1);
+                    resetCardState();
+                }
+            };
+
+            const resetCardState = () => {
+                setIsFlipped(false);
+                setSelectedOption(null);
+                setShowResult(false);
+            };
+
+            const restart = () => {
+                setCurrentIndex(0);
+                resetCardState();
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 sm:p-8 flex flex-col items-center">
+                    {/* Header */}
+                    <div className="max-w-3xl w-full flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-2">
+                            <BookOpen className="text-blue-600 w-6 h-6" />
+                            <h1 className="text-xl font-bold tracking-tight">Philosophy of Science & Eng.</h1>
+                        </div>
+                        <div className="text-sm font-medium bg-slate-200 px-3 py-1 rounded-full">
+                            {currentIndex + 1} / {flashcards.length}
+                        </div>
+                    </div>
+
+                    {/* Flashcard Container */}
+                    <div className="max-w-3xl w-full flex-1 flex flex-col">
+                        
+                        {/* Flashcard Area */}
+                        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-10 flex flex-col relative overflow-hidden transition-all duration-300">
+                            
+                            {/* Progress bar */}
+                            <div className="absolute top-0 left-0 w-full h-1 bg-slate-100">
+                                <div 
+                                    className="h-full bg-blue-600 transition-all duration-300"
+                                    style={{ width: `${((currentIndex + 1) / flashcards.length) * 100}%` }}
+                                ></div>
+                            </div>
+
+                            <div className="mb-6">
+                                <h2 className="text-xl sm:text-2xl font-semibold leading-snug">
+                                    {card.question}
+                                </h2>
+                            </div>
+
+                            {/* Front of card (Options) */}
+                            <div className="flex-1 flex flex-col justify-center space-y-3">
+                                {card.options.map((option, idx) => {
+                                    
+                                    let btnClass = "text-left p-4 rounded-xl border-2 transition-all duration-200 focus:outline-none ";
+                                    
+                                    if (!showResult) {
+                                        btnClass += "border-slate-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer";
+                                    } else {
+                                        if (idx === card.correctAnswer) {
+                                            btnClass += "border-green-500 bg-green-50 text-green-900"; // Correct answer
+                                        } else if (idx === selectedOption) {
+                                            btnClass += "border-red-500 bg-red-50 text-red-900"; // Incorrect selection
+                                        } else {
+                                            btnClass += "border-slate-100 bg-slate-50 text-slate-400 opacity-60 cursor-not-allowed"; // Other options
+                                        }
+                                    }
+
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleOptionSelect(idx)}
+                                            disabled={showResult}
+                                            className={btnClass}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0
+                                                    ${showResult && idx === card.correctAnswer ? 'bg-green-500 text-white' : 
+                                                        showResult && idx === selectedOption ? 'bg-red-500 text-white' : 
+                                                        'bg-slate-100 text-slate-600'}`}
+                                                >
+                                                    {String.fromCharCode(65 + idx)}
+                                                </div>
+                                                <span className="text-base sm:text-lg">{option}</span>
+                                                
+                                                {/* Status Icons */}
+                                                {showResult && idx === card.correctAnswer && (
+                                                    <CheckCircle2 className="w-6 h-6 text-green-600 ml-auto shrink-0" />
+                                                )}
+                                                {showResult && idx === selectedOption && idx !== card.correctAnswer && (
+                                                    <XCircle className="w-6 h-6 text-red-600 ml-auto shrink-0" />
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Back of card (Explanation) */}
+                            {isFlipped && (
+                                <div className="mt-8 pt-6 border-t border-slate-100 transition-opacity duration-500 opacity-100">
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Explanation</h3>
+                                    <p className="text-slate-700 leading-relaxed text-lg">
+                                        {card.explanation}
+                                    </p>
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex items-center justify-between mt-8">
+                            <button
+                                onClick={handlePrev}
+                                disabled={currentIndex === 0}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
+                                    ${currentIndex === 0 ? 'text-slate-400 cursor-not-allowed' : 'text-slate-700 hover:bg-slate-200'}`}
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                                Previous
+                            </button>
+
+                            <button
+                                onClick={restart}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-200 transition-colors"
+                                title="Restart"
+                            >
+                                <RefreshCw className="w-5 h-5" />
+                            </button>
+
+                            <button
+                                onClick={handleNext}
+                                disabled={currentIndex === flashcards.length - 1}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
+                                    ${currentIndex === flashcards.length - 1 ? 'text-slate-400 cursor-not-allowed' : 'text-slate-700 hover:bg-slate-200'}`}
+                            >
+                                Next
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Render the App ---
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
