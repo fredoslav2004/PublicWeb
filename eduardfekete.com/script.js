@@ -1,4 +1,6 @@
 const contentCache = {};
+const assetVersion =
+  document.querySelector('meta[name="asset-version"]')?.content || "1";
 
 let isMobile = window.innerWidth < 768 || (window.innerWidth / window.innerHeight < 0.8 && window.innerWidth < 1024);
 
@@ -9,7 +11,9 @@ async function loadAllContent() {
   const tabs = ['about', 'experience', 'projects', 'contact'];
   for (const tab of tabs) {
     try {
-      const response = await fetch(`${tab}.html`);
+      const response = await fetch(`${tab}.html?v=${encodeURIComponent(assetVersion)}`, {
+        cache: "no-store",
+      });
       contentCache[tab] = await response.text();
     } catch {
       contentCache[tab] = '<p>Error loading content.</p>';
