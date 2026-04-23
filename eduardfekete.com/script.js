@@ -243,12 +243,30 @@ document.addEventListener("keydown", (e) => {
 /* ====== AGE UPDATER ====== */
 const birthDate = new Date(2004, 3, 23, 20, 5); // April 23, 2004, 8:05 PM
 
+function calculateAgeInYears(now, birthday) {
+  let fullYears = now.getFullYear() - birthday.getFullYear();
+  const lastBirthday = new Date(birthday);
+  lastBirthday.setFullYear(now.getFullYear());
+
+  if (now < lastBirthday) {
+    fullYears -= 1;
+    lastBirthday.setFullYear(now.getFullYear() - 1);
+  }
+
+  const nextBirthday = new Date(lastBirthday);
+  nextBirthday.setFullYear(lastBirthday.getFullYear() + 1);
+
+  const elapsedSinceBirthday = now - lastBirthday;
+  const birthdaySpan = nextBirthday - lastBirthday;
+
+  return fullYears + elapsedSinceBirthday / birthdaySpan;
+}
+
 function updateAge() {
   const ageElement = document.getElementById("age");
   if (ageElement) {
     const now = new Date();
-    const ageMs = now - birthDate;
-    const ageYears = ageMs / (1000 * 60 * 60 * 24 * 365.25);
+    const ageYears = calculateAgeInYears(now, birthDate);
     const ageStr = ageYears.toFixed(8);
     const [integerPart, decimalPart] = ageStr.split('.');
     const firstDecimal = decimalPart.charAt(0);
