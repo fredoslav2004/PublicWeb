@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAKEFLOW Lockdown Browser Practice</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app" class="font-size-medium">
+        <!-- 1. Password/Login Gate Screen (Simplified: No Password or Backup Uploads) -->
+        <div id="login-screen" class="screen active">
+            <div class="login-wrapper">
+                <div class="logo-large">
+                    <span class="logo-icon">w</span>
+                    <span class="logo-text">FAKEFLOW</span>
+                </div>
+                
+                <div class="card login-card">
+                    <div class="card-header">
+                        <h2>Start Mock Exam Flow</h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="instruction-text">To access the flow, please select your exam set and participation mode.</p>
+                        
+                        <div class="form-group">
+                            <label for="exam-select">Select Exam Set</label>
+                            <select id="exam-select">
+                                <option value="set1">11 Test Exam (20 Questions)</option>
+                                <option value="set2" selected>WEB2 Exam Set (40 Questions)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="mode-select">Practice Mode</label>
+                            <select id="mode-select">
+                                <option value="practice" selected>Practice Mode (Check Answers immediately, no strict timer)</option>
+                                <option value="exam">Exam Mode (Strict timer, score and review at the end)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="card-footer-buttons">
+                            <button id="btn-close-browser" class="btn btn-secondary">Close browser</button>
+                            <button id="btn-enter-flow" class="btn btn-primary">Enter</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Countdown Screen -->
+        <div id="countdown-screen" class="screen">
+            <div class="login-wrapper">
+                <div class="card countdown-card">
+                    <div class="card-header">
+                        <h2>Countdown to flow start</h2>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="instruction-text">The flow has not yet started. You will gain access to the assignment automatically when the flow starts.</p>
+                        
+                        <div class="countdown-timer-box">
+                            <div class="countdown-title">Flow starts in</div>
+                            <div class="countdown-digits">
+                                <span class="digit-block" id="cd-h">00</span>h
+                                <span class="digit-block" id="cd-m">00</span>m
+                                <span class="digit-block" id="cd-s">03</span>s
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer-buttons justify-center">
+                            <button id="btn-skip-countdown" class="btn btn-primary">Start Exam Immediately</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Main Flow Screen (Exam Interface) -->
+        <div id="flow-screen" class="screen">
+            <!-- Top Dark Grey Header -->
+            <header class="flow-header">
+                <div class="header-left">
+                    <div class="logo-small">
+                        <span class="logo-icon-s">w</span>
+                        <span class="logo-text-s">FAKEFLOW</span>
+                    </div>
+                    <button id="btn-settings" class="icon-btn-text" title="Settings">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                    </button>
+                    <button id="btn-exit" class="btn-exit-flow">Exit</button>
+                </div>
+                
+                <div class="header-center">
+                    <div class="header-info-widget">
+                        <svg class="icon text-light" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                        <span id="current-clock-time">08:29</span>
+                    </div>
+                    <div class="header-info-widget">
+                        <svg class="icon text-light" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+                    </div>
+                    <div class="header-info-widget">
+                        <svg class="icon text-light" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                    </div>
+                    <button id="btn-flow-description" class="btn btn-secondary-sm">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        Read the flow description
+                    </button>
+                </div>
+                
+                <div class="header-right">
+                    <button id="btn-go-to-submission" class="btn btn-primary btn-submission-action">Go to submission</button>
+                </div>
+            </header>
+            
+            <!-- Under Header Metadata Bar -->
+            <div class="flow-subheader">
+                <div class="subheader-left">
+                    <div class="paper-title-area">
+                        <h1 id="paper-display-title">Title: 1-My paper</h1>
+                        <span class="paper-author" id="paper-display-author">By: Practice Student</span>
+                    </div>
+                    <button class="btn-paper-info">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 14px; height: 14px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        Paper info
+                    </button>
+                </div>
+                
+                <div class="subheader-right">
+                    <div class="timer-card-wrapper">
+                        <div class="timer-card">
+                            <span class="timer-label" id="timer-label-ends">Flow ends at 10:30:00</span>
+                            <span class="timer-value countdown-warning" id="timer-left-display">Time left: 02:00:00</span>
+                        </div>
+                        <div class="save-status-indicator">
+                            <span class="pulse-indicator"></span>
+                            <span id="save-status-text">The paper is saved in FAKEFLOW</span>
+                        </div>
+                    </div>
+                    
+                    <div class="subheader-actions">
+                        <button id="btn-pause-participation" class="action-link">
+                            <svg class="icon" viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                            Pause participation
+                        </button>
+                        <button id="btn-toggle-sidebar" class="action-link">
+                            <span>Hide sidebar</span>
+                            <svg class="icon arrow-toggle" viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content Container with Split Layout -->
+            <main class="flow-layout">
+                <!-- Left Pane: The actual paper/question -->
+                <section class="flow-left-pane">
+                    <div class="question-container-inner">
+                        <div class="question-header-bar">
+                            <span id="question-index-display" class="question-idx-badge">Question 1 of 20</span>
+                            <span id="question-category-display" class="question-category-badge">JS Fundamentals</span>
+                        </div>
+                        
+                        <!-- Question Text Content -->
+                        <div id="question-body-content" class="question-body">
+                            <!-- Injected dynamically -->
+                        </div>
+                        
+                        <!-- Interactive Input Area -->
+                        <div class="question-interactive-area">
+                            <div class="interactive-title">Your Answer:</div>
+                            <div id="question-inputs" class="inputs-container">
+                                <!-- Injected dynamically -->
+                            </div>
+                        </div>
+                        
+                        <!-- Practice Mode Answer Checking -->
+                        <div id="practice-feedback-panel" class="practice-feedback hidden">
+                            <div class="feedback-heading">Feedback</div>
+                            <div id="practice-feedback-message" class="feedback-msg"></div>
+                            <button id="btn-practice-reveal" class="btn btn-secondary-sm mt-3">Show Explanation & Code Answer</button>
+                            <div id="practice-answer-explanation" class="answer-explanation hidden"></div>
+                        </div>
+                        
+                        <div id="practice-control-bar" class="practice-control-bar">
+                            <button id="btn-check-answer" class="btn btn-secondary">Check Answer</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Left Pane Sticky Footer Nav (Simplified: No bottom numbers page strip) -->
+                    <footer class="flow-navigation-footer">
+                        <button id="btn-prev-question" class="btn btn-secondary-sm">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                            Prev
+                        </button>
+                        
+                        <!-- Center Fullscreen Overview button -->
+                        <button id="btn-footer-overview" class="btn btn-secondary-sm">
+                            <svg class="icon" viewBox="0 0 24 24" style="width: 14px; height: 14px;"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-7v2h14V6H7z"/></svg>
+                            Overview
+                        </button>
+
+                        <button id="btn-next-question" class="btn btn-primary-sm">
+                            Next
+                            <svg class="icon" viewBox="0 0 24 24" style="fill: white;"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                        </button>
+                    </footer>
+                </section>
+                
+                <!-- Right Pane: Sidebar overview and options (Overview hidden, only vertical strip) -->
+                <aside id="flow-right-pane" class="flow-right-pane collapsed">
+                    <div class="sidebar-header">
+                        <span>Options</span>
+                    </div>
+                    
+                    <div class="sidebar-content">
+                        <!-- Simplified Utilities widget only (no overview grid here) -->
+                        <div class="sidebar-widget flex-column gap-2">
+                            <h3>Utilities</h3>
+                            <button id="btn-flag" class="btn btn-sidebar-action">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6h-5.6z"/></svg>
+                                <span id="flag-text">Flag this question</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Vertical Icon Strip on side of right pane -->
+                    <div class="sidebar-vertical-bar">
+                        <button class="vert-btn" id="btn-show-overview-widget" title="Overview Dashboard">
+                            <svg viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-7v2h14V6H7z"/></svg>
+                        </button>
+                        <button class="vert-btn" id="btn-show-calculator" title="Calculator">
+                            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 14h-8v-2h8v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        </button>
+                        <button class="vert-btn" id="btn-show-playground" title="JS Code Sandbox & Playground">🧪</button>
+                        <button class="vert-btn" id="btn-show-scratchpad" title="Text Scratchpad">
+                            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                        </button>
+                        <button class="vert-btn" id="btn-show-canvas" title="Drawing Canvas">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10c1.25 0 2.5-.3 3.6-.85.34-.17.4-.62.13-.9l-.33-.33c-.34-.34-.41-.86-.18-1.28.76-1.39 2.05-2.45 3.59-2.92.42-.13.69-.51.69-.95V12c0-5.51-4.49-10-10-10zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 8 6.5 8 8 8.67 8 9.5 7.33 11 6.5 11zm3-4C8.67 7 8 6.33 8 5.5S8.67 4 9.5 4s1.5.67 1.5 1.5S10.33 7 9.5 7zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 4 14.5 4s1.5.67 1.5 1.5S15.33 7 14.5 7zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 8 17.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                        </button>
+                        <button class="vert-btn" id="btn-show-sticky" title="Add Draggable Sticky Note">📌</button>
+                        <button class="vert-btn" id="btn-show-formulas" title="Formula Cheatsheet">📋</button>
+                        <button class="vert-btn" id="btn-text-size-minus" title="Decrease text size">A-</button>
+                        <button class="vert-btn" id="btn-text-size-plus" title="Increase text size">A+</button>
+                    </div>
+                </aside>
+            </main>
+        </div>
+
+        <!-- 4. Fullscreen Overview Dashboard Overlay Screen (Takes over whole page) -->
+        <div id="fullscreen-overview-screen" class="screen">
+            <div class="login-wrapper max-width-900">
+                <div class="card fullscreen-overview-card">
+                    <div class="card-header flex-row-between">
+                        <h2>Exam Questions Overview</h2>
+                        <button id="btn-close-overview" class="btn btn-secondary-sm">Return to Exam</button>
+                    </div>
+                    <div class="card-body">
+                        <p class="instruction-text">Review the status of all pages in your exam. Click any number to jump directly to that question.</p>
+                        
+                        <div class="overview-grid-large" id="fullscreen-overview-grid">
+                            <!-- Question buttons 1..N generated here -->
+                        </div>
+                        
+                        <div class="overview-legend justify-center mt-3">
+                            <span class="legend-item"><span class="legend-dot unanswered"></span>Unanswered</span>
+                            <span class="legend-item"><span class="legend-dot answered"></span>Answered</span>
+                            <span class="legend-item"><span class="legend-dot flagged"></span>Flagged</span>
+                        </div>
+
+                        <div class="card-footer-buttons">
+                            <button id="btn-overview-back" class="btn btn-secondary">Back to exam</button>
+                            <button id="btn-overview-submission" class="btn btn-primary">Go to submission</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Submission Screen -->
+        <div id="submission-screen" class="screen">
+            <div class="login-wrapper max-width-800">
+                <div class="card submission-card">
+                    <div class="card-header">
+                        <h2>Go to submission</h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="instruction-text">Review your answers before submitting the paper. Once submitted, you cannot change your answers.</p>
+                        
+                        <div class="submission-summary-box">
+                            <div class="summary-metric">
+                                <span class="metric-val" id="summary-total-questions">0</span>
+                                <span class="metric-lbl">Total Questions</span>
+                            </div>
+                            <div class="summary-metric">
+                                <span class="metric-val text-success" id="summary-answered-questions">0</span>
+                                <span class="metric-lbl">Answered</span>
+                            </div>
+                            <div class="summary-metric">
+                                <span class="metric-val text-warning" id="summary-flagged-questions">0</span>
+                                <span class="metric-lbl">Flagged</span>
+                            </div>
+                            <div class="summary-metric">
+                                <span class="metric-val text-danger" id="summary-unanswered-questions">0</span>
+                                <span class="metric-lbl">Unanswered</span>
+                            </div>
+                        </div>
+
+                        <h3>Question Details</h3>
+                        <div class="submission-list" id="submission-questions-list">
+                            <!-- Table of all questions and their statuses -->
+                        </div>
+                        
+                        <div class="card-footer-buttons">
+                            <button id="btn-back-to-exam" class="btn btn-secondary">Back to exam</button>
+                            <button id="btn-submit-exam" class="btn btn-success btn-large">Hand in paper</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Results Screen -->
+        <div id="results-screen" class="screen">
+            <div class="login-wrapper max-width-900">
+                <div class="card results-card">
+                    <div class="card-header">
+                        <h2>Exam Result Report</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="score-summary-panel">
+                            <div class="score-circle">
+                                <span class="score-pct" id="results-score-pct">0%</span>
+                                <span class="score-fraction" id="results-score-fraction">0 / 0</span>
+                            </div>
+                            <div class="score-details">
+                                <h3 id="results-verdict">Congratulations!</h3>
+                                <p id="results-details-text">You completed the exam practice.</p>
+                                <div class="results-buttons">
+                                    <button id="btn-retake-exam" class="btn btn-primary">Retake Exam</button>
+                                    <button id="btn-exit-to-login" class="btn btn-secondary">Exit to Login</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3>Review Answers</h3>
+                        <div class="results-review-list" id="results-review-list">
+                            <!-- Detailed list of questions, student answers, correct answers and code references -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Utilities / Modal Dialogs -->
+        
+        <!-- Settings Modal -->
+        <dialog id="settings-dialog" class="fakeflow-dialog">
+            <div class="dialog-header">
+                <h3>Settings & System Check</h3>
+                <button class="dialog-close-x">&times;</button>
+            </div>
+            <div class="dialog-body">
+                <div class="setting-item">
+                    <span>Fullscreen Simulation (Lockdown mode)</span>
+                    <button id="btn-toggle-fullscreen" class="btn btn-secondary-sm">Enter Fullscreen</button>
+                </div>
+                <div class="setting-item">
+                    <span>Device Audio</span>
+                    <span class="badge badge-success">OK - Connected</span>
+                </div>
+                <div class="setting-item">
+                    <span>Webcam & Security Feed</span>
+                    <span class="badge badge-success">OK - Simulated Active</span>
+                </div>
+                <div class="setting-item">
+                    <span>Internet Connection Status</span>
+                    <span class="badge badge-success">OK - Online</span>
+                </div>
+                <div class="setting-item">
+                    <span>Browser Sandbox Key</span>
+                    <span class="sandbox-key font-mono">wf-sandbox-2026-ste-web2</span>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary dialog-close-btn">Close</button>
+            </div>
+        </dialog>
+
+        <!-- Flow Description Modal -->
+        <dialog id="flow-description-dialog" class="fakeflow-dialog">
+            <div class="dialog-header">
+                <h3>Flow Description</h3>
+                <button class="dialog-close-x">&times;</button>
+            </div>
+            <div class="dialog-body">
+                <h4>WEB2 - Client-Side Web Technologies Exam Practice</h4>
+                <p>This flow is designed to help you prepare for the WEB2 final exam. It contains real test exam questions and standard exam question sets.</p>
+                <ul>
+                    <li><strong>Time Limit:</strong> 2 Hours (120 minutes) once started.</li>
+                    <li><strong>Format:</strong> Multiple choice, True/False matrices, and code explanation queries.</li>
+                    <li><strong>Rules:</strong> In a real exam, you are locked into the browser. Try practicing in fullscreen to simulate the test environment.</li>
+                </ul>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary dialog-close-btn">Close</button>
+            </div>
+        </dialog>
+
+        <!-- Formula Sheet Reference Modal -->
+        <dialog id="formula-sheet-dialog" class="fakeflow-dialog">
+            <div class="dialog-header">
+                <h3>WEB2 Formula Sheet Reference</h3>
+                <button class="dialog-close-x">&times;</button>
+            </div>
+            <div class="dialog-body">
+                <h4>JavaScript Fundamentals Cheatsheet</h4>
+                
+                <div class="formula-section">
+                    <h5>1. Scope & Hoisting</h5>
+                    <pre class="font-mono formula-code">var   = Function scoped. Hoisted. Can redeclare.
+let   = Block scoped. Not redeclared. TDZ active.
+const = Block scoped. Immutable reference. TDZ active.</pre>
+                </div>
+
+                <div class="formula-section">
+                    <h5>2. Type Coercion Rules</h5>
+                    <pre class="font-mono formula-code">Falsy values: false, 0, "", null, undefined, NaN.
+Addition: string + anything = string (coerces to string).
+Subtraction/Multiplication: "3" - 1 = 2 (coerces to number).
+Equality: null == undefined (true). x === y checks type too.</pre>
+                </div>
+
+                <div class="formula-section">
+                    <h5>3. "this" Context Resolution</h5>
+                    <pre class="font-mono formula-code">Method call:    obj.method() -> this is obj
+Simple call:    foo()        -> this is global/undefined
+Arrow func:     () => {}     -> this is outer lexical context
+Constructor:    new Foo()    -> this is new instance
+Explicit bind:  foo.bind(x)  -> this is x</pre>
+                </div>
+
+                <div class="formula-section">
+                    <h5>4. Array Higher-Order Functions</h5>
+                    <pre class="font-mono formula-code">map:     [a].map(x => b)      -> [b] (transforms)
+filter:  [a].filter(x => boolean) -> [a] (filters)
+reduce:  [a].reduce((acc, x) => acc2, initial) -> value
+forEach: [a].forEach(x => void)   -> void (side effects)</pre>
+                </div>
+
+                <div class="formula-section">
+                    <h5>5. Asynchronous JS & Event Loop</h5>
+                    <pre class="font-mono formula-code">Promises: States = [pending, fulfilled, rejected]
+Microtasks (Promise.then, queueMicrotask) run before
+Macrotasks (setTimeout, setInterval, I/O callbacks).</pre>
+                </div>
+
+                <div class="formula-section">
+                    <h5>6. React Lifecycle & Rules</h5>
+                    <pre class="font-mono formula-code">Hook Rules: Only call hooks at top level. Only call in React Components.
+State updates: setState is asynchronous.
+useEffect: [] (runs once on mount), [dep] (runs when dep changes).</pre>
+                </div>
+
+                <div class="formula-section">
+                    <h5>7. TypeScript Structural Typing</h5>
+                    <pre class="font-mono formula-code">TypeScript uses "duck typing". If object shapes match,
+types match. Type guard using:
+- typeof x === "string"
+- x instanceof Foo
+- "prop" in x</pre>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary dialog-close-btn">Close</button>
+            </div>
+        </dialog>
+
+        <!-- Calculator Floating Widget -->
+        <div id="calculator-widget" class="floating-widget hidden">
+            <div class="widget-header">
+                <span>Calculator</span>
+                <button class="widget-close">&times;</button>
+            </div>
+            <div class="widget-body calculator-body">
+                <input type="text" id="calc-display" readonly>
+                <div class="calc-grid">
+                    <button class="calc-btn btn-clear">C</button>
+                    <button class="calc-btn btn-op">(</button>
+                    <button class="calc-btn btn-op">)</button>
+                    <button class="calc-btn btn-op">/</button>
+                    <button class="calc-btn">7</button>
+                    <button class="calc-btn">8</button>
+                    <button class="calc-btn">9</button>
+                    <button class="calc-btn btn-op">*</button>
+                    <button class="calc-btn">4</button>
+                    <button class="calc-btn">5</button>
+                    <button class="calc-btn">6</button>
+                    <button class="calc-btn btn-op">-</button>
+                    <button class="calc-btn">1</button>
+                    <button class="calc-btn">2</button>
+                    <button class="calc-btn">3</button>
+                    <button class="calc-btn btn-op">+</button>
+                    <button class="calc-btn">0</button>
+                    <button class="calc-btn">.</button>
+                    <button class="calc-btn btn-equals">=</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scratchpad Text Floating Widget -->
+        <div id="scratchpad-widget" class="floating-widget hidden">
+            <div class="widget-header">
+                <span>Scratchpad Notes</span>
+                <button class="widget-close">&times;</button>
+            </div>
+            <div class="widget-body">
+                <textarea id="scratchpad-textarea" placeholder="Type temporary notes or drafts here. These are kept during your practice session..."></textarea>
+            </div>
+        </div>
+
+        <!-- Scratchpad Drawing Canvas Floating Widget -->
+        <div id="canvas-widget" class="floating-widget hidden">
+            <div class="widget-header">
+                <span>Drawing Canvas</span>
+                <button class="widget-close">&times;</button>
+            </div>
+            <div class="widget-body flex-column gap-2">
+                <div class="canvas-controls">
+                    <button id="canvas-clear" class="btn btn-secondary-xs">Clear</button>
+                    <input type="color" id="canvas-color" value="#607D14">
+                    <input type="range" id="canvas-brush-size" min="1" max="10" value="3" style="width: 60px;">
+                </div>
+                <canvas id="drawing-canvas" width="300" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- JavaScript Playground Floating Widget -->
+        <div id="playground-widget" class="floating-widget playground-widget hidden">
+            <div class="widget-header">
+                <span>JS Code Sandbox & Study Guide 🧪</span>
+                <button class="widget-close">&times;</button>
+            </div>
+            <div class="playground-layout">
+                <!-- Playground Tabs Header -->
+                <div class="playground-tabs">
+                    <button class="pg-tab-btn active" data-target="pg-sandbox">Sandbox</button>
+                    <button class="pg-tab-btn" data-target="pg-curriculum">Curriculum Guide</button>
+                    <button class="pg-tab-btn" data-target="pg-examhacks">Exam Hacks</button>
+                </div>
+                
+                <!-- Tab Contents -->
+                <div class="playground-tab-contents">
+                    <!-- Tab 1: Sandbox -->
+                    <div id="pg-sandbox" class="pg-tab-pane active">
+                        <div class="editor-header">
+                            <span class="editor-title">code_editor.js</span>
+                            <div class="editor-actions">
+                                <button id="btn-run-code" class="btn-run" title="Run code (Ctrl+Enter)">
+                                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Run
+                                </button>
+                                <button id="btn-clear-console" class="btn-clear-pg" title="Clear console">Clear</button>
+                            </div>
+                        </div>
+                        <div class="editor-container">
+                            <div class="editor-gutter" id="editor-gutter">1</div>
+                            <textarea id="playground-code-input" spellcheck="false" placeholder="// Write or load JavaScript code here...&#10;// Type annotations in TypeScript are automatically stripped when running.&#10;console.log('Hello Sandbox!');"></textarea>
+                        </div>
+                        <div class="console-header">Console Output</div>
+                        <div id="playground-console" class="console-output">
+                            <div class="console-line console-system">Sandbox ready. Write code above and click Run!</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab 2: Curriculum Reference Guide -->
+                    <div id="pg-curriculum" class="pg-tab-pane">
+                        <div class="lesson-picker-container">
+                            <label for="lesson-select">Select Lecture Topic:</label>
+                            <select id="lesson-select">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="lesson-body-area" id="lesson-content-area">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Tab 3: Exam Hacks & Explanations -->
+                    <div id="pg-examhacks" class="pg-tab-pane">
+                        <p class="instruction-text-sm">Click any tricky exam pattern below to analyze it. It will load into the Sandbox so you can run it and see the console logs step-by-step!</p>
+                        <div class="hacks-list" id="hacks-list-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Core App JS files -->
+    <script src="playgroundData.js"></script>
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
